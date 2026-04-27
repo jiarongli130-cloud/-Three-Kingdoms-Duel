@@ -1176,7 +1176,8 @@
                     triggerShake();
                 } else {
                     h1 -= dmg2;
-                    battleLog.innerHTML += `<span style="color:var(--accent-red)">[第${round}合]</span> ${p2.name} 普通猛攻，${p1.name} 承受 ${Math.floor(dmg2)} 點邏輯破壞。<br>`;
+                    // ▼ 將原本的「普通猛攻」替換為隨機讀取 300 招陣列 ▼
+                    battleLog.innerHTML += `<span style="color:var(--accent-red)">[第${round}合]</span> ${p2.name} ${moves[Math.floor(Math.random()*moves.length)]} ${p1.name} 承受 ${Math.floor(dmg2)} 點邏輯破壞。<br>`;
                     triggerShake();
                 }
             }
