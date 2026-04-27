@@ -105,10 +105,11 @@
             <button onclick="clearTournament()" style="flex: 1; border-color: #ff3131; color: #ff3131;">清空名單</button>
         </div>
         <div id="tourneyRoster" style="margin-bottom: 15px; color: #ccc; font-size: 14px;">目前名單 (0/12)：無</div>
-        <div style="display: flex; gap: 10px;">
-            <button class="btn-tournament" onclick="runTournament(false)" style="flex: 1;">⚔️ 舉辦指定大會</button>
-            <button class="btn-tournament" onclick="runTournament(true)" style="flex: 1;">🎲 舉辦隨機大會</button>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <button class="btn-tournament" onclick="runTournament(false)" style="flex: 1;">⚔️ 舉辦指定大會(12人)</button>
+            <button class="btn-tournament" onclick="runTournament(true)" style="flex: 1;">🎲 舉辦隨機大會(12人)</button>
         </div>
+        <button class="btn-tournament" onclick="runGlobalTournament()" style="width: 100%; background: #8b0000; border-color: #ff3131; box-shadow: 0 0 15px #8b0000;">🌍 舉辦全軍大亂鬥 (目前全庫將領參戰)</button>
     </div>
 
     <div class="battle-view">
@@ -1450,6 +1451,134 @@
         battleLog.scrollTop = battleLog.scrollHeight;
         await new Promise(r => setTimeout(r, 2500));
         return winnerIndex;
+    }
+// ==============================================================
+    // ▼▼▼ 核心：全軍大逃殺 (光速海選 + 八強轉播) 推演模組 ▼▼▼
+    // ==============================================================
+
+    // 專供海選使用的光速數學推演引擎 (不更新UI，0毫秒運算)
+    function quickSimulate(idx1, idx2) {
+        const p1 = generals[idx1];
+        const p2 = generals[idx2];
+        let h1 = 100, h2 = 100;
+        let round = 1;
+        let p1Ult30Used = false, p1Ult10Used = false, p2Ult30Used = false, p2Ult10Used = false;
+        let p1GodDefyUsed = false, p2GodDefyUsed = false, p1CustomUltUsed = false, p2CustomUltUsed = false;
+        let p1FanYueHealUsed = false, p2FanYueHealUsed = false;
+        let p1DodgeCount = 0, p2DodgeCount = 0;
+        let p1RemnantDodgeUsed = false, p2RemnantDodgeUsed = false;
+
+        const getUltDmg = (name) => {
+            const map = { "關羽":48,"張飛":47,"馬超":46,"黃忠":45,"呂布":44,"許褚":42,"典韋":41,"文醜":40,"顏良":39,"龐德":37,"兀突骨":35,"張郃":34,"張遼":34,"夏侯惇":34,"姜維":34,"夏侯淵":33,"太史慈":33,"孫策":33,"甘寧":33,"周泰":32,"凌統":32,"文鴦":32,"鄧艾":32,"李嚴":31,"張任":31,"高覽":31,"徐晃":30,"曹洪":30,"曹彰":30,"陳武":30,"鄂煥":30,"魏延":29,"文聘":29,"關興":29,"張苞":29,"華雄":28,"祝融":28,"徐質":28,"孫桓":28,"諸葛尚":28,"李典":27,"樂進":27,"于禁":27,"馬岱":27,"程普":26,"黃蓋":26,"韓當":26,"呂蒙":26,"嚴顏":26,"高順":25,"臧霸":25,"王雙":25,"冷苞":25,"周倉":25,"楊阜":25,"馬雲騄":25,"麯義":25,"公孫瓚":25,"孫堅":25,"邢道榮":25,"鄧忠":25,"曹仁":24,"劉備":24,"潘璋":24,"侯成":24,"楊仁":23,"傅僉":23,"越吉":23,"何慢":23,"秦慶童":23 };
+            return map[name] || 0;
+        };
+
+        while(h1 > 0 && h2 > 0 && round < 80) {
+            // 彩蛋判定
+            if ((p1.name === "趙雲" && p2.name === "樊玥") || (p1.name === "樊玥" && p2.name === "趙雲")) return p1.name === "樊玥" ? idx1 : idx2;
+            if ((p1.name === "殘卒" && p2.name === "樊玥") || (p1.name === "樊玥" && p2.name === "殘卒")) return p1.name === "樊玥" ? idx1 : idx2;
+
+            if (p1.name === "趙雲" && h1 <= 10 && !p1Ult10Used) { p1Ult10Used = true; h2 = 0; }
+            else if (p2.name === "趙雲" && h2 <= 10 && !p2Ult10Used) { p2Ult10Used = true; h1 = 0; }
+
+            if (p1.name === "趙雲" && h1 <= 36 && h1 > 10 && !p1Ult30Used && h2 > 0) { p1Ult30Used = true; if (p2DodgeCount > 0) p2DodgeCount--; else h2 -= 50; }
+            if (p2.name === "趙雲" && h2 <= 36 && h2 > 10 && !p2Ult30Used && h1 > 0) { p2Ult30Used = true; if (p1DodgeCount > 0) p1DodgeCount--; else h1 -= 50; }
+
+            let d1 = getUltDmg(p1.name), d2 = getUltDmg(p2.name);
+            if (d1 && h1 <= 35 && !p1CustomUltUsed && h2 > 0) { p1CustomUltUsed = true; if (p2DodgeCount > 0) p2DodgeCount--; else h2 -= d1; }
+            if (d2 && h2 <= 35 && !p2CustomUltUsed && h1 > 0) { p2CustomUltUsed = true; if (p1DodgeCount > 0) p1DodgeCount--; else h1 -= d2; }
+
+            if (p1.name === "殘卒" && h1 <= 20 && !p1RemnantDodgeUsed) { p1RemnantDodgeUsed = true; p1DodgeCount = 10; }
+            if (p2.name === "殘卒" && h2 <= 20 && !p2RemnantDodgeUsed) { p2RemnantDodgeUsed = true; p2DodgeCount = 10; }
+
+            if (h1 > 0 && h2 > 0) {
+                if (Math.random() > 0.5) { if (p2DodgeCount > 0) p2DodgeCount--; else h2 -= Math.max(3, (p1.power*0.12) - (p2.power*0.04) + (Math.random()*12-4)); } 
+                else { if (p1DodgeCount > 0) p1DodgeCount--; else h1 -= Math.max(3, (p2.power*0.12) - (p1.power*0.04) + (Math.random()*12-4)); }
+            }
+
+            h1 = Math.max(0, h1); h2 = Math.max(0, h2);
+
+            if (p1.name === "趙雲" && p2.rank.includes("神仙流") && h1 === 0 && !p1GodDefyUsed) { h1 = 1; p1GodDefyUsed = true; }
+            if (p2.name === "趙雲" && p1.rank.includes("神仙流") && h2 === 0 && !p2GodDefyUsed) { h2 = 1; p2GodDefyUsed = true; }
+            if (p1.name === "樊玥" && h1 <= 30 && !p1FanYueHealUsed) { p1FanYueHealUsed = true; h1 = 100; }
+            if (p2.name === "樊玥" && h2 <= 30 && !p2FanYueHealUsed) { p2FanYueHealUsed = true; h2 = 100; }
+            round++;
+        }
+        return h1 > h2 ? idx1 : idx2;
+    }
+
+    async function runGlobalTournament() {
+        const buttons = document.querySelectorAll("button");
+        buttons.forEach(b => b.disabled = true);
+
+        // 提取全軍名單並隨機打亂
+        let activeRoster = Array.from({length: generals.length}, (_, i) => i);
+        activeRoster.sort(() => Math.random() - 0.5);
+
+        battleLog.innerHTML = `<h2 style="color:#ff3131; text-align:center; text-shadow: 0 0 10px #ff3131; margin-bottom:5px;">🌍 天下第一・全軍大亂鬥 🌍</h2>`;
+        battleLog.innerHTML += `<div style="color:#ccc; text-align:center; margin-bottom: 15px; font-weight:bold;">【海選啟動】<br>共計 ${activeRoster.length} 名將領、雜兵與神魔參戰，爭奪僅有 8 席的最高殿堂！<br><span style="font-size:12px; color:#ff8c00;">(海選階段將啟用光速推演引擎)</span></div><hr style="border-color:#333;">`;
+        battleLog.scrollTop = battleLog.scrollHeight;
+        await new Promise(r => setTimeout(r, 2500));
+
+        let roundNum = 1;
+        
+        // --- 階段 1：光速海選賽 (直到剩下 8 人) ---
+        while(activeRoster.length > 8) {
+            battleLog.innerHTML += `<h3 style="color:#a9a9a9; text-align:center;">--- ⚔️ 光速海選 第 ${roundNum} 輪 ⚔️ ---</h3>`;
+            battleLog.scrollTop = battleLog.scrollHeight;
+            await new Promise(r => setTimeout(r, 800));
+
+            let nextRoster = [];
+            let logs = "";
+            
+            for(let i = 0; i < activeRoster.length; i += 2) {
+                if(i + 1 >= activeRoster.length) {
+                    nextRoster.push(activeRoster[i]); // 單數輪空
+                    logs += `<span style="color:#aaaaaa;">[輪空] ${generals[activeRoster[i]].name} 運氣極佳，直接晉級！</span><br>`;
+                } else {
+                    let w = quickSimulate(activeRoster[i], activeRoster[i+1]);
+                    let loser = w === activeRoster[i] ? activeRoster[i+1] : activeRoster[i];
+                    nextRoster.push(w);
+                    logs += `<span style="color:#87ceeb;">[斬殺] ${generals[w].name} 淘汰了 ${generals[loser].name}！</span><br>`;
+                }
+            }
+            
+            // 將海選結果整批渲染，避免瀏覽器卡死
+            battleLog.innerHTML += `<div style="font-size:12px; line-height:1.4; column-count: 2;">${logs}</div><hr style="border-color:#333;">`;
+            battleLog.scrollTop = battleLog.scrollHeight;
+            activeRoster = nextRoster;
+            roundNum++;
+            await new Promise(r => setTimeout(r, 1200));
+        }
+
+        // --- 階段 2：轉交給傳統八強大會轉播 ---
+        battleLog.innerHTML += `<br><h2 style="color:#ffd700; text-align:center; margin-top:20px; text-shadow: 0 0 10px #ffd700;">🎉 歷經血腥海選，最強八人誕生！ 🎉</h2><hr style="border-color:#333;">`;
+        let eliteStr = activeRoster.map(i => `<span style="color:#00ffff; font-weight:bold;">${generals[i].name}</span>`).join("、");
+        battleLog.innerHTML += `<div style="text-align:center; color:#ccc;">【八強精英】<br>${eliteStr}</div><br>`;
+        battleLog.scrollTop = battleLog.scrollHeight;
+        await new Promise(r => setTimeout(r, 3000));
+
+        battleLog.innerHTML += `<h3 style="color:#4169e1; text-align:center; margin-top:20px;">--- 🛡️ 八強賽 🛡️ ---</h3>`;
+        let q1_w = await autoMatch(activeRoster[0], activeRoster[1], "八強賽 A組");
+        let q2_w = await autoMatch(activeRoster[2], activeRoster[3], "八強賽 B組");
+        let q3_w = await autoMatch(activeRoster[4], activeRoster[5], "八強賽 C組");
+        let q4_w = await autoMatch(activeRoster[6], activeRoster[7], "八強賽 D組");
+
+        battleLog.innerHTML += `<h2 style="color:#ff8c00; text-align:center; margin-top:20px; text-shadow: 0 0 10px #ff8c00;">🔥 四強準決賽 🔥</h2><hr style="border-color:#333;">`;
+        let semi1 = await autoMatch(q1_w, q2_w, "準決賽 上半區");
+        let semi2 = await autoMatch(q3_w, q4_w, "準決賽 下半區");
+
+        battleLog.innerHTML += `<h2 style="color:#ff3131; text-align:center; margin-top:20px; text-shadow: 0 0 15px #ff3131;">👑 天下第一總決賽 👑</h2><hr style="border-color:#333;">`;
+        let champion = await autoMatch(semi1, semi2, "🏆 紫禁之巔決戰 🏆");
+
+        battleLog.innerHTML += `<br><div style="text-align:center; padding:20px; border: 2px solid #ffd700; background:rgba(255,215,0,0.1); box-shadow: 0 0 30px rgba(255,215,0,0.5); margin-top:20px;">
+            <h1 style="color:#ffd700; text-shadow: 0 0 15px #ffd700; font-size:30px; margin:0;">【全軍大會 總冠軍誕生】</h1>
+            <h2 style="color:#ffffff; font-size:28px; margin-top:15px; text-shadow: 0 0 10px #fff;">👑 ${generals[champion].name} 👑</h2>
+            <p style="color:#ccc; margin-top:10px;">從 ${generals.length} 名將領中殺出重圍，真正名震天下的戰神！</p>
+        </div><br><br>`;
+        battleLog.scrollTop = battleLog.scrollHeight;
+        
+        buttons.forEach(b => b.disabled = false);
     }
 </script>
 </body>
