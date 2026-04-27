@@ -1117,6 +1117,25 @@
             }
 
             // ==========================================
+            // 🌸 憐憫彩蛋：樊玥 VS 殘卒
+            // ==========================================
+            if ((p1.name === "殘卒" && p2.name === "樊玥") || (p1.name === "樊玥" && p2.name === "殘卒")) {
+                if (p1.name === "樊玥") { h2 = 0; } else { h1 = 0; }
+                battleLog.innerHTML += `<br><span style="color:#ffffff; font-weight:bold; font-size:20px; text-shadow: 0 0 10px #ffffff, 0 0 20px #ffffff;">🌸 【神明垂憐】樊玥輕嘆一聲，不忍兵刃相見...</span><br><span style="color:#dddddd; font-size:16px; font-style:italic;">本就命若游絲的殘卒，在神明的溫柔注視下放下了殘破的兵器，甘願認輸...</span><br><br>`;
+                triggerShake(); setTimeout(triggerShake, 400);
+                
+                document.getElementById('p1HpBar').style.width = h1 + "%";
+                document.getElementById('p2HpBar').style.width = h2 + "%";
+                document.getElementById('p1HpText').innerText = Math.floor(h1) + "/100";
+                document.getElementById('p2HpText').innerText = Math.floor(h2) + "/100";
+                hpChart.data.labels.push(round);
+                hpChart.data.datasets[0].data.push(h1);
+                hpChart.data.datasets[1].data.push(h2);
+                hpChart.update();
+                break;
+            }
+            
+            // ==========================================
             // ❄️ 趙雲終極神技：玥之極 (10% 以下即死判定，無視閃避)
             // ==========================================
             if (p1.name === "趙雲" && h1 <= 10 && !p1Ult10Used) {
@@ -1283,7 +1302,10 @@
         }
 
         const winner = h1 > h2 ? p1.name : p2.name;
-        if (!((p1.name === "趙雲" && p2.name === "樊玥") || (p1.name === "樊玥" && p2.name === "趙雲"))) {
+       // 判斷是否為樊玥彩蛋局，若不是才印出常規勝利文字
+        const isFanYueEgg = (p1.name === "趙雲" && p2.name === "樊玥") || (p1.name === "樊玥" && p2.name === "趙雲") || (p1.name === "殘卒" && p2.name === "樊玥") || (p1.name === "樊玥" && p2.name === "殘卒");
+        
+        if (!isFanYueEgg) {
             battleLog.innerHTML += `<br><strong style="color:var(--accent-orange); font-size:22px;">[演武終結] 最終處決結果：${winner} 傲立戰場！</strong>`;
         }
     }
