@@ -1195,13 +1195,13 @@
             // ==========================================
             if (p1.name === "殘卒" && h1 <= 20 && !p1RemnantDodgeUsed) {
                 p1RemnantDodgeUsed = true; p1DodgeCount = 10;
-                battleLog.innerHTML += `<br><span style="color:#aaaaaa; font-weight:bold; font-size:15px;">【螻蟻貪生】${p1.name} 血量跌破 20%！</span><br><span style="color:#cccccc; font-weight:bold; font-size:18px;">💨 強制發動絕招【苟延殘喘】！激發 200% 求生本能，接下來將強制閃避 3 次任何攻擊（玥之極除外）！</span><br><br>`;
+                battleLog.innerHTML += `<br><span style="color:#aaaaaa; font-weight:bold; font-size:15px;">【螻蟻貪生】${p1.name} 血量跌破 20%！</span><br><span style="color:#cccccc; font-weight:bold; font-size:18px;">💨 強制發動絕招【苟延殘喘】！激發 200% 求生本能，接下來將強制閃避 10次任何攻擊（玥之極除外）！</span><br><br>`;
                 triggerShake(); setTimeout(triggerShake, 200);
                 await new Promise(r => setTimeout(r, 800));
             }
             if (p2.name === "殘卒" && h2 <= 20 && !p2RemnantDodgeUsed) {
                 p2RemnantDodgeUsed = true; p2DodgeCount = 10;
-                battleLog.innerHTML += `<br><span style="color:#aaaaaa; font-weight:bold; font-size:15px;">【螻蟻貪生】敵將 ${p2.name} 血量跌破 20%！</span><br><span style="color:#cccccc; font-weight:bold; font-size:18px;">💨 強制發動絕招【苟延殘喘】！激發 200% 求生本能，接下來將強制閃避 3 次任何攻擊（玥之極除外）！</span><br><br>`;
+                battleLog.innerHTML += `<br><span style="color:#aaaaaa; font-weight:bold; font-size:15px;">【螻蟻貪生】敵將 ${p2.name} 血量跌破 20%！</span><br><span style="color:#cccccc; font-weight:bold; font-size:18px;">💨 強制發動絕招【苟延殘喘】！激發 200% 求生本能，接下來將強制閃避 10次任何攻擊（玥之極除外）！</span><br><br>`;
                 triggerShake(); setTimeout(triggerShake, 200);
                 await new Promise(r => setTimeout(r, 800));
             }
