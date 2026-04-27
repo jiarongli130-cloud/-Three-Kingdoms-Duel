@@ -81,9 +81,16 @@
             <select id="p2Select" style="color: var(--accent-red); border: 1px solid var(--accent-red);"></select>
         </div>
     </div>
-    <div class="controls">
+   <div class="controls">
         <button onclick="startDuel()">發動數據處決</button>
         <button class="btn-random" onclick="randomize()">天道隨機點將</button>
+    </div>
+
+    <div class="controls" style="border: 1px dashed var(--accent-orange); padding: 15px; border-radius: 5px; background: rgba(255, 140, 0, 0.05);">
+        <input type="text" id="customName" placeholder="自創姓名" style="flex: 1; min-width: 80px; background: #000; color: var(--text-color); border: 1px solid var(--text-color); padding: 10px;">
+        <input type="number" id="customPower" placeholder="武力(1-9999)" style="flex: 1; min-width: 100px; background: #000; color: var(--text-color); border: 1px solid var(--text-color); padding: 10px;">
+        <input type="text" id="customRank" placeholder="階級(如: 隱藏修羅)" style="flex: 1; min-width: 120px; background: #000; color: var(--text-color); border: 1px solid var(--text-color); padding: 10px;">
+        <button onclick="addCustomGeneral()" style="color: #ffd700; border-color: #ffd700; flex: 1;">鍛造武將降臨</button>
     </div>
 
     <div class="battle-view">
@@ -956,13 +963,53 @@
     const battleLog = document.getElementById('battleLog');
     let hpChart;
 
-    const sortedGenerals = [...generals].sort((a, b) => b.power - a.power);
-    sortedGenerals.forEach((g) => {
-        let opt1 = new Option(`${g.name} (${g.power}) - ${g.rank}`, generals.indexOf(g));
-        let opt2 = new Option(`${g.name} (${g.power}) - ${g.rank}`, generals.indexOf(g));
-        p1Select.add(opt1);
-        p2Select.add(opt2);
-    });
+    // ▼▼▼ 新增：下拉選單更新與自創武將功能 ▼▼▼
+    function updateDropdowns() {
+        p1Select.innerHTML = '';
+        p2Select.innerHTML = '';
+        const sortedGenerals = [...generals].sort((a, b) => b.power - a.power);
+        sortedGenerals.forEach((g) => {
+            // 使用原陣列的 indexOf 確保 index 不會因為排序而亂掉
+            let opt1 = new Option(`${g.name} (${g.power}) - ${g.rank}`, generals.indexOf(g));
+            let opt2 = new Option(`${g.name} (${g.power}) - ${g.rank}`, generals.indexOf(g));
+            p1Select.add(opt1);
+            p2Select.add(opt2);
+        });
+    }
+    
+    // 網頁載入時先執行一次，把初始名將載入
+    updateDropdowns();
+
+    function addCustomGeneral() {
+        const nameInput = document.getElementById('customName').value.trim();
+        const powerInput = parseInt(document.getElementById('customPower').value);
+        const rankInput = document.getElementById('customRank').value.trim() || "異界降臨";
+
+        if (!nameInput) {
+            alert("主公，請賜予武將姓名！");
+            return;
+        }
+        if (isNaN(powerInput) || powerInput < 1 || powerInput > 99999) {
+            alert("主公，請設定合理的武力值（1~99999）！");
+            return;
+        }
+
+        // 將自創武將加入資料庫陣列
+        generals.push({ name: nameInput, power: powerInput, rank: rankInput });
+        
+        // 重新排序並更新選單
+        updateDropdowns();
+        
+        // 發送天道戰報提示
+        battleLog.innerHTML += `<br><span style="color:#ffd700; font-weight:bold; font-size:16px;">⚡ 【天道異象】異界武將降臨！「${nameInput}」（武力: ${powerInput} / 階級: ${rankInput}）已加入沙盤！</span><br><br>`;
+        battleLog.scrollTop = battleLog.scrollHeight;
+
+        // 清空輸入框
+        document.getElementById('customName').value = '';
+        document.getElementById('customPower').value = '';
+        document.getElementById('customRank').value = '';
+    }
+    // ▲▲▲ 新增結束 ▲▲▲
 
     function randomize() {
         p1Select.selectedIndex = Math.floor(Math.random() * generals.length);
