@@ -897,21 +897,56 @@
 
         let h1 = 100, h2 = 100;
         let round = 1;
-        battleLog.innerHTML = `[系統啟動] 正在處決：${p1.name} VS ${p2.name}<br>`;
+        
+        // 紀錄趙雲專屬神技是否已經發動過（一場只能發動一次）
+        let p1UltUsed = false;
+        let p2UltUsed = false;
+
+        battleLog.innerHTML = `[對決啟動] ${p1.name} VS ${p2.name}<br>系統正在進行武力維度模擬...<br>`;
         initChart();
 
-        while (h1 > 0 && h2 > 0 && round < 50) {
-            await new Promise(r => setTimeout(r, 400));
-            let dmg1 = Math.max(2, (p1.power * 0.1) - (p2.power * 0.03) + (Math.random() * 10 - 2));
-            let dmg2 = Math.max(2, (p2.power * 0.1) - (p1.power * 0.03) + (Math.random() * 10 - 2));
+        while (h1 > 0 && h2 > 0 && round < 80) {
+            await new Promise(r => setTimeout(r, 450));
+
+            // ==========================================
+            // ✨ 趙雲專屬神技：亢龍無悔 (我方判定)
+            // ==========================================
+            if (p1.name === "趙雲" && h1 <= 30 && !p1UltUsed) {
+                p1UltUsed = true;
+                let ultDmg = Math.floor(h2 / 2); // 直接削去敵將目前一半血量
+                h2 -= ultDmg;
+                battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神絕境】${p1.name} 血量降至 30% 以下！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 強制發動專屬神技【亢龍無悔】！槍出如龍，天地變色！${p2.name} 瞬間損失一半生命（-${ultDmg} HP）！</span><br><br>`;
+                
+                // 連續劇烈震動三次，展現天下第一的威力
+                triggerShake(); setTimeout(triggerShake, 150); setTimeout(triggerShake, 300);
+                await new Promise(r => setTimeout(r, 800)); // 讓讀者有時間看特效
+            }
+
+            // ==========================================
+            // ✨ 趙雲專屬神技：亢龍無悔 (敵方判定)
+            // ==========================================
+            if (p2.name === "趙雲" && h2 <= 30 && !p2UltUsed) {
+                p2UltUsed = true;
+                let ultDmg = Math.floor(h1 / 2); // 直接削去敵方目前一半血量
+                h1 -= ultDmg;
+                battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神絕境】敵將 ${p2.name} 血量降至 30% 以下！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 強制發動專屬神技【亢龍無悔】！槍出如龍，天地變色！${p1.name} 瞬間損失一半生命（-${ultDmg} HP）！</span><br><br>`;
+                
+                triggerShake(); setTimeout(triggerShake, 150); setTimeout(triggerShake, 300);
+                await new Promise(r => setTimeout(r, 800));
+            }
+            // ==========================================
+
+            // 基礎傷害公式：(攻方武力*0.12) - (守方武力*0.04) + 亂數
+            let dmg1 = Math.max(3, (p1.power * 0.12) - (p2.power * 0.04) + (Math.random() * 12 - 4));
+            let dmg2 = Math.max(3, (p2.power * 0.12) - (p1.power * 0.04) + (Math.random() * 12 - 4));
 
             if (Math.random() > 0.5) {
                 h2 -= dmg1;
-                battleLog.innerHTML += `<span style="color:var(--text-color)">[第${round}合]</span> ${p1.name} ${moves[Math.floor(Math.random()*moves.length)]} 造成 ${Math.floor(dmg1)} 傷害。<br>`;
+                battleLog.innerHTML += `<span style="color:var(--text-color)">[第${round}合]</span> ${p1.name} ${moves[Math.floor(Math.random()*moves.length)]} 造成 ${Math.floor(dmg1)} 點數據損傷。<br>`;
                 triggerShake();
             } else {
                 h1 -= dmg2;
-                battleLog.innerHTML += `<span style="color:var(--accent-red)">[第${round}合]</span> ${p2.name} 咆哮猛攻，${p1.name} 損血 ${Math.floor(dmg2)}。<br>`;
+                battleLog.innerHTML += `<span style="color:var(--accent-red)">[第${round}合]</span> ${p2.name} 咆哮猛攻，${p1.name} 承受 ${Math.floor(dmg2)} 點邏輯破壞。<br>`;
                 triggerShake();
             }
 
@@ -920,15 +955,18 @@
             document.getElementById('p2HpBar').style.width = h2 + "%";
             document.getElementById('p1HpText').innerText = Math.floor(h1) + "/100";
             document.getElementById('p2HpText').innerText = Math.floor(h2) + "/100";
+            
             hpChart.data.labels.push(round);
             hpChart.data.datasets[0].data.push(h1);
             hpChart.data.datasets[1].data.push(h2);
             hpChart.update();
+
             battleLog.scrollTop = battleLog.scrollHeight;
             round++;
         }
+
         const winner = h1 > h2 ? p1.name : p2.name;
-        battleLog.innerHTML += `<br><strong style="color:var(--accent-orange); font-size:18px;">[數據處決完畢] 獲勝：${winner}！</strong>`;
+        battleLog.innerHTML += `<br><strong style="color:var(--accent-orange); font-size:22px;">[演武終結] 最終處決結果：${winner} 傲立戰場！</strong>`;
     }
     initChart();
 </script>
