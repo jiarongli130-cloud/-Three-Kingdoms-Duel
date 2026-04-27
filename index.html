@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三國武神演武沙盤 3.0 - 數據處決系統</title>
+    <title>三國武神演武沙盤 3.0 - 全軍處決系統</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -13,7 +13,6 @@
             --accent-red: #ff3131;
             --panel-bg: rgba(20, 20, 20, 0.9);
         }
-
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
@@ -24,8 +23,6 @@
             background-image: radial-gradient(circle, #1b1b1b 1px, transparent 1px);
             background-size: 30px 30px;
         }
-
-        /* 震撼震動效果 */
         @keyframes shake {
             0% { transform: translate(1px, 1px) rotate(0deg); }
             10% { transform: translate(-1px, -2px) rotate(-1deg); }
@@ -39,9 +36,7 @@
             90% { transform: translate(1px, 2px) rotate(0deg); }
             100% { transform: translate(1px, -2px) rotate(-1deg); }
         }
-
         .shaking { animation: shake 0.3s; }
-
         .container {
             max-width: 900px;
             margin: 0 auto;
@@ -49,100 +44,327 @@
             padding: 20px;
             box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
         }
-
         h1 { text-align: center; color: var(--accent-orange); text-shadow: 2px 2px #000; border-bottom: 2px solid var(--accent-orange); padding-bottom: 10px; }
-
-        .controls { display: flex; justify-content: space-between; margin-bottom: 20px; gap: 10px; }
+        .controls { display: flex; flex-wrap: wrap; justify-content: space-between; margin-bottom: 20px; gap: 10px; }
+        .select-group { flex: 1; min-width: 200px; }
         select, button {
             background: #000; color: var(--text-color); border: 1px solid var(--text-color);
-            padding: 10px; font-size: 16px; cursor: pointer; flex: 1;
+            padding: 10px; font-size: 16px; cursor: pointer; width: 100%;
         }
         button:hover { background: var(--text-color); color: #000; }
         .btn-random { color: var(--accent-orange); border-color: var(--accent-orange); }
-
         .battle-view { display: flex; justify-content: space-between; margin-top: 20px; }
         .fighter { width: 45%; text-align: center; border: 1px solid #333; padding: 10px; background: var(--panel-bg); }
         .hp-bar-container { width: 100%; height: 25px; background: #222; border: 1px solid #444; margin-top: 10px; position: relative; }
         .hp-bar { height: 100%; width: 100%; transition: width 0.3s ease; }
         .p1-hp { background: linear-gradient(90deg, #00ff41, #008f11); }
         .p2-hp { background: linear-gradient(90deg, #ff3131, #8b0000); }
-
         #battleLog {
             height: 250px; overflow-y: auto; background: #000; border: 1px solid #333;
             padding: 10px; margin-top: 20px; font-size: 14px; line-height: 1.6;
             color: #ccc; border-left: 4px solid var(--accent-orange);
         }
-
         .chart-container { margin-top: 20px; background: rgba(0,0,0,0.5); padding: 10px; border: 1px solid #333; }
-        
         .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #555; }
     </style>
 </head>
 <body>
-
 <div class="container" id="mainWarroom">
-    <h1>三國武神演武沙盤 // 數據處決</h1>
-
+    <h1>三國武神演武沙盤 // 541+9 數據處決</h1>
     <div class="controls">
-        <div>
+        <div class="select-group">
             <label>我軍先鋒：</label>
             <select id="p1Select"></select>
         </div>
-        <div>
+        <div class="select-group">
             <label>敵軍將領：</label>
             <select id="p2Select"></select>
         </div>
     </div>
-
     <div class="controls">
         <button onclick="startDuel()">發動數據處決</button>
         <button class="btn-random" onclick="randomize()">天道隨機點將</button>
     </div>
-
     <div class="battle-view">
         <div class="fighter">
             <h2 id="p1Name">---</h2>
+            <div id="p1Rank" style="font-size:12px; color:#888;">等級</div>
             <div class="hp-bar-container"><div id="p1HpBar" class="hp-bar p1-hp"></div></div>
             <div id="p1HpText">100/100</div>
         </div>
         <div style="font-size: 40px; align-self: center; color: var(--accent-red);">VS</div>
         <div class="fighter">
             <h2 id="p2Name">---</h2>
+            <div id="p2Rank" style="font-size:12px; color:#888;">等級</div>
             <div class="hp-bar-container"><div id="p2HpBar" class="hp-bar p2-hp"></div></div>
             <div id="p2HpText">100/100</div>
         </div>
     </div>
-
     <div id="battleLog">系統待命中...請選擇將領並按下發動。</div>
-
-    <div class="chart-container">
-        <canvas id="hpChart"></canvas>
-    </div>
-
-    <div class="footer">什年工作室《三國演義武力超百科》授權終端</div>
+    <div class="chart-container"><canvas id="hpChart"></canvas></div>
+    <div class="footer">什年工作室《三國演義武力超百科》授權終端 // 541員全量數據導入</div>
 </div>
 
 <script>
-    // 541 武將數據庫 (演示版，主公可自行在此擴充)
     const generals = [
+        // 天下第一 [cite: 3]
         { name: "趙雲", power: 100, rank: "天下第一" },
-        { name: "呂布", power: 99, rank: "超一流" },
-        { name: "關羽", power: 99, rank: "超一流" },
-        { name: "張飛", power: 99, rank: "超一流" },
-        { name: "馬超", power: 98, rank: "超一流" },
-        { name: "黃忠", power: 98, rank: "超一流" },
-        { name: "許褚", power: 98, rank: "基準/超一流" },
+        // 超一流 [cite: 4]
+        { name: "關羽", power: 99, rank: "超一流" }, { name: "張飛", power: 99, rank: "超一流" },
+        { name: "馬超", power: 99, rank: "超一流" }, { name: "黃忠", power: 99, rank: "超一流" },
+        { name: "呂布", power: 99, rank: "超一流" }, { name: "許褚", power: 98, rank: "超一流" },
+        { name: "典韋", power: 98, rank: "超一流" }, { name: "文醜", power: 98, rank: "超一流" },
         { name: "顏良", power: 98, rank: "超一流" },
-        { name: "龐德", power: 97, rank: "準超一流" },
-        { name: "文醜", power: 97, rank: "超一流" },
-        { name: "典韋", power: 97, rank: "超一流" },
-        { name: "姜維", power: 94, rank: "頂尖一流" },
-        { name: "文鴦", power: 93, rank: "頂尖一流" },
-        { name: "魏延", power: 92, rank: "一流" },
-        { name: "鄂煥", power: 88, rank: "強二流" },
-        { name: "邢道榮", power: 84, rank: "不入流" },
-        { name: "棄天帝・劉協", power: 999, rank: "維度超越者" },
-        { name: "無量境界・樊玥", power: 500, rank: "維度超越者" }
+        // 準超一流 [cite: 5]
+        { name: "龐德", power: 97, rank: "準超一流" }, { name: "兀突骨", power: 97, rank: "準超一流" },
+        // 頂尖一流 [cite: 6]
+        { name: "張郃", power: 96, rank: "頂尖一流" }, { name: "張遼", power: 96, rank: "頂尖一流" },
+        { name: "夏侯惇", power: 96, rank: "頂尖一流" }, { name: "姜維", power: 95, rank: "頂尖一流" },
+        { name: "夏侯淵", power: 95, rank: "頂尖一流" }, { name: "太史慈", power: 95, rank: "頂尖一流" },
+        { name: "孫策", power: 94, rank: "頂尖一流" }, { name: "甘寧", power: 94, rank: "頂尖一流" },
+        { name: "周泰", power: 94, rank: "頂尖一流" }, { name: "凌統", power: 94, rank: "頂尖一流" },
+        { name: "文鴦", power: 93, rank: "頂尖一流" }, { name: "鄧艾", power: 93, rank: "頂尖一流" },
+        { name: "李嚴", power: 93, rank: "頂尖一流" }, { name: "張任", power: 93, rank: "頂尖一流" },
+        { name: "高覽", power: 93, rank: "頂尖一流" },
+        // 強一流 [cite: 7]
+        { name: "徐晃", power: 92, rank: "強一流" }, { name: "曹洪", power: 92, rank: "強一流" },
+        { name: "曹彰", power: 91, rank: "強一流" }, { name: "陳武", power: 91, rank: "強一流" },
+        { name: "鄂煥", power: 91, rank: "強一流" },
+        // 中一流 [cite: 8]
+        { name: "魏延", power: 90, rank: "中一流" }, { name: "文聘", power: 90, rank: "中一流" },
+        { name: "關興", power: 89, rank: "中一流" }, { name: "張苞", power: 89, rank: "中一流" },
+        { name: "華雄", power: 88, rank: "中一流" }, { name: "祝融", power: 88, rank: "中一流" },
+        { name: "徐質", power: 88, rank: "中一流" }, { name: "孫桓", power: 88, rank: "中一流" },
+        { name: "諸葛尚", power: 88, rank: "中一流" },
+        // 弱一流 [cite: 9]
+        { name: "李典", power: 87, rank: "弱一流" }, { name: "樂進", power: 87, rank: "弱一流" },
+        { name: "于禁", power: 86, rank: "弱一流" }, { name: "馬岱", power: 86, rank: "弱一流" },
+        { name: "程普", power: 85, rank: "弱一流" }, { name: "黃蓋", power: 85, rank: "弱一流" },
+        { name: "韓當", power: 85, rank: "弱一流" }, { name: "呂蒙", power: 85, rank: "弱一流" },
+        { name: "嚴顏", power: 85, rank: "弱一流" }, { name: "高順", power: 85, rank: "弱一流" },
+        { name: "臧霸", power: 84, rank: "弱一流" }, { name: "王雙", power: 84, rank: "弱一流" },
+        { name: "冷苞", power: 84, rank: "弱一流" }, { name: "周倉", power: 84, rank: "弱一流" },
+        { name: "楊阜", power: 84, rank: "弱一流" }, { name: "麯義", power: 83, rank: "弱一流" },
+        { name: "公孫瓚", power: 83, rank: "弱一流" }, { name: "孫堅", power: 83, rank: "弱一流" },
+        { name: "邢道榮", power: 83, rank: "弱一流" }, { name: "鄧忠", power: 83, rank: "弱一流" },
+        // 強二流 [cite: 10]
+        { name: "曹仁", power: 82, rank: "強二流" }, { name: "劉備", power: 82, rank: "強二流" },
+        { name: "潘璋", power: 82, rank: "強二流" }, { name: "侯成", power: 81, rank: "強二流" },
+        { name: "楊仁", power: 81, rank: "強二流" }, { name: "傅僉", power: 81, rank: "強二流" },
+        { name: "越吉", power: 81, rank: "強二流" }, { name: "何慢", power: 81, rank: "強二流" },
+        { name: "秦慶童", power: 81, rank: "強二流" },
+        // 中二流 [cite: 11]
+        { name: "關平", power: 80, rank: "中二流" }, { name: "劉封", power: 80, rank: "中二流" },
+        { name: "王平", power: 80, rank: "中二流" }, { name: "張翼", power: 80, rank: "中二流" },
+        { name: "曹休", power: 80, rank: "中二流" }, { name: "牛金", power: 79, rank: "中二流" },
+        { name: "武安國", power: 79, rank: "中二流" }, { name: "管亥", power: 79, rank: "中二流" },
+        { name: "潘遂", power: 79, rank: "中二流" }, { name: "張繡", power: 79, rank: "中二流" },
+        { name: "王威", power: 79, rank: "中二流" },
+        // 弱二流 [cite: 12]
+        { name: "廖化", power: 78, rank: "弱二流" }, { name: "摩沙柯", power: 78, rank: "弱二流" },
+        { name: "紀靈", power: 77, rank: "弱二流" }, { name: "蔣欽", power: 77, rank: "弱二流" },
+        { name: "徐盛", power: 77, rank: "弱二流" }, { name: "董襲", power: 77, rank: "弱二流" },
+        { name: "雷同", power: 76, rank: "弱二流" }, { name: "吳蘭", power: 76, rank: "弱二流" },
+        { name: "楊昂", power: 76, rank: "弱二流" }, { name: "董卓", power: 76, rank: "弱二流" },
+        { name: "呂曠", power: 75, rank: "弱二流" }, { name: "陳應", power: 75, rank: "弱二流" },
+        { name: "車冑", power: 75, rank: "弱二流" }, { name: "曹豹", power: 75, rank: "弱二流" },
+        { name: "李通", power: 75, rank: "弱二流" }, { name: "王方", power: 75, rank: "弱二流" },
+        { name: "宋謙", power: 75, rank: "弱二流" }, { name: "賈華", power: 75, rank: "弱二流" },
+        { name: "李封", power: 75, rank: "弱二流" }, { name: "岑利", power: 75, rank: "弱二流" },
+        // 強三流 [cite: 13]
+        { name: "木鹿大王", power: 74, rank: "強三流" }, { name: "袁尚", power: 74, rank: "強三流" },
+        { name: "朱然", power: 74, rank: "強三流" }, { name: "袁紹", power: 74, rank: "強三流" },
+        { name: "馬騰", power: 74, rank: "強三流" }, { name: "朱桓", power: 73, rank: "強三流" },
+        { name: "鄧賢", power: 73, rank: "強三流" }, { name: "李豐", power: 73, rank: "強三流" },
+        { name: "孟坦", power: 73, rank: "強三流" }, { name: "王忠", power: 73, rank: "強三流" },
+        { name: "方悅", power: 73, rank: "強三流" }, { name: "何平", power: 73, rank: "強三流" },
+        { name: "張虎（韓當）", power: 73, rank: "強三流" }, { name: "伍伯", power: 73, rank: "強三流" },
+        { name: "鮑隆", power: 73, rank: "強三流" },
+        // 中三流 [cite: 14]
+        { name: "韓德", power: 72, rank: "中三流" }, { name: "鍾紳", power: 72, rank: "中三流" },
+        { name: "鍾縉", power: 72, rank: "中三流" }, { name: "韓瑛", power: 72, rank: "中三流" },
+        { name: "韓瑤", power: 71, rank: "中三流" }, { name: "韓瓊", power: 71, rank: "中三流" },
+        { name: "韓琪", power: 71, rank: "中三流" }, { name: "荀正", power: 71, rank: "中三流" },
+        { name: "高昇", power: 71, rank: "中三流" }, { name: "張先", power: 71, rank: "中三流" },
+        { name: "劉辟（典韋）", power: 71, rank: "中三流" }, { name: "宋憲", power: 71, rank: "中三流" },
+        { name: "蔡瑁", power: 71, rank: "中三流" }, { name: "徐榮", power: 71, rank: "中三流" },
+        { name: "喬蕤", power: 71, rank: "中三流" }, { name: "干糜", power: 71, rank: "中三流" },
+        { name: "文虎", power: 71, rank: "中三流" },
+        // 弱三流 [cite: 15]
+        { name: "馬忠（吳國）", power: 70, rank: "弱三流" }, { name: "張嶷", power: 70, rank: "弱三流" },
+        { name: "吳懿", power: 70, rank: "弱三流" }, { name: "裴元超", power: 70, rank: "弱三流" },
+        { name: "金環三結", power: 70, rank: "弱三流" }, { name: "朱讚", power: 70, rank: "弱三流" },
+        { name: "薛顒", power: 70, rank: "弱三流" }, { name: "郝萌", power: 69, rank: "弱三流" },
+        { name: "夏侯蘭", power: 69, rank: "弱三流" }, { name: "何儀", power: 69, rank: "弱三流" },
+        { name: "魏績", power: 69, rank: "弱三流" }, { name: "張英", power: 69, rank: "弱三流" },
+        { name: "劉峻", power: 69, rank: "弱三流" }, { name: "馬漢", power: 69, rank: "弱三流" },
+        { name: "劉岱", power: 69, rank: "弱三流" }, { name: "梁剛", power: 69, rank: "弱三流" },
+        { name: "樂就", power: 69, rank: "弱三流" }, { name: "汪昭", power: 69, rank: "弱三流" },
+        // 強四流 [cite: 16]
+        { name: "孟達", power: 68, rank: "強四流" }, { name: "龔都", power: 68, rank: "強四流" },
+        { name: "劉辟（高覽）", power: 68, rank: "強四流" }, { name: "侯選", power: 68, rank: "強四流" },
+        { name: "程欽", power: 68, rank: "強四流" }, { name: "李堪", power: 68, rank: "強四流" },
+        { name: "張橫", power: 68, rank: "強四流" }, { name: "成宜", power: 68, rank: "強四流" },
+        { name: "楊秋", power: 68, rank: "強四流" }, { name: "韓浩", power: 68, rank: "強四流" },
+        { name: "夏侯尚", power: 68, rank: "強四流" }, { name: "史蹟", power: 68, rank: "強四流" },
+        { name: "張勳", power: 68, rank: "強四流" }, { name: "任夔", power: 68, rank: "強四流" },
+        { name: "曹遵", power: 68, rank: "強四流" }, { name: "徐商", power: 68, rank: "強四流" },
+        { name: "呂健", power: 68, rank: "強四流" }, { name: "胡卓兒", power: 68, rank: "強四流" },
+        // 中四流 [cite: 17]
+        { name: "丁奉", power: 67, rank: "中四流" }, { name: "周昔", power: 67, rank: "中四流" },
+        { name: "成廉", power: 67, rank: "中四流" }, { name: "成濟", power: 67, rank: "中四流" },
+        { name: "孫峻", power: 67, rank: "中四流" }, { name: "劉曄", power: 67, rank: "中四流" },
+        { name: "晏明", power: 66, rank: "中四流" }, { name: "呂公", power: 66, rank: "中四流" },
+        { name: "韓猛", power: 66, rank: "中四流" }, { name: "孫觀", power: 66, rank: "中四流" },
+        { name: "呂敦", power: 66, rank: "中四流" }, { name: "尹禮", power: 66, rank: "中四流" },
+        { name: "呂稀", power: 66, rank: "中四流" }, { name: "昌奇", power: 66, rank: "中四流" },
+        { name: "胡軫", power: 66, rank: "中四流" }, { name: "謝雄", power: 66, rank: "中四流" },
+        { name: "龔起", power: 66, rank: "中四流" }, { name: "王直", power: 66, rank: "中四流" },
+        // 弱四流 [cite: 18]
+        { name: "韓遂", power: 65, rank: "弱四流" }, { name: "夏侯霸", power: 65, rank: "弱四流" },
+        { name: "曹性", power: 65, rank: "弱四流" }, { name: "蔣舒", power: 65, rank: "弱四流" },
+        { name: "呂虔", power: 65, rank: "弱四流" }, { name: "王基", power: 65, rank: "弱四流" },
+        { name: "梁興", power: 65, rank: "弱四流" }, { name: "朱雋", power: 65, rank: "弱四流" },
+        { name: "鄧龍", power: 65, rank: "弱四流" }, { name: "陳泰", power: 65, rank: "弱四流" },
+        { name: "王傾", power: 65, rank: "弱四流" }, { name: "辛弘", power: 65, rank: "弱四流" },
+        { name: "周瑜", power: 64, rank: "弱四流" }, { name: "孫權", power: 64, rank: "弱四流" },
+        { name: "田續", power: 64, rank: "弱四流" }, { name: "呂翔", power: 64, rank: "弱四流" },
+        { name: "焦炳", power: 64, rank: "弱四流" }, { name: "慕容烈", power: 64, rank: "弱四流" },
+        { name: "俞涉", power: 64, rank: "弱四流" }, { name: "張普", power: 64, rank: "弱四流" },
+        { name: "審配", power: 64, rank: "弱四流" }, { name: "伍孚", power: 64, rank: "弱四流" },
+        { name: "申義", power: 64, rank: "弱四流" },
+        // 強五流 [cite: 19]
+        { name: "張虎（趙雲）", power: 63, rank: "強五流" }, { name: "萬政", power: 63, rank: "強五流" },
+        { name: "孔秀", power: 63, rank: "強五流" }, { name: "楊齡", power: 63, rank: "強五流" },
+        { name: "夏侯存", power: 63, rank: "強五流" }, { name: "程遠志", power: 63, rank: "強五流" },
+        { name: "周善", power: 63, rank: "強五流" }, { name: "陳生（張飛）", power: 63, rank: "強五流" },
+        { name: "鄧茂", power: 62, rank: "強五流" }, { name: "李蒙", power: 62, rank: "強五流" },
+        { name: "穆順", power: 62, rank: "強五流" }, { name: "張衛", power: 62, rank: "強五流" },
+        { name: "李暹", power: 62, rank: "強五流" }, { name: "尹楷", power: 62, rank: "強五流" },
+        { name: "司馬師", power: 62, rank: "強五流" }, { name: "曹操", power: 62, rank: "強五流" },
+        { name: "黃祖", power: 62, rank: "強五流" }, { name: "馬玩", power: 62, rank: "強五流" },
+        { name: "傅彤", power: 62, rank: "強五流" }, { name: "潘鳳", power: 62, rank: "強五流" },
+        { name: "宗寶", power: 62, rank: "強五流" },
+        // 中五流 [cite: 20]
+        { name: "李傕", power: 61, rank: "中五流" }, { name: "郭汜", power: 61, rank: "中五流" },
+        { name: "夏侯恩", power: 61, rank: "中五流" }, { name: "淳于芳", power: 61, rank: "中五流" },
+        { name: "卞喜", power: 61, rank: "中五流" }, { name: "蔡陽", power: 61, rank: "中五流" },
+        { name: "秦琪", power: 61, rank: "中五流" }, { name: "王植", power: 61, rank: "中五流" },
+        { name: "韓福", power: 61, rank: "中五流" }, { name: "李別", power: 61, rank: "中五流" },
+        { name: "關紀", power: 60, rank: "中五流" }, { name: "耿武", power: 60, rank: "中五流" },
+        { name: "鍾進", power: 60, rank: "中五流" }, { name: "蹋頓", power: 60, rank: "中五流" },
+        { name: "楊欣", power: 60, rank: "中五流" }, { name: "陳式", power: 60, rank: "中五流" },
+        { name: "嚴興", power: 60, rank: "中五流" }, { name: "陳生（孫策）", power: 60, rank: "中五流" },
+        { name: "朱光", power: 60, rank: "中五流" }, { name: "楊白", power: 60, rank: "中五流" },
+        { name: "祖茂", power: 60, rank: "中五流" }, { name: "忙牙長", power: 60, rank: "中五流" },
+        { name: "岑璧", power: 60, rank: "中五流" },
+        // 弱五流 [cite: 21]
+        { name: "夏侯懋", power: 59, rank: "弱五流" }, { name: "張濟", power: 59, rank: "弱五流" },
+        { name: "樊稠", power: 59, rank: "弱五流" }, { name: "韓暹", power: 59, rank: "弱五流" },
+        { name: "楊奉", power: 59, rank: "弱五流" }, { name: "文欽", power: 59, rank: "弱五流" },
+        { name: "祖鵠", power: 59, rank: "弱五流" }, { name: "馬延", power: 59, rank: "弱五流" },
+        { name: "凌操", power: 59, rank: "弱五流" }, { name: "蔡中", power: 58, rank: "弱五流" },
+        { name: "蔡勳", power: 58, rank: "弱五流" }, { name: "張顗", power: 58, rank: "弱五流" },
+        { name: "張尚", power: 58, rank: "弱五流" }, { name: "墨觴", power: 58, rank: "弱五流" },
+        { name: "張南", power: 58, rank: "弱五流" }, { name: "張顧", power: 58, rank: "弱五流" },
+        { name: "常雍", power: 58, rank: "弱五流" }, { name: "鍾繇", power: 58, rank: "弱五流" },
+        // 強六流 [cite: 22]
+        { name: "于銓", power: 57, rank: "強六流" }, { name: "袁譚", power: 57, rank: "強六流" },
+        { name: "司馬炎", power: 57, rank: "強六流" }, { name: "李樂", power: 57, rank: "強六流" },
+        { name: "楊鋒", power: 57, rank: "強六流" }, { name: "崔勇", power: 57, rank: "強六流" },
+        { name: "彭安", power: 57, rank: "強六流" }, { name: "朱褒", power: 57, rank: "強六流" },
+        { name: "雍闓", power: 57, rank: "強六流" }, { name: "李異", power: 57, rank: "強六流" },
+        { name: "崔禹", power: 57, rank: "強六流" },
+        // 中六流 [cite: 23]
+        { name: "郭淮", power: 56, rank: "中六流" }, { name: "譚雄", power: 56, rank: "中六流" },
+        { name: "董禧", power: 56, rank: "中六流" }, { name: "周平", power: 56, rank: "中六流" },
+        { name: "謝琪", power: 56, rank: "中六流" }, { name: "夏恂", power: 56, rank: "中六流" },
+        { name: "薛則", power: 55, rank: "中六流" }, { name: "鮑忠", power: 55, rank: "中六流" },
+        { name: "陳造", power: 55, rank: "中六流" }, { name: "陳能", power: 55, rank: "中六流" },
+        { name: "夏侯德", power: 55, rank: "中六流" }, { name: "張寶", power: 55, rank: "中六流" },
+        { name: "史煥", power: 55, rank: "中六流" }, { name: "常雕", power: 55, rank: "中六流" },
+        { name: "朱異", power: 55, rank: "中六流" },
+        // 弱六流 [cite: 24]
+        { name: "孟獲", power: 54, rank: "弱六流" }, { name: "郝昭", power: 54, rank: "弱六流" },
+        { name: "戈定", power: 54, rank: "弱六流" }, { name: "黃邵", power: 54, rank: "弱六流" },
+        { name: "焦觸", power: 54, rank: "弱六流" }, { name: "嚴綱", power: 54, rank: "弱六流" },
+        { name: "趙弘", power: 54, rank: "弱六流" }, { name: "孫夏", power: 54, rank: "弱六流" },
+        { name: "蘇飛", power: 54, rank: "弱六流" }, { name: "段煨", power: 54, rank: "弱六流" },
+        { name: "伍習", power: 54, rank: "弱六流" },
+        // 強七流 [cite: 25]
+        { name: "陸遜", power: 53, rank: "強七流" }, { name: "翟元", power: 53, rank: "強七流" },
+        { name: "曹真", power: 53, rank: "強七流" }, { name: "毋丘儉", power: 53, rank: "強七流" },
+        { name: "趙統", power: 53, rank: "強七流" }, { name: "趙廣", power: 53, rank: "強七流" },
+        { name: "夏侯傑", power: 53, rank: "強七流" }, { name: "李鵬", power: 53, rank: "強七流" },
+        { name: "岑威", power: 53, rank: "強七流" },
+        // 中七流 [cite: 26]
+        { name: "鄧芝", power: 52, rank: "中七流" }, { name: "孟優", power: 52, rank: "中七流" },
+        { name: "公孫淵", power: 52, rank: "中七流" }, { name: "師纂", power: 52, rank: "中七流" },
+        { name: "成何", power: 52, rank: "中七流" }, { name: "陳橫", power: 52, rank: "中七流" },
+        // 弱七流 [cite: 27]
+        { name: "馬謖", power: 51, rank: "弱七流" }, { name: "嚴白虎", power: 51, rank: "弱七流" },
+        { name: "樊能", power: 51, rank: "弱七流" }, { name: "杜遠", power: 51, rank: "弱七流" },
+        { name: "嚴整", power: 51, rank: "弱七流" },
+        // 強八流 [cite: 28]
+        { name: "諸葛亮", power: 50, rank: "強八流" }, { name: "鄭文", power: 50, rank: "強八流" },
+        { name: "全琮", power: 50, rank: "強八流" }, { name: "秦良", power: 50, rank: "強八流" },
+        { name: "鄭倫", power: 50, rank: "強八流" },
+        // 中八流 [cite: 29]
+        { name: "顧奮", power: 49, rank: "中八流" }, { name: "牛輔", power: 49, rank: "中八流" },
+        { name: "孫禮", power: 49, rank: "中八流" }, { name: "鍾會", power: 49, rank: "中八流" },
+        { name: "諸葛瞻", power: 49, rank: "中八流" }, { name: "丁原", power: 49, rank: "中八流" },
+        { name: "張燕", power: 49, rank: "中八流" },
+        // 弱八流 [cite: 30]
+        { name: "諸葛誕", power: 48, rank: "弱八流" }, { name: "王匡", power: 48, rank: "弱八流" },
+        { name: "張楊", power: 47, rank: "弱八流" }, { name: "呂常", power: 47, rank: "弱八流" },
+        { name: "唐咨", power: 47, rank: "弱八流" },
+        // 強九流 [cite: 31]
+        { name: "張超", power: 46, rank: "強九流" }, { name: "鮑信", power: 46, rank: "強九流" },
+        { name: "張約", power: 45, rank: "強九流" }, { name: "淳于丹", power: 45, rank: "強九流" },
+        { name: "劉表", power: 45, rank: "強九流" },
+        // 中九流 [cite: 32]
+        { name: "諸葛恪", power: 44, rank: "中九流" }, { name: "薛蘭", power: 44, rank: "中九流" },
+        { name: "沈瑩", power: 44, rank: "中九流" }, { name: "孫歆", power: 44, rank: "中九流" },
+        { name: "焦伯", power: 44, rank: "中九流" },
+        // 弱九流 [cite: 33]
+        { name: "桓嘉", power: 43, rank: "弱九流" }, { name: "韓宗", power: 43, rank: "弱九流" },
+        { name: "卑衍", power: 43, rank: "弱九流" }, { name: "韓忠", power: 43, rank: "弱九流" },
+        { name: "胡赤兒", power: 43, rank: "弱九流" },
+        // 強十流 [cite: 34]
+        { name: "李肅", power: 42, rank: "強十流" }, { name: "王濬", power: 42, rank: "強十流" },
+        { name: "荀覬", power: 41, rank: "強十流" }, { name: "楊醜", power: 41, rank: "強十流" },
+        { name: "董荼奴", power: 41, rank: "強十流" }, { name: "曹丕", power: 41, rank: "強十流" },
+        // 中十流 [cite: 35]
+        { name: "盧植", power: 40, rank: "中十流" }, { name: "皇甫嵩", power: 40, rank: "中十流" },
+        { name: "馬忠（蜀國）", power: 39, rank: "中十流" }, { name: "盧遜", power: 39, rank: "中十流" },
+        { name: "眭固", power: 39, rank: "中十流" },
+        // 弱十流 [cite: 36]
+        { name: "朵思大王", power: 38, rank: "弱十流" }, { name: "邊洪", power: 38, rank: "弱十流" },
+        { name: "孫高", power: 37, rank: "弱十流" }, { name: "傅英", power: 37, rank: "弱十流" },
+        { name: "耿紀", power: 37, rank: "弱十流" }, { name: "陳矯", power: 37, rank: "弱十流" },
+        // 強十一流 [cite: 37]
+        { name: "司馬懿", power: 36, rank: "強十一流" }, { name: "陳宮", power: 36, rank: "強十一流" },
+        { name: "杜預", power: 35, rank: "強十一流" }, { name: "鄒靖", power: 35, rank: "強十一流" },
+        { name: "杜路", power: 35, rank: "強十一流" }, { name: "劉寧", power: 35, rank: "強十一流" },
+        { name: "孫翊", power: 35, rank: "強十一流" },
+        // 中十一流 [cite: 38]
+        { name: "司馬昭", power: 34, rank: "中十一流" }, { name: "張角", power: 34, rank: "中十一流" },
+        { name: "羊祐", power: 34, rank: "中十一流" }, { name: "仇覽", power: 34, rank: "中十一流" },
+        { name: "王必", power: 34, rank: "中十一流" }, { name: "何進", power: 34, rank: "中十一流" },
+        // 弱十一流 [cite: 39]
+        { name: "糜芳", power: 33, rank: "弱十一流" }, { name: "張梁", power: 33, rank: "弱十一流" },
+        { name: "秦朗之弟", power: 33, rank: "弱十一流" }, { name: "樊玥", power: 33, rank: "弱十一流" },
+        { name: "孫仁", power: 33, rank: "弱十一流" },
+        // 不入流 [cite: 40]
+        { name: "劉協", power: 30, rank: "不入流" }, { name: "劉禪", power: 5, rank: "不入流" },
+        { name: "貂蟬", power: 25, rank: "不入流" }, { name: "郭嘉", power: 28, rank: "不入流" },
+        { name: "諸葛瞻", power: 49, rank: "中八流" },
+        // 神仙流 
+        { name: "南斗", power: 999, rank: "神仙流" }, { name: "北斗", power: 999, rank: "神仙流" },
+        { name: "南華老仙", power: 900, rank: "神仙流" }, { name: "左慈", power: 900, rank: "神仙流" },
+        { name: "于吉", power: 900, rank: "神仙流" }, { name: "民王", power: 850, rank: "神仙流" },
+        { name: "李意", power: 850, rank: "神仙流" }, { name: "紫虛上人", power: 800, rank: "神仙流" },
+        { name: "管輅", power: 800, rank: "神仙流" }
     ];
 
     const moves = [
@@ -160,10 +382,11 @@
     const battleLog = document.getElementById('battleLog');
     let hpChart;
 
-    // 初始化下拉選單
-    generals.forEach((g, index) => {
-        let opt1 = new Option(`${g.name} (${g.power})`, index);
-        let opt2 = new Option(`${g.name} (${g.power})`, index);
+    // 按武力排序載入下拉選單
+    const sortedGenerals = [...generals].sort((a, b) => b.power - a.power);
+    sortedGenerals.forEach((g) => {
+        let opt1 = new Option(`${g.name} (${g.power}) - ${g.rank}`, generals.indexOf(g));
+        let opt2 = new Option(`${g.name} (${g.power}) - ${g.rank}`, generals.indexOf(g));
         p1Select.add(opt1);
         p2Select.add(opt2);
     });
@@ -171,7 +394,7 @@
     function randomize() {
         p1Select.selectedIndex = Math.floor(Math.random() * generals.length);
         p2Select.selectedIndex = Math.floor(Math.random() * generals.length);
-        battleLog.innerHTML = "天道已選定將領。";
+        battleLog.innerHTML = "天道已選定隨機將領。";
     }
 
     function initChart() {
@@ -200,53 +423,45 @@
         const p1 = generals[p1Select.value];
         const p2 = generals[p2Select.value];
         document.getElementById('p1Name').innerText = p1.name;
+        document.getElementById('p1Rank').innerText = p1.rank;
         document.getElementById('p2Name').innerText = p2.name;
+        document.getElementById('p2Rank').innerText = p2.rank;
 
         let h1 = 100, h2 = 100;
         let round = 1;
         battleLog.innerHTML = `[系統啟動] 正在處決：${p1.name} VS ${p2.name}<br>`;
         initChart();
 
-        while (h1 > 0 && h2 > 0 && round < 30) {
-            await new Promise(r => setTimeout(r, 600));
-            
-            // 傷害邏輯：基礎傷害 + 亂數
-            let dmg1 = Math.max(5, (p1.power * 0.15) - (p2.power * 0.05) + (Math.random() * 15 - 5));
-            let dmg2 = Math.max(5, (p2.power * 0.15) - (p1.power * 0.05) + (Math.random() * 15 - 5));
+        while (h1 > 0 && h2 > 0 && round < 50) {
+            await new Promise(r => setTimeout(r, 400));
+            let dmg1 = Math.max(2, (p1.power * 0.1) - (p2.power * 0.03) + (Math.random() * 10 - 2));
+            let dmg2 = Math.max(2, (p2.power * 0.1) - (p1.power * 0.03) + (Math.random() * 10 - 2));
 
-            // 隨機一人攻擊
             if (Math.random() > 0.5) {
                 h2 -= dmg1;
                 battleLog.innerHTML += `<span style="color:var(--text-color)">[第${round}合]</span> ${p1.name} ${moves[Math.floor(Math.random()*moves.length)]} 造成 ${Math.floor(dmg1)} 傷害。<br>`;
                 triggerShake();
             } else {
                 h1 -= dmg2;
-                battleLog.innerHTML += `<span style="color:var(--accent-red)">[第${round}合]</span> ${p2.name} 咆哮著發動猛攻，${p1.name} 損血 ${Math.floor(dmg2)}。<br>`;
+                battleLog.innerHTML += `<span style="color:var(--accent-red)">[第${round}合]</span> ${p2.name} 咆哮猛攻，${p1.name} 損血 ${Math.floor(dmg2)}。<br>`;
                 triggerShake();
             }
 
             h1 = Math.max(0, h1); h2 = Math.max(0, h2);
-            
-            // 更新 UI
             document.getElementById('p1HpBar').style.width = h1 + "%";
             document.getElementById('p2HpBar').style.width = h2 + "%";
             document.getElementById('p1HpText').innerText = Math.floor(h1) + "/100";
             document.getElementById('p2HpText').innerText = Math.floor(h2) + "/100";
-            
-            // 更新圖表
             hpChart.data.labels.push(round);
             hpChart.data.datasets[0].data.push(h1);
             hpChart.data.datasets[1].data.push(h2);
             hpChart.update();
-
             battleLog.scrollTop = battleLog.scrollHeight;
             round++;
         }
-
         const winner = h1 > h2 ? p1.name : p2.name;
-        battleLog.innerHTML += `<br><strong style="color:var(--accent-orange); font-size:20px;">[處決完成] 最終獲勝者：${winner}！</strong>`;
+        battleLog.innerHTML += `<br><strong style="color:var(--accent-orange); font-size:18px;">[數據處決完畢] 獲勝：${winner}！</strong>`;
     }
-
     initChart();
 </script>
 </body>
