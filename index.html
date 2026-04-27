@@ -54,8 +54,8 @@
         button:hover { background: var(--text-color); color: #000; }
         .btn-random { color: var(--accent-orange); border-color: var(--accent-orange); }
         .battle-view { display: flex; justify-content: space-between; margin-top: 20px; }
-        .fighter { width: 45%; text-align: center; border: 1px solid #333; padding: 10px; background: var(--panel-bg); }
-        .hp-bar-container { width: 100%; height: 25px; background: #222; border: 1px solid #444; margin-top: 10px; position: relative; }
+        .fighter { width: 45%; text-align: center; padding: 10px; background: var(--panel-bg); }
+        .hp-bar-container { width: 100%; height: 25px; background: #222; margin-top: 10px; position: relative; }
         .hp-bar { height: 100%; width: 100%; transition: width 0.3s ease; }
         .p1-hp { background: linear-gradient(90deg, #00ff41, #008f11); }
         .p2-hp { background: linear-gradient(90deg, #ff3131, #8b0000); }
@@ -66,16 +66,6 @@
         }
         .chart-container { margin-top: 20px; background: rgba(0,0,0,0.5); padding: 10px; border: 1px solid #333; }
         .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #555; }
-        
-        /* ▼▼▼ 敵軍介面赤紅化 ▼▼▼ */
-        #p2Name, #p2Rank, #p2HpText { 
-            color: var(--accent-red); 
-            text-shadow: 0 0 5px var(--accent-red); 
-        }
-        #p2HpBar { 
-            background: var(--accent-red); 
-            box-shadow: 0 0 10px var(--accent-red); 
-        }
     </style>
 </head>
 <body>
@@ -95,21 +85,25 @@
         <button onclick="startDuel()">發動數據處決</button>
         <button class="btn-random" onclick="randomize()">天道隨機點將</button>
     </div>
+
     <div class="battle-view">
-        <div class="fighter">
-            <h2 id="p1Name">---</h2>
-            <div id="p1Rank" style="font-size:12px; color:#888;">等級</div>
-            <div class="hp-bar-container"><div id="p1HpBar" class="hp-bar p1-hp"></div></div>
-            <div id="p1HpText">100/100</div>
+        <div class="fighter" style="border: 1px solid var(--text-color); box-shadow: 0 0 10px rgba(0, 255, 65, 0.1);">
+            <h2 id="p1Name" style="color: var(--text-color); text-shadow: 0 0 5px var(--text-color);">---</h2>
+            <div id="p1Rank" style="font-size:12px; color: var(--text-color);">等級</div>
+            <div class="hp-bar-container" style="border: 1px solid var(--text-color);"><div id="p1HpBar" class="hp-bar p1-hp"></div></div>
+            <div id="p1HpText" style="color: var(--text-color); font-weight: bold; margin-top: 5px;">100/100</div>
         </div>
-        <div style="font-size: 40px; align-self: center; color: var(--accent-red);">VS</div>
-        <div class="fighter">
-            <h2 id="p2Name">---</h2>
-            <div id="p2Rank" style="font-size:12px; color:#888;">等級</div>
-            <div class="hp-bar-container"><div id="p2HpBar" class="hp-bar p2-hp"></div></div>
-            <div id="p2HpText">100/100</div>
+        
+        <div style="font-size: 40px; align-self: center; color: var(--accent-red); text-shadow: 0 0 10px var(--accent-red);">VS</div>
+        
+        <div class="fighter" style="border: 1px solid var(--accent-red); box-shadow: 0 0 15px rgba(255, 49, 49, 0.2);">
+            <h2 id="p2Name" style="color: var(--accent-red); text-shadow: 0 0 5px var(--accent-red);">---</h2>
+            <div id="p2Rank" style="font-size:12px; color: var(--accent-red);">等級</div>
+            <div class="hp-bar-container" style="border: 1px solid var(--accent-red);"><div id="p2HpBar" class="hp-bar p2-hp"></div></div>
+            <div id="p2HpText" style="color: var(--accent-red); font-weight: bold; margin-top: 5px;">100/100</div>
         </div>
     </div>
+
     <div id="battleLog">系統待命中...請選擇將領並按下發動。</div>
     <div class="chart-container"><canvas id="hpChart"></canvas></div>
     <div class="footer">什年工作室《三國演義武力超百科》授權終端 // 541員全量數據導入</div>
@@ -964,7 +958,7 @@
             }
 
             // ==========================================
-            // ❄️ 趙雲終極神技：玥之極 (10% 以下即死)
+            // ❄️ 趙雲終極神技：玥之極 (10% 以下即死判定)
             // ==========================================
             if (p1.name === "趙雲" && h1 <= 10 && !p1Ult10Used) {
                 p1Ult10Used = true; h2 = 0; 
@@ -980,7 +974,7 @@
             }
 
             // ==========================================
-            // 🔥 趙雲專屬神技：九天龍吟驚寰宇 (30% 以下，減血 50)
+            // 🔥 趙雲專屬神技：九天龍吟驚寰宇 (30% 以下)
             // ==========================================
             if (p1.name === "趙雲" && h1 <= 30 && h1 > 10 && !p1Ult30Used && h2 > 0) {
                 p1Ult30Used = true; h2 -= 50; 
@@ -1050,17 +1044,15 @@
             }
 
             // ==========================================
-            // 💋 樊玥專屬神技：樊玥之吻 (低於 30% 滿血復活一次)
+            // 💋 樊玥專屬神技：樊玥之吻
             // ==========================================
             if (p1.name === "樊玥" && h1 <= 30 && !p1FanYueHealUsed) {
-                p1FanYueHealUsed = true;
-                h1 = 100;
+                p1FanYueHealUsed = true; h1 = 100;
                 battleLog.innerHTML += `<br><span style="color:#ffffff; font-weight:bold; font-size:15px; text-shadow: 0 0 5px #ff69b4;">【神明恩典】${p1.name} 生命值降至極危！</span><br><span style="color:#ffffff; font-weight:bold; font-size:18px; text-shadow: 0 0 10px #ff1493;">💋 強制發動專屬神技【樊玥之吻】！純白與粉色數據流環繞全身，${p1.name} 瞬間滿血復活（HP 恢復至 100）！</span><br><br>`;
                 triggerShake(); setTimeout(triggerShake, 200);
             }
             if (p2.name === "樊玥" && h2 <= 30 && !p2FanYueHealUsed) {
-                p2FanYueHealUsed = true;
-                h2 = 100;
+                p2FanYueHealUsed = true; h2 = 100;
                 battleLog.innerHTML += `<br><span style="color:#ffffff; font-weight:bold; font-size:15px; text-shadow: 0 0 5px #ff69b4;">【神明恩典】敵將 ${p2.name} 生命值降至極危！</span><br><span style="color:#ffffff; font-weight:bold; font-size:18px; text-shadow: 0 0 10px #ff1493;">💋 強制發動專屬神技【樊玥之吻】！純白與粉色數據流環繞全身，${p2.name} 瞬間滿血復活（HP 恢復至 100）！</span><br><br>`;
                 triggerShake(); setTimeout(triggerShake, 200);
             }
