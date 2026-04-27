@@ -1270,26 +1270,58 @@
             }
 
             // ==========================================
-            // ⚔️ 常規攻防判定
+            // ⚔️ 常規攻防判定 (加入完美格擋、閃避與普通格擋)
             // ==========================================
             if (h1 > 0 && h2 > 0) {
                 let dmg1 = Math.max(3, (p1.power * 0.12) - (p2.power * 0.04) + (Math.random() * 12 - 4));
                 let dmg2 = Math.max(3, (p2.power * 0.12) - (p1.power * 0.04) + (Math.random() * 12 - 4));
+                
+                let eventRand = Math.random(); // 決定觸發何種防禦機制
 
                 if (Math.random() > 0.5) {
+                    // p1 攻擊 p2
                     if (p2DodgeCount > 0) {
                         p2DodgeCount--;
-                        battleLog.innerHTML += `<span style="color:#aaaaaa;">[第${round}合] 💨 ${p2.name} 像泥鰍般翻滾，極限閃避了 ${p1.name} 的攻擊！（剩餘閃避：${p2DodgeCount}次）</span><br>`;
+                        battleLog.innerHTML += `<span style="color:#aaaaaa;">[第${round}合] 💨 ${p2.name} 發動殘卒本能，極限閃避了 ${p1.name} 的攻擊！（剩餘閃避：${p2DodgeCount}次）</span><br>`;
+                    } else if (eventRand < 0.12) {
+                        // 12% 完美閃避
+                        battleLog.innerHTML += `<span style="color:#aaaaaa;">[第${round}合] 💨 敏捷如風！${p2.name} 看破了攻擊軌跡，完美閃躲了 ${p1.name} 的致命一擊！</span><br>`;
+                    } else if (eventRand < 0.20) {
+                        // 8% 完美彈反 (無傷)
+                        battleLog.innerHTML += `<span style="color:#ffd700;">[第${round}合] 🛡️ 完美彈反！${p2.name} 兵刃微挑，發出清脆的龍吟，【無傷】化解了 ${p1.name} 的狂暴攻勢！</span><br>`;
+                        triggerShake();
+                    } else if (eventRand < 0.35) {
+                        // 15% 普通格擋 (減傷 60%)
+                        dmg1 = Math.floor(dmg1 * 0.4);
+                        h2 -= dmg1;
+                        battleLog.innerHTML += `<span style="color:#b0c4de;">[第${round}合] 🛡️ 鏗鏘巨響！${p2.name} 舉起兵器成功格擋 ${p1.name} 的猛攻，僅承受 ${Math.floor(dmg1)} 點震傷。</span><br>`;
+                        triggerShake();
                     } else {
+                        // 65% 常規命中
                         h2 -= dmg1;
                         battleLog.innerHTML += `<span style="color:var(--text-color)">[第${round}合]</span> ${p1.name} ${moves[Math.floor(Math.random()*moves.length)]} 造成 ${Math.floor(dmg1)} 點數據損傷。<br>`;
                         triggerShake();
                     }
                 } else {
+                    // p2 攻擊 p1
                     if (p1DodgeCount > 0) {
                         p1DodgeCount--;
-                        battleLog.innerHTML += `<span style="color:#aaaaaa;">[第${round}合] 💨 ${p1.name} 像泥鰍般翻滾，極限閃避了 ${p2.name} 的攻擊！（剩餘閃避：${p1DodgeCount}次）</span><br>`;
+                        battleLog.innerHTML += `<span style="color:#aaaaaa;">[第${round}合] 💨 ${p1.name} 發動殘卒本能，極限閃避了 ${p2.name} 的攻擊！（剩餘閃避：${p1DodgeCount}次）</span><br>`;
+                    } else if (eventRand < 0.12) {
+                        // 12% 完美閃避
+                        battleLog.innerHTML += `<span style="color:#aaaaaa;">[第${round}合] 💨 敏捷如風！${p1.name} 看破了攻擊軌跡，完美閃躲了 ${p2.name} 的致命一擊！</span><br>`;
+                    } else if (eventRand < 0.20) {
+                        // 8% 完美彈反 (無傷)
+                        battleLog.innerHTML += `<span style="color:#ffd700;">[第${round}合] 🛡️ 完美彈反！${p1.name} 兵刃微挑，發出清脆的龍吟，【無傷】化解了 ${p2.name} 的狂暴攻勢！</span><br>`;
+                        triggerShake();
+                    } else if (eventRand < 0.35) {
+                        // 15% 普通格擋 (減傷 60%)
+                        dmg2 = Math.floor(dmg2 * 0.4);
+                        h1 -= dmg2;
+                        battleLog.innerHTML += `<span style="color:#b0c4de;">[第${round}合] 🛡️ 鏗鏘巨響！${p1.name} 舉起兵器成功格擋 ${p2.name} 的猛攻，僅承受 ${Math.floor(dmg2)} 點震傷。</span><br>`;
+                        triggerShake();
                     } else {
+                        // 65% 常規命中
                         h1 -= dmg2;
                         battleLog.innerHTML += `<span style="color:var(--accent-red)">[第${round}合]</span> ${p2.name} ${moves[Math.floor(Math.random()*moves.length)]} ${p1.name} 承受 ${Math.floor(dmg2)} 點邏輯破壞。<br>`;
                         triggerShake();
@@ -1390,9 +1422,27 @@
             if (p1.name === "殘卒" && h1 <= 20 && !p1RemnantDodgeUsed) { p1RemnantDodgeUsed = true; p1DodgeCount = 10; }
             if (p2.name === "殘卒" && h2 <= 20 && !p2RemnantDodgeUsed) { p2RemnantDodgeUsed = true; p2DodgeCount = 10; }
 
-            if (h1 > 0 && h2 > 0) {
-                if (Math.random() > 0.5) { if (p2DodgeCount > 0) p2DodgeCount--; else h2 -= Math.max(3, (p1.power*0.12) - (p2.power*0.04) + (Math.random()*12-4)); } 
-                else { if (p1DodgeCount > 0) p1DodgeCount--; else h1 -= Math.max(3, (p2.power*0.12) - (p1.power*0.04) + (Math.random()*12-4)); }
+           if (h1 > 0 && h2 > 0) {
+                let dmg1 = Math.max(3, (p1.power*0.12) - (p2.power*0.04) + (Math.random()*12-4));
+                let dmg2 = Math.max(3, (p2.power*0.12) - (p1.power*0.04) + (Math.random()*12-4));
+                let eventRand = Math.random();
+
+                if (Math.random() > 0.5) { 
+                    if (p2DodgeCount > 0) { p2DodgeCount--; } 
+                    // 12% 閃避 + 8% 完美格擋 = 20% 機率完全無傷
+                    else if (eventRand < 0.20) { /* 完美防禦，無傷 */ }
+                    // 15% 機率普通格擋 (減傷 60%)
+                    else if (eventRand < 0.35) { h2 -= dmg1 * 0.4; } 
+                    else { h2 -= dmg1; }
+                } 
+                else { 
+                    if (p1DodgeCount > 0) { p1DodgeCount--; } 
+                    // 12% 閃避 + 8% 完美格擋 = 20% 機率完全無傷
+                    else if (eventRand < 0.20) { /* 完美防禦，無傷 */ }
+                    // 15% 機率普通格擋 (減傷 60%)
+                    else if (eventRand < 0.35) { h1 -= dmg2 * 0.4; } 
+                    else { h1 -= dmg2; }
+                }
             }
 
             h1 = Math.max(0, h1); h2 = Math.max(0, h2);
