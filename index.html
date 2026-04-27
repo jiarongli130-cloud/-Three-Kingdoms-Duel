@@ -887,7 +887,7 @@
         setTimeout(() => warroom.classList.remove('shaking'), 300);
     }
 
-  async function startDuel() {
+async function startDuel() {
         const p1 = generals[p1Select.value];
         const p2 = generals[p2Select.value];
         document.getElementById('p1Name').innerText = p1.name;
@@ -898,11 +898,13 @@
         let h1 = 100, h2 = 100;
         let round = 1;
         
-        // 紀錄趙雲專屬神技是否已經發動過
+        // 紀錄趙雲專屬神技與被動是否已經發動過
         let p1Ult30Used = false;
         let p1Ult10Used = false;
         let p2Ult30Used = false;
         let p2Ult10Used = false;
+        let p1GodDefyUsed = false; // 鎖血防護旗標
+        let p2GodDefyUsed = false;
 
         battleLog.innerHTML = `[對決啟動] ${p1.name} VS ${p2.name}<br>系統正在進行武力維度模擬...<br>`;
         initChart();
@@ -931,27 +933,25 @@
             }
 
             // ==========================================
-            // 🔥 趙雲專屬神技：九天龍吟驚寰宇 (30% 以下觸發，效果：減血 50)
+            // 🔥 趙雲專屬神技：九天龍吟驚寰宇 (30% 以下觸發，減血 50)
             // ==========================================
             if (p1.name === "趙雲" && h1 <= 30 && h1 > 10 && !p1Ult30Used && h2 > 0) {
                 p1Ult30Used = true;
-                let ultDmg = 50; // 修改為固定傷害 50
-                h2 -= ultDmg;
+                h2 -= 50; 
                 battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】${p1.name} 血量降至 30% 以下！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 強制發動專屬神技【九天龍吟驚寰宇】！槍出如龍，天地變色！${p2.name} 瞬間慘遭重創（-50 HP）！</span><br><br>`;
                 triggerShake(); setTimeout(triggerShake, 150); setTimeout(triggerShake, 300);
                 await new Promise(r => setTimeout(r, 800));
             }
             if (p2.name === "趙雲" && h2 <= 30 && h2 > 10 && !p2Ult30Used && h1 > 0) {
                 p2Ult30Used = true;
-                let ultDmg = 50; // 修改為固定傷害 50
-                h1 -= ultDmg;
+                h1 -= 50; 
                 battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】敵將 ${p2.name} 血量降至 30% 以下！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 強制發動專屬神技【九天龍吟驚寰宇】！槍出如龍，天地變色！${p1.name} 瞬間慘遭重創（-50 HP）！</span><br><br>`;
                 triggerShake(); setTimeout(triggerShake, 150); setTimeout(triggerShake, 300);
                 await new Promise(r => setTimeout(r, 800));
             }
 
             // ==========================================
-            // ⚔️ 常規攻防判定
+            // ⚔️ 常規攻防判定 (雙方都還活著才互砍)
             // ==========================================
             if (h1 > 0 && h2 > 0) {
                 let dmg1 = Math.max(3, (p1.power * 0.12) - (p2.power * 0.04) + (Math.random() * 12 - 4));
@@ -968,7 +968,27 @@
                 }
             }
 
+            // 結算血量，確保不會出現負數
             h1 = Math.max(0, h1); h2 = Math.max(0, h2);
+
+            // ==========================================
+            // 🛡️ 趙雲專屬被動：弒神鎖血 (嚴格限定遇到「神仙流」)
+            // 若對手不是神仙，趙雲 0 血就是真死了，不會觸發此段。
+            // ==========================================
+            if (p1.name === "趙雲" && p2.rank.includes("神仙流") && h1 === 0 && !p1GodDefyUsed) {
+                h1 = 1; // 強制鎖在 1 滴血
+                p1GodDefyUsed = true;
+                battleLog.innerHTML += `<br><span style="color:#ffd700; font-weight:bold; font-size:16px; text-shadow: 0 0 5px #ffaa00;">【逆天改命】神仙的維度打擊降臨！但...神明之力亦無法抹殺天下第一！${p1.name} 強行鎖住最後 1 點生命！</span><br><br>`;
+                triggerShake();
+            }
+            if (p2.name === "趙雲" && p1.rank.includes("神仙流") && h2 === 0 && !p2GodDefyUsed) {
+                h2 = 1; // 強制鎖在 1 滴血
+                p2GodDefyUsed = true;
+                battleLog.innerHTML += `<br><span style="color:#ffd700; font-weight:bold; font-size:16px; text-shadow: 0 0 5px #ffaa00;">【逆天改命】神仙的維度打擊降臨！但...神明之力亦無法抹殺天下第一！${p2.name} 強行鎖住最後 1 點生命！</span><br><br>`;
+                triggerShake();
+            }
+
+            // 更新畫面血條與圖表
             document.getElementById('p1HpBar').style.width = h1 + "%";
             document.getElementById('p2HpBar').style.width = h2 + "%";
             document.getElementById('p1HpText').innerText = Math.floor(h1) + "/100";
