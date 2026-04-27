@@ -1008,6 +1008,10 @@
         let p1GodDefyUsed = false, p2GodDefyUsed = false;
         let p1CustomUltUsed = false, p2CustomUltUsed = false;
         let p1FanYueHealUsed = false, p2FanYueHealUsed = false;
+        
+        // ▼ 殘卒閃避專屬旗標與計數器
+        let p1DodgeCount = 0, p2DodgeCount = 0;
+        let p1RemnantDodgeUsed = false, p2RemnantDodgeUsed = false;
 
         const ultimateSkills = {
             "關羽": { name: "威震華夏・武聖偃月劈", dmg: 48, color: "#00ff41", desc: "青龍偃月刀劃破虛空，爆發出武聖的傲氣與無盡殺意！" },
@@ -1113,7 +1117,7 @@
             }
 
             // ==========================================
-            // ❄️ 趙雲終極神技：玥之極 (10% 以下即死判定)
+            // ❄️ 趙雲終極神技：玥之極 (10% 以下即死判定，無視閃避)
             // ==========================================
             if (p1.name === "趙雲" && h1 <= 10 && !p1Ult10Used) {
                 p1Ult10Used = true; h2 = 0; 
@@ -1129,57 +1133,107 @@
             }
 
             // ==========================================
-            // 🔥 趙雲專屬神技：九天龍吟驚寰宇 (36% 以下)
+            // 🔥 趙雲專屬神技：九天龍吟驚寰宇 (加入閃避攔截)
             // ==========================================
             if (p1.name === "趙雲" && h1 <= 36 && h1 > 10 && !p1Ult30Used && h2 > 0) {
-                p1Ult30Used = true; h2 -= 50; 
-                battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】${p1.name} 血量降至 36% 以下！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 強制發動專屬神技【九天龍吟驚寰宇】！槍出如龍，天地變色！${p2.name} 瞬間慘遭重創（-50 HP）！</span><br><br>`;
+                p1Ult30Used = true; 
+                if (p2DodgeCount > 0) {
+                    p2DodgeCount--;
+                    battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】${p1.name} 強制發動【九天龍吟驚寰宇】！</span><br><span style="color:#aaaaaa; font-weight:bold; font-size:16px;">💨 但被敵將 ${p2.name} 以不可思議的身法極限閃避！（剩餘閃避：${p2DodgeCount}次）</span><br><br>`;
+                } else {
+                    h2 -= 50; 
+                    battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】${p1.name} 血量降至 36% 以下！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 強制發動專屬神技【九天龍吟驚寰宇】！槍出如龍，天地變色！${p2.name} 瞬間慘遭重創（-50 HP）！</span><br><br>`;
+                }
                 triggerShake(); setTimeout(triggerShake, 150); setTimeout(triggerShake, 300);
                 await new Promise(r => setTimeout(r, 800));
             }
             if (p2.name === "趙雲" && h2 <= 36 && h2 > 10 && !p2Ult30Used && h1 > 0) {
-                p2Ult30Used = true; h1 -= 50; 
-                battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】敵將 ${p2.name} 血量降至 36% 以下！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 強制發動專屬神技【九天龍吟驚寰宇】！槍出如龍，天地變色！${p1.name} 瞬間慘遭重創（-50 HP）！</span><br><br>`;
+                p2Ult30Used = true; 
+                if (p1DodgeCount > 0) {
+                    p1DodgeCount--;
+                    battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】敵將 ${p2.name} 強制發動【九天龍吟驚寰宇】！</span><br><span style="color:#aaaaaa; font-weight:bold; font-size:16px;">💨 但被 ${p1.name} 以不可思議的身法極限閃避！（剩餘閃避：${p1DodgeCount}次）</span><br><br>`;
+                } else {
+                    h1 -= 50; 
+                    battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】敵將 ${p2.name} 血量降至 36% 以下！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 強制發動專屬神技【九天龍吟驚寰宇】！槍出如龍，天地變色！${p1.name} 瞬間慘遭重創（-50 HP）！</span><br><br>`;
+                }
                 triggerShake(); setTimeout(triggerShake, 150); setTimeout(triggerShake, 300);
                 await new Promise(r => setTimeout(r, 800));
             }
 
             // ==========================================
-            // 💥 71大名將專屬絕招 (35% 以下觸發)
+            // 💥 72大名將專屬絕招 (加入閃避攔截)
             // ==========================================
             if (ultimateSkills[p1.name] && h1 <= 35 && !p1CustomUltUsed && h2 > 0) {
                 p1CustomUltUsed = true;
                 let skill = ultimateSkills[p1.name];
-                h2 -= skill.dmg;
-                battleLog.innerHTML += `<br><span style="color:${skill.color}; font-weight:bold; font-size:15px; text-shadow: 0 0 3px ${skill.color};">【名將覺醒】${p1.name} 陷入苦戰，爆發潛能！</span><br><span style="color:${skill.color}; font-weight:bold; font-size:18px; text-shadow: 0 0 5px ${skill.color};">💥 強制發動絕招【${skill.name}】！<br>${skill.desc}<br>${p2.name} 遭受毀滅性打擊（-${skill.dmg} HP）！</span><br><br>`;
+                if (p2DodgeCount > 0) {
+                    p2DodgeCount--;
+                    battleLog.innerHTML += `<br><span style="color:${skill.color}; font-weight:bold; font-size:15px; text-shadow: 0 0 3px ${skill.color};">【名將覺醒】${p1.name} 強制發動絕招【${skill.name}】！</span><br><span style="color:#aaaaaa; font-weight:bold; font-size:16px;">💨 但被敵將 ${p2.name} 極限閃避了！（剩餘閃避：${p2DodgeCount}次）</span><br><br>`;
+                } else {
+                    h2 -= skill.dmg;
+                    battleLog.innerHTML += `<br><span style="color:${skill.color}; font-weight:bold; font-size:15px; text-shadow: 0 0 3px ${skill.color};">【名將覺醒】${p1.name} 陷入苦戰，爆發潛能！</span><br><span style="color:${skill.color}; font-weight:bold; font-size:18px; text-shadow: 0 0 5px ${skill.color};">💥 強制發動絕招【${skill.name}】！<br>${skill.desc}<br>${p2.name} 遭受毀滅性打擊（-${skill.dmg} HP）！</span><br><br>`;
+                }
                 triggerShake(); setTimeout(triggerShake, 150);
                 await new Promise(r => setTimeout(r, 800));
             }
             if (ultimateSkills[p2.name] && h2 <= 35 && !p2CustomUltUsed && h1 > 0) {
                 p2CustomUltUsed = true;
                 let skill = ultimateSkills[p2.name];
-                h1 -= skill.dmg;
-                battleLog.innerHTML += `<br><span style="color:${skill.color}; font-weight:bold; font-size:15px; text-shadow: 0 0 3px ${skill.color};">【名將覺醒】敵將 ${p2.name} 陷入苦戰，爆發潛能！</span><br><span style="color:${skill.color}; font-weight:bold; font-size:18px; text-shadow: 0 0 5px ${skill.color};">💥 強制發動絕招【${skill.name}】！<br>${skill.desc}<br>${p1.name} 遭受毀滅性打擊（-${skill.dmg} HP）！</span><br><br>`;
+                if (p1DodgeCount > 0) {
+                    p1DodgeCount--;
+                    battleLog.innerHTML += `<br><span style="color:${skill.color}; font-weight:bold; font-size:15px; text-shadow: 0 0 3px ${skill.color};">【名將覺醒】敵將 ${p2.name} 強制發動絕招【${skill.name}】！</span><br><span style="color:#aaaaaa; font-weight:bold; font-size:16px;">💨 但被 ${p1.name} 極限閃避了！（剩餘閃避：${p1DodgeCount}次）</span><br><br>`;
+                } else {
+                    h1 -= skill.dmg;
+                    battleLog.innerHTML += `<br><span style="color:${skill.color}; font-weight:bold; font-size:15px; text-shadow: 0 0 3px ${skill.color};">【名將覺醒】敵將 ${p2.name} 陷入苦戰，爆發潛能！</span><br><span style="color:${skill.color}; font-weight:bold; font-size:18px; text-shadow: 0 0 5px ${skill.color};">💥 強制發動絕招【${skill.name}】！<br>${skill.desc}<br>${p1.name} 遭受毀滅性打擊（-${skill.dmg} HP）！</span><br><br>`;
+                }
                 triggerShake(); setTimeout(triggerShake, 150);
                 await new Promise(r => setTimeout(r, 800));
             }
 
             // ==========================================
-            // ⚔️ 常規攻防判定
+            // 💨 殘卒專屬神技：生存本能 (20% 以下觸發，獲得 3 次閃避)
+            // ==========================================
+            if (p1.name === "殘卒" && h1 <= 20 && !p1RemnantDodgeUsed) {
+                p1RemnantDodgeUsed = true; p1DodgeCount = 3;
+                battleLog.innerHTML += `<br><span style="color:#aaaaaa; font-weight:bold; font-size:15px;">【螻蟻貪生】${p1.name} 血量跌破 20%！</span><br><span style="color:#cccccc; font-weight:bold; font-size:18px;">💨 強制發動絕招【苟延殘喘】！激發 200% 求生本能，接下來將強制閃避 3 次任何攻擊（玥之極除外）！</span><br><br>`;
+                triggerShake(); setTimeout(triggerShake, 200);
+                await new Promise(r => setTimeout(r, 800));
+            }
+            if (p2.name === "殘卒" && h2 <= 20 && !p2RemnantDodgeUsed) {
+                p2RemnantDodgeUsed = true; p2DodgeCount = 3;
+                battleLog.innerHTML += `<br><span style="color:#aaaaaa; font-weight:bold; font-size:15px;">【螻蟻貪生】敵將 ${p2.name} 血量跌破 20%！</span><br><span style="color:#cccccc; font-weight:bold; font-size:18px;">💨 強制發動絕招【苟延殘喘】！激發 200% 求生本能，接下來將強制閃避 3 次任何攻擊（玥之極除外）！</span><br><br>`;
+                triggerShake(); setTimeout(triggerShake, 200);
+                await new Promise(r => setTimeout(r, 800));
+            }
+
+            // ==========================================
+            // ⚔️ 常規攻防判定 (加入閃避攔截，並實裝右側 300 招)
             // ==========================================
             if (h1 > 0 && h2 > 0) {
                 let dmg1 = Math.max(3, (p1.power * 0.12) - (p2.power * 0.04) + (Math.random() * 12 - 4));
                 let dmg2 = Math.max(3, (p2.power * 0.12) - (p1.power * 0.04) + (Math.random() * 12 - 4));
 
                 if (Math.random() > 0.5) {
-                    h2 -= dmg1;
-                    battleLog.innerHTML += `<span style="color:var(--text-color)">[第${round}合]</span> ${p1.name} ${moves[Math.floor(Math.random()*moves.length)]} 造成 ${Math.floor(dmg1)} 點數據損傷。<br>`;
-                    triggerShake();
+                    // p1 攻擊 p2
+                    if (p2DodgeCount > 0) {
+                        p2DodgeCount--;
+                        battleLog.innerHTML += `<span style="color:#aaaaaa;">[第${round}合] 💨 ${p2.name} 像泥鰍般翻滾，極限閃避了 ${p1.name} 的攻擊！（剩餘閃避：${p2DodgeCount}次）</span><br>`;
+                    } else {
+                        h2 -= dmg1;
+                        battleLog.innerHTML += `<span style="color:var(--text-color)">[第${round}合]</span> ${p1.name} ${moves[Math.floor(Math.random()*moves.length)]} 造成 ${Math.floor(dmg1)} 點數據損傷。<br>`;
+                        triggerShake();
+                    }
                 } else {
-                    h1 -= dmg2;
-                    // ▼ 將原本的「普通猛攻」替換為隨機讀取 300 招陣列 ▼
-                    battleLog.innerHTML += `<span style="color:var(--accent-red)">[第${round}合]</span> ${p2.name} ${moves[Math.floor(Math.random()*moves.length)]} ${p1.name} 承受 ${Math.floor(dmg2)} 點邏輯破壞。<br>`;
-                    triggerShake();
+                    // p2 攻擊 p1
+                    if (p1DodgeCount > 0) {
+                        p1DodgeCount--;
+                        battleLog.innerHTML += `<span style="color:#aaaaaa;">[第${round}合] 💨 ${p1.name} 像泥鰍般翻滾，極限閃避了 ${p2.name} 的攻擊！（剩餘閃避：${p1DodgeCount}次）</span><br>`;
+                    } else {
+                        h1 -= dmg2;
+                        // ▼ 右側敵軍也實裝了 300 種隨機處決招式 ▼
+                        battleLog.innerHTML += `<span style="color:var(--accent-red)">[第${round}合]</span> ${p2.name} ${moves[Math.floor(Math.random()*moves.length)]} ${p1.name} 承受 ${Math.floor(dmg2)} 點邏輯破壞。<br>`;
+                        triggerShake();
+                    }
                 }
             }
 
