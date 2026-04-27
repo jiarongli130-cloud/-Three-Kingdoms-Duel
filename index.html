@@ -70,7 +70,7 @@
 </head>
 <body>
 <div class="container" id="mainWarroom">
-    <h1>三國武神演武沙盤 // 541+9 數據處決</h1>
+    <h1>三國武將演武沙盤 </h1>
     <div class="controls">
         <div class="select-group">
             <label>我軍先鋒：</label>
@@ -172,6 +172,7 @@
         {"name": "孫堅", "power": 87, "rank": "弱一流"},
         {"name": "邢道榮", "power": 87, "rank": "弱一流"},
         {"name": "鄧忠", "power": 87, "rank": "弱一流"},
+        {"name": "馬雲騄", "power": 85, "rank": "弱一流"},
         {"name": "曹仁", "power": 82, "rank": "強二流"},
         {"name": "劉備", "power": 82, "rank": "強二流"},
         {"name": "潘璋", "power": 82, "rank": "強二流"},
@@ -1173,7 +1174,7 @@
                     triggerShake();
                 } else {
                     h1 -= dmg2;
-                    battleLog.innerHTML += `<span style="color:var(--accent-red)">[第${round}合]</span> ${p2.name} 咆哮猛攻，${p1.name} 承受 ${Math.floor(dmg2)} 點邏輯破壞。<br>`;
+                    battleLog.innerHTML += `<span style="color:var(--accent-red)">[第${round}合]</span> ${p2.name} 普通猛攻，${p1.name} 承受 ${Math.floor(dmg2)} 點邏輯破壞。<br>`;
                     triggerShake();
                 }
             }
