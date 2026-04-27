@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三國武神演武沙盤 3.0 - 全軍處決系統</title>
+    <title>三國武神演武沙盤 4.0 - 武道大會</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -47,12 +47,17 @@
         h1 { text-align: center; color: var(--accent-orange); text-shadow: 2px 2px #000; border-bottom: 2px solid var(--accent-orange); padding-bottom: 10px; }
         .controls { display: flex; flex-wrap: wrap; justify-content: space-between; margin-bottom: 20px; gap: 10px; }
         .select-group { flex: 1; min-width: 200px; }
-        select, button {
+        select, button, input {
             background: #000; color: var(--text-color); border: 1px solid var(--text-color);
-            padding: 10px; font-size: 16px; cursor: pointer; width: 100%;
+            padding: 10px; font-size: 16px; cursor: pointer; width: 100%; box-sizing: border-box;
         }
         button:hover { background: var(--text-color); color: #000; }
         .btn-random { color: var(--accent-orange); border-color: var(--accent-orange); }
+        
+        /* 武道大會專屬按鈕特效 */
+        .btn-tournament { background: #4b0082; color: #fff; border-color: #8a2be2; font-weight: bold; text-shadow: 0 0 5px #fff; box-shadow: 0 0 10px #4b0082; }
+        .btn-tournament:hover { background: #8a2be2; color: #fff; box-shadow: 0 0 20px #8a2be2;}
+
         .battle-view { display: flex; justify-content: space-between; margin-top: 20px; }
         .fighter { width: 45%; text-align: center; padding: 10px; background: var(--panel-bg); }
         .hp-bar-container { width: 100%; height: 25px; background: #222; margin-top: 10px; position: relative; }
@@ -60,9 +65,9 @@
         .p1-hp { background: linear-gradient(90deg, #00ff41, #008f11); }
         .p2-hp { background: linear-gradient(90deg, #ff3131, #8b0000); }
         #battleLog {
-            height: 250px; overflow-y: auto; background: #000; border: 1px solid #333;
-            padding: 10px; margin-top: 20px; font-size: 14px; line-height: 1.6;
-            color: #ccc; border-left: 4px solid var(--accent-orange);
+            height: 350px; overflow-y: auto; background: #000; border: 1px solid #333;
+            padding: 15px; margin-top: 20px; font-size: 14px; line-height: 1.6;
+            color: #ccc; border-left: 4px solid var(--accent-orange); scroll-behavior: smooth;
         }
         .chart-container { margin-top: 20px; background: rgba(0,0,0,0.5); padding: 10px; border: 1px solid #333; }
         .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #555; }
@@ -70,7 +75,8 @@
 </head>
 <body>
 <div class="container" id="mainWarroom">
-    <h1>三國武將演武沙盤 </h1>
+    <h1>三國武將演武沙盤 4.0 - 天下第一武道大會</h1>
+    
     <div class="controls">
         <div class="select-group">
             <label>我軍先鋒：</label>
@@ -81,15 +87,17 @@
             <select id="p2Select" style="color: var(--accent-red); border: 1px solid var(--accent-red);"></select>
         </div>
     </div>
-   <div class="controls">
-        <button onclick="startDuel()">發動數據處決</button>
-        <button class="btn-random" onclick="randomize()">天道隨機點將</button>
+
+    <div class="controls">
+        <button onclick="startDuel()" style="flex: 1;">發動單挑處決</button>
+        <button class="btn-random" onclick="randomize()" style="flex: 1;">天道隨機點將</button>
+        <button class="btn-tournament" onclick="runTournament()" style="flex: 1.5;">🏆 舉辦八強武道大會</button>
     </div>
 
     <div class="controls" style="border: 1px dashed var(--accent-orange); padding: 15px; border-radius: 5px; background: rgba(255, 140, 0, 0.05);">
-        <input type="text" id="customName" placeholder="自創姓名" style="flex: 1; min-width: 80px; background: #000; color: var(--text-color); border: 1px solid var(--text-color); padding: 10px;">
-        <input type="number" id="customPower" placeholder="武力(1-9999)" style="flex: 1; min-width: 100px; background: #000; color: var(--text-color); border: 1px solid var(--text-color); padding: 10px;">
-        <input type="text" id="customRank" placeholder="階級(如: 隱藏修羅)" style="flex: 1; min-width: 120px; background: #000; color: var(--text-color); border: 1px solid var(--text-color); padding: 10px;">
+        <input type="text" id="customName" placeholder="自創姓名" style="flex: 1; min-width: 80px;">
+        <input type="number" id="customPower" placeholder="武力(1-9999)" style="flex: 1; min-width: 100px;">
+        <input type="text" id="customRank" placeholder="階級(如: 隱藏修羅)" style="flex: 1; min-width: 120px;">
         <button onclick="addCustomGeneral()" style="color: #ffd700; border-color: #ffd700; flex: 1;">鍛造武將降臨</button>
     </div>
 
@@ -111,9 +119,9 @@
         </div>
     </div>
 
-    <div id="battleLog">系統待命中...請選擇將領並按下發動。</div>
+    <div id="battleLog">系統待命中...請選擇將領並按下發動單挑，或點擊「舉辦八強武道大會」。</div>
     <div class="chart-container"><canvas id="hpChart"></canvas></div>
-    <div class="footer">什年工作室《三國演義武力超百科》授權終端</div>
+    <div class="footer">什年工作室《三國演義武力超百科》授權終端 // 支援八強自動推演</div>
 </div>
 
 <script>
@@ -805,7 +813,6 @@
         "【方天畫戟】倒捲而上，鋒利的戟枝將對手的裝甲硬生生扯下！",
         "【青龍偃月】夾帶風雷之勢劈下，連空間都被斬出一道黑色裂痕！",
         "【丈八蛇矛】如毒蛇吐信，以極其刁鑽的角度咬穿對手的防火牆！",
-        // ======================= 新增 150 招終極擴展 =======================
         "施展【工作管理員・結束任務】，強行終止對手的呼吸進程！",
         "啟動【安全模式】，免疫一切異常狀態，反手一刀將敵軍切碎！",
         "發動【硬碟重組】，將對手的身體數據重新排列成一堆廢鐵！",
@@ -957,7 +964,7 @@
         "施展【幻影百裂拳】，無數拳影在千分之一秒內傾瀉在對手身上，將其打成漫天飛舞的像素點！",
         "冷酷地轉動手中的刀柄，將刺入對方體內的刀刃旋轉 360 度，徹底絞碎了敵方的生存希望！"
     ];
-    
+
     const p1Select = document.getElementById('p1Select');
     const p2Select = document.getElementById('p2Select');
     const battleLog = document.getElementById('battleLog');
@@ -969,7 +976,6 @@
         p2Select.innerHTML = '';
         const sortedGenerals = [...generals].sort((a, b) => b.power - a.power);
         sortedGenerals.forEach((g) => {
-            // 使用原陣列的 indexOf 確保 index 不會因為排序而亂掉
             let opt1 = new Option(`${g.name} (${g.power}) - ${g.rank}`, generals.indexOf(g));
             let opt2 = new Option(`${g.name} (${g.power}) - ${g.rank}`, generals.indexOf(g));
             p1Select.add(opt1);
@@ -1039,7 +1045,7 @@
         setTimeout(() => warroom.classList.remove('shaking'), 300);
     }
 
-    async function startDuel() {
+    async function startDuel(isTournamentMode = false) {
         const p1 = generals[p1Select.value];
         const p2 = generals[p2Select.value];
         document.getElementById('p1Name').innerText = p1.name;
@@ -1138,11 +1144,14 @@
             "秦慶童": { name: "家奴反噬・暗箭難防", dmg: 23, color: "#2f4f4f", desc: "在系統的陰暗角落裡放冷箭，造成意想不到的嚴重破壞！" }
         };
 
-        battleLog.innerHTML = `[對決啟動] ${p1.name} VS ${p2.name}<br>系統正在進行武力維度模擬...<br>`;
+        if (!isTournamentMode) {
+            battleLog.innerHTML = `[對決啟動] ${p1.name} VS ${p2.name}<br>系統正在進行武力維度模擬...<br>`;
+        }
         initChart();
 
         while (h1 > 0 && h2 > 0 && round < 80) {
-            await new Promise(r => setTimeout(r, 450));
+            // 武道大會模式加快動畫速度
+            await new Promise(r => setTimeout(r, isTournamentMode ? 200 : 450));
 
             // ==========================================
             // 🌸 宿命彩蛋：樊玥 VS 趙雲
@@ -1349,14 +1358,80 @@
         }
 
         const winner = h1 > h2 ? p1.name : p2.name;
-       // 判斷是否為樊玥彩蛋局，若不是才印出常規勝利文字
         const isFanYueEgg = (p1.name === "趙雲" && p2.name === "樊玥") || (p1.name === "樊玥" && p2.name === "趙雲") || (p1.name === "殘卒" && p2.name === "樊玥") || (p1.name === "樊玥" && p2.name === "殘卒");
         
-        if (!isFanYueEgg) {
+        if (!isFanYueEgg && !isTournamentMode) {
             battleLog.innerHTML += `<br><strong style="color:var(--accent-orange); font-size:22px;">[演武終結] 最終處決結果：${winner} 傲立戰場！</strong>`;
         }
+        
+        // 回傳勝利者的 Index，供武道大會推演使用
+        return h1 > h2 ? p1Select.value : p2Select.value;
     }
-    initChart();
+
+    // ▼▼▼ 武道大會核心邏輯 ▼▼▼
+    async function runTournament() {
+        const btn = document.querySelector(".btn-tournament");
+        btn.disabled = true; 
+        
+        // 隨機抽取8名不同武將
+        let indices = [];
+        while(indices.length < 8) {
+            let r = Math.floor(Math.random() * generals.length);
+            if(!indices.includes(r)) indices.push(r);
+        }
+        
+        battleLog.innerHTML = `<h2 style="color:#ffd700; text-align:center; text-shadow: 0 0 10px #ffd700; margin-bottom:5px;">🏆 天下第一武道大會 🏆</h2>`;
+        let rosterStr = indices.map(i => `<span style="color:#00ffff;">${generals[i].name}</span>`).join("、");
+        battleLog.innerHTML += `<div style="color:#ccc; text-align:center; margin-bottom: 15px; font-weight:bold;">【八強參賽名單】<br>${rosterStr}</div><hr style="border-color:#333;">`;
+        battleLog.scrollTop = battleLog.scrollHeight;
+        await new Promise(r => setTimeout(r, 2500));
+        
+        // 八強賽 
+        let q1_winner = await autoMatch(indices[0], indices[1], "八強賽 A組");
+        let q2_winner = await autoMatch(indices[2], indices[3], "八強賽 B組");
+        let q3_winner = await autoMatch(indices[4], indices[5], "八強賽 C組");
+        let q4_winner = await autoMatch(indices[6], indices[7], "八強賽 D組");
+        
+        // 四強賽
+        battleLog.innerHTML += `<br><h2 style="color:#ff8c00; text-align:center; margin-top:20px; text-shadow: 0 0 10px #ff8c00;">🔥 四強準決賽 🔥</h2><hr style="border-color:#333;">`;
+        battleLog.scrollTop = battleLog.scrollHeight;
+        await new Promise(r => setTimeout(r, 2000));
+        let s1_winner = await autoMatch(q1_winner, q2_winner, "準決賽 甲組");
+        let s2_winner = await autoMatch(q3_winner, q4_winner, "準決賽 乙組");
+        
+        // 總決賽
+        battleLog.innerHTML += `<br><h2 style="color:#ff3131; text-align:center; margin-top:20px; text-shadow: 0 0 15px #ff3131;">👑 天下第一總決賽 👑</h2><hr style="border-color:#333;">`;
+        battleLog.scrollTop = battleLog.scrollHeight;
+        await new Promise(r => setTimeout(r, 2500));
+        let champion = await autoMatch(s1_winner, s2_winner, "🏆 終極決戰 🏆");
+        
+        // 頒獎典禮
+        battleLog.innerHTML += `<br><div style="text-align:center; padding:20px; border: 2px solid #ffd700; background:rgba(255,215,0,0.1); box-shadow: 0 0 30px rgba(255,215,0,0.5); margin-top:20px;">
+            <h1 style="color:#ffd700; text-shadow: 0 0 15px #ffd700; font-size:30px; margin:0;">【武道大會 冠軍誕生】</h1>
+            <h2 style="color:#ffffff; font-size:28px; margin-top:15px; text-shadow: 0 0 10px #fff;">👑 ${generals[champion].name} 👑</h2>
+            <p style="color:#ccc; margin-top:10px;">力壓群雄，傲視沙盤！成為天下第一！</p>
+        </div><br><br>`;
+        battleLog.scrollTop = battleLog.scrollHeight;
+        btn.disabled = false;
+    }
+
+    async function autoMatch(idx1, idx2, matchName) {
+        battleLog.innerHTML += `<br><h3 style="color:var(--accent-orange); border-left: 4px solid var(--accent-orange); padding-left: 10px;">⚔️ ${matchName}：${generals[idx1].name} VS ${generals[idx2].name}</h3>`;
+        battleLog.scrollTop = battleLog.scrollHeight;
+        await new Promise(r => setTimeout(r, 1500));
+        
+        // 設定戰鬥 UI
+        p1Select.value = idx1;
+        p2Select.value = idx2;
+        
+        // 執行戰鬥並取得勝利者
+        let winnerIndex = await startDuel(true); // true 代表是武道大會模式
+        
+        battleLog.innerHTML += `<br><span style="color:#ffd700; font-weight:bold; font-size:16px;">✨ [賽事結果] ${matchName} 勝出者：${generals[winnerIndex].name}！晉級下一輪！</span><br><hr style="border-color:#333; margin-top:15px;">`;
+        battleLog.scrollTop = battleLog.scrollHeight;
+        await new Promise(r => setTimeout(r, 2500));
+        return winnerIndex;
+    }
 </script>
 </body>
 </html>
