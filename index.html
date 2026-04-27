@@ -902,13 +902,12 @@ async function startDuel() {
         let p2Ult30Used = false, p2Ult10Used = false;
         let p1GodDefyUsed = false, p2GodDefyUsed = false;
         let p1CustomUltUsed = false, p2CustomUltUsed = false;
+        let p1FanYueHealUsed = false, p2FanYueHealUsed = false; // 樊玥之吻專屬旗標
 
         // ==========================================
         // 📜 71 名將專屬絕招資料庫 (原11人 + 新58人)
-        // 傷害嚴格依照主公排名遞減 (48 ~ 23)
         // ==========================================
         const ultimateSkills = {
-            // --- 原 11 大猛將 (48~35) ---
             "關羽": { name: "威震華夏・武聖偃月劈", dmg: 48, color: "#00ff41", desc: "青龍偃月刀劃破虛空，爆發出武聖的傲氣與無盡殺意！" },
             "張飛": { name: "燕人咆哮・萬人敵碎擊", dmg: 47, color: "#ff3131", desc: "丈八蛇矛化作狂暴黑龍，伴隨雷霆怒吼撕裂敵方防線！" },
             "馬超": { name: "神威天將・絕影雷霆刺", dmg: 46, color: "#00ffff", desc: "身披銀甲如白晝流星，長槍刺出無數雷電殘影！" },
@@ -921,7 +920,6 @@ async function startDuel() {
             "龐德": { name: "抬棺死戰・白馬泣血刃", dmg: 37, color: "#ffffff", desc: "帶著必死的決心，刀刃燃起蒼白色的業火，無情劈落！" },
             "兀突骨": { name: "南蠻巨靈・藤甲碾壓", dmg: 35, color: "#32cd32", desc: "龐大的身軀宛如戰車般橫衝直撞，將一切阻礙踩成粉末！" },
 
-            // --- 頂尖一流 (34~31) ---
             "張郃": { name: "巧變無極・幻影絕殺", dmg: 34, color: "#8a2be2", desc: "身法如鬼魅般難以捉摸，從視覺死角刺出致命的數據洪流！" },
             "張遼": { name: "威震逍遙・八百破陣擊", dmg: 34, color: "#4169e1", desc: "以一擋百的無畏氣勢，雙戟化作斬裂系統的蔚藍風暴！" },
             "夏侯惇": { name: "盲夏侯・拔矢啖睛破", dmg: 34, color: "#8b0000", desc: "獨眼爆發出駭人血光，以命搏命的瘋狂突擊撞碎敵方防火牆！" },
@@ -938,14 +936,12 @@ async function startDuel() {
             "張任": { name: "落鳳破滅・百鳥絕殺", dmg: 31, color: "#8b4513", desc: "埋伏於暗處的冷箭齊發，將對手的運算空間徹底釘死！" },
             "高覽": { name: "河北雙壁・泰山開天劈", dmg: 31, color: "#a0522d", desc: "巨斧帶著開山裂石之威，硬生生劈開對手的物理碰撞箱！" },
 
-            // --- 強一流 (30) ---
             "徐晃": { name: "長驅直入・開山大斧", dmg: 30, color: "#4682b4", desc: "大斧挾帶無堅不摧的力場，將眼前的障礙與敵人一併斬斷！" },
             "曹洪": { name: "拼死護主・血刃連斬", dmg: 30, color: "#b22222", desc: "雙眼佈滿血絲，不顧一切地向前狂砍，完全捨棄防禦邏輯！" },
             "曹彰": { name: "黃鬚兒・搏虎降龍拳", dmg: 30, color: "#daa520", desc: "捨棄兵器，以純粹的肉身力量打出引發空間扭曲的爆發拳！" },
             "陳武": { name: "江表虎臣・死戰無退", dmg: 30, color: "#808000", desc: "毫無懼色地迎著刀鋒而上，以捨身之姿換取貫穿心臟的絕殺！" },
             "鄂煥": { name: "方天化戟・惡神亂舞", dmg: 30, color: "#8b008b", desc: "揮舞著怪異的長戟，像狂風般掃蕩一切，系統畫面為之震顫！" },
 
-            // --- 中一流 (29~28) ---
             "魏延": { name: "子午奇謀・反骨獠牙", dmg: 29, color: "#483d8b", desc: "刀法狂放不羈，從不可思議的角度咬穿對手的防禦代碼！" },
             "文聘": { name: "江夏鐵壁・鎮江重擊", dmg: 29, color: "#2f4f4f", desc: "穩如泰山的防禦後，反手打出沉重如山的致命一擊！" },
             "關興": { name: "武聖傳承・青龍殘影", dmg: 29, color: "#3cb371", desc: "青龍偃月刀的虛影再現，夾帶先父之威斬碎敵方防火牆！" },
@@ -956,7 +952,6 @@ async function startDuel() {
             "孫桓": { name: "江東新銳・破陣神槍", dmg: 28, color: "#1e90ff", desc: "槍尖閃爍銳利的光芒，精準刺入敵方代碼的連接點！" },
             "諸葛尚": { name: "武侯血脈・八卦陣斬", dmg: 28, color: "#00fa9a", desc: "在八卦陣列的輔助下，於陣眼處發動無法躲避的絕殺！" },
 
-            // --- 弱一流 (27~25) ---
             "李典": { name: "深明大義・沉穩反擊", dmg: 27, color: "#5f9ea0", desc: "看破對方的攻擊意圖，在最完美的時機發動致命反制！" },
             "樂進": { name: "先登死士・無畏衝鋒", dmg: 27, color: "#b22222", desc: "無視任何傷害判定，強行突破防線將兵器送入敵方胸膛！" },
             "于禁": { name: "毅重之將・法度森嚴", dmg: 27, color: "#4682b4", desc: "以嚴密的刀法封鎖敵方所有行動，隨即執行系統處決！" },
@@ -978,7 +973,6 @@ async function startDuel() {
             "邢道榮": { name: "零陵上將・梨花開山斧", dmg: 25, color: "#ffb6c1", desc: "大喝一聲爆發出驚人氣勢，巨斧揮出超越自身極限的亂舞！" },
             "鄧忠": { name: "奇襲先鋒・破影突擊", dmg: 25, color: "#3cb371", desc: "繼承父親的奇襲兵法，從不可思議的角度完成突刺！" },
 
-            // --- 強二流 (24~23) ---
             "曹仁": { name: "八門金鎖・銅牆鐵壁", dmg: 24, color: "#c0c0c0", desc: "化防禦為攻擊，用堅不可摧的盾牌重擊對手的核心代碼！" },
             "劉備": { name: "雌雄雙股・仁義之怒", dmg: 24, color: "#ffd700", desc: "雙劍交織出金色的劍網，爆發出真命天子不容侵犯的威光！" },
             "潘璋": { name: "東吳擒將・陷阱鐵鎖", dmg: 24, color: "#483d8b", desc: "扔出附帶麻痺代碼的鐵鎖，將對手綑綁後給予殘酷處決！" },
@@ -1003,6 +997,16 @@ async function startDuel() {
                 if (p1.name === "樊玥") { h2 = 0; } else { h1 = 0; }
                 battleLog.innerHTML += `<br><span style="color:#ffffff; font-weight:bold; font-size:20px; text-shadow: 0 0 10px #ffffff, 0 0 20px #ffffff;">🌸 【宿命羈絆】樊玥溫柔注視，強制發動專屬招式【雲玥同心】！</span><br><span style="color:#dddddd; font-size:16px; font-style:italic;">「天下第一」的趙雲放下了手中的龍膽亮銀槍，撤除所有防禦。武神甘願在此刻溫柔落敗...</span><br><br>`;
                 triggerShake(); setTimeout(triggerShake, 400);
+                
+                // 更新 UI 後直接結束
+                document.getElementById('p1HpBar').style.width = h1 + "%";
+                document.getElementById('p2HpBar').style.width = h2 + "%";
+                document.getElementById('p1HpText').innerText = Math.floor(h1) + "/100";
+                document.getElementById('p2HpText').innerText = Math.floor(h2) + "/100";
+                hpChart.data.labels.push(round);
+                hpChart.data.datasets[0].data.push(h1);
+                hpChart.data.datasets[1].data.push(h2);
+                hpChart.update();
                 break;
             }
 
@@ -1023,7 +1027,7 @@ async function startDuel() {
             }
 
             // ==========================================
-            // 🔥 趙雲專屬神技：九天龍吟驚寰宇 (30% 以下，減血 50)
+            // 🔥 趙雲專屬神技：九天龍吟驚寰宇 (30% 以下)
             // ==========================================
             if (p1.name === "趙雲" && h1 <= 30 && h1 > 10 && !p1Ult30Used && h2 > 0) {
                 p1Ult30Used = true; h2 -= 50; 
@@ -1079,7 +1083,7 @@ async function startDuel() {
             h1 = Math.max(0, h1); h2 = Math.max(0, h2);
 
             // ==========================================
-            // 🛡️ 趙雲專屬被動：弒神鎖血 (遇神仙流強制鎖1血)
+            // 🛡️ 趙雲專屬被動：弒神鎖血
             // ==========================================
             if (p1.name === "趙雲" && p2.rank.includes("神仙流") && h1 === 0 && !p1GodDefyUsed) {
                 h1 = 1; p1GodDefyUsed = true;
@@ -1090,6 +1094,22 @@ async function startDuel() {
                 h2 = 1; p2GodDefyUsed = true;
                 battleLog.innerHTML += `<br><span style="color:#ffd700; font-weight:bold; font-size:16px; text-shadow: 0 0 5px #ffaa00;">【逆天改命】神仙的維度打擊降臨！但...神明之力亦無法抹殺天下第一！${p2.name} 強行鎖住最後 1 點生命！</span><br><br>`;
                 triggerShake();
+            }
+
+            // ==========================================
+            // 💋 樊玥專屬神技：樊玥之吻 (低於 30% 滿血復活一次)
+            // ==========================================
+            if (p1.name === "樊玥" && h1 <= 30 && !p1FanYueHealUsed) {
+                p1FanYueHealUsed = true;
+                h1 = 100;
+                battleLog.innerHTML += `<br><span style="color:#ffffff; font-weight:bold; font-size:15px; text-shadow: 0 0 5px #ff69b4;">【神明恩典】${p1.name} 生命值降至極危！</span><br><span style="color:#ffffff; font-weight:bold; font-size:18px; text-shadow: 0 0 10px #ff1493;">💋 強制發動專屬神技【樊玥之吻】！純白與粉色數據流環繞全身，${p1.name} 瞬間滿血復活（HP 恢復至 100）！</span><br><br>`;
+                triggerShake(); setTimeout(triggerShake, 200);
+            }
+            if (p2.name === "樊玥" && h2 <= 30 && !p2FanYueHealUsed) {
+                p2FanYueHealUsed = true;
+                h2 = 100;
+                battleLog.innerHTML += `<br><span style="color:#ffffff; font-weight:bold; font-size:15px; text-shadow: 0 0 5px #ff69b4;">【神明恩典】敵將 ${p2.name} 生命值降至極危！</span><br><span style="color:#ffffff; font-weight:bold; font-size:18px; text-shadow: 0 0 10px #ff1493;">💋 強制發動專屬神技【樊玥之吻】！純白與粉色數據流環繞全身，${p2.name} 瞬間滿血復活（HP 恢復至 100）！</span><br><br>`;
+                triggerShake(); setTimeout(triggerShake, 200);
             }
 
             // 更新 UI
