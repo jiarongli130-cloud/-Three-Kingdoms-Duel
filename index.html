@@ -898,13 +898,32 @@ async function startDuel() {
         let h1 = 100, h2 = 100;
         let round = 1;
         
-        // 紀錄趙雲專屬神技與被動是否已經發動過
+        // 紀錄神技是否發動過
         let p1Ult30Used = false;
         let p1Ult10Used = false;
         let p2Ult30Used = false;
         let p2Ult10Used = false;
         let p1GodDefyUsed = false; 
         let p2GodDefyUsed = false;
+        let p1CustomUltUsed = false; // 11名將專屬絕招判定
+        let p2CustomUltUsed = false;
+
+        // ==========================================
+        // 📜 11名將專屬絕招資料庫 (依主公排行，傷害48~35)
+        // ==========================================
+        const ultimateSkills = {
+            "關羽": { name: "威震華夏・武聖偃月劈", dmg: 48, color: "#00ff41", desc: "青龍偃月刀劃破虛空，爆發出武聖的傲氣與無盡殺意！" },
+            "張飛": { name: "燕人咆哮・萬人敵碎擊", dmg: 47, color: "#ff3131", desc: "丈八蛇矛化作狂暴黑龍，伴隨雷霆怒吼撕裂敵方防線！" },
+            "馬超": { name: "神威天將・絕影雷霆刺", dmg: 46, color: "#00ffff", desc: "身披銀甲如白晝流星，長槍刺出無數雷電殘影！" },
+            "黃忠": { name: "老當益壯・穿雲落日弓", dmg: 45, color: "#ff8c00", desc: "拉滿萬石之弓，射出貫穿代碼壁壘的核爆烈焰箭！" },
+            "呂布": { name: "鬼神無雙・方天碎空擊", dmg: 44, color: "#ff00ff", desc: "方天畫戟斬碎三維空間，釋放出令人絕望的鬼神威壓！" },
+            "許褚": { name: "虎痴震怒・裸衣碎岩錘", dmg: 42, color: "#ffd700", desc: "褪去護甲徹底狂暴，以純粹的蠻力砸碎周遭的物理引擎！" },
+            "典韋": { name: "古之惡來・雙戟血枷鎖", dmg: 41, color: "#d2691e", desc: "雙鐵戟交織成死亡羅網，如惡鬼般將對手死死絞殺！" },
+            "文醜": { name: "河北庭柱・崩山裂地斬", dmg: 40, color: "#4682b4", desc: "長槍挾帶摧枯拉朽之勢，將沙盤地面轟出巨大的數據坑洞！" },
+            "顏良": { name: "威震河北・疾風瞬影劈", dmg: 39, color: "#c0c0c0", desc: "刀法快如閃電，在對手反應之前已斬出致命的代碼弧光！" },
+            "龐德": { name: "抬棺死戰・白馬泣血刃", dmg: 37, color: "#ffffff", desc: "帶著必死的決心，刀刃燃起蒼白色的業火，無情劈落！" },
+            "兀突骨": { name: "南蠻巨靈・藤甲碾壓", dmg: 35, color: "#32cd32", desc: "龐大的身軀宛如戰車般橫衝直撞，將一切阻礙踩成粉末！" }
+        };
 
         battleLog.innerHTML = `[對決啟動] ${p1.name} VS ${p2.name}<br>系統正在進行武力維度模擬...<br>`;
         initChart();
@@ -917,36 +936,22 @@ async function startDuel() {
             // ==========================================
             if ((p1.name === "趙雲" && p2.name === "樊玥") || (p1.name === "樊玥" && p2.name === "趙雲")) {
                 if (p1.name === "樊玥") { h2 = 0; } else { h1 = 0; }
-                
                 battleLog.innerHTML += `<br><span style="color:#ffffff; font-weight:bold; font-size:20px; text-shadow: 0 0 10px #ffffff, 0 0 20px #ffffff;">🌸 【宿命羈絆】樊玥溫柔注視，強制發動專屬招式【雲玥同心】！</span><br><span style="color:#dddddd; font-size:16px; font-style:italic;">「天下第一」的趙雲放下了手中的龍膽亮銀槍，撤除所有防禦。武神甘願在此刻溫柔落敗...</span><br><br>`;
                 triggerShake(); setTimeout(triggerShake, 400);
-                
-                // 更新 UI 後直接中斷戰鬥
-                document.getElementById('p1HpBar').style.width = h1 + "%";
-                document.getElementById('p2HpBar').style.width = h2 + "%";
-                document.getElementById('p1HpText').innerText = Math.floor(h1) + "/100";
-                document.getElementById('p2HpText').innerText = Math.floor(h2) + "/100";
-                hpChart.data.labels.push(round);
-                hpChart.data.datasets[0].data.push(h1);
-                hpChart.data.datasets[1].data.push(h2);
-                hpChart.update();
-                battleLog.scrollTop = battleLog.scrollHeight;
-                break; // 觸發後直接跳出迴圈，結束對決
+                break;
             }
 
             // ==========================================
             // ❄️ 趙雲終極神技：玥之極 (10% 以下即死判定)
             // ==========================================
             if (p1.name === "趙雲" && h1 <= 10 && !p1Ult10Used) {
-                p1Ult10Used = true;
-                h2 = 0; 
+                p1Ult10Used = true; h2 = 0; 
                 battleLog.innerHTML += `<br><span style="color:#ffffff; font-weight:bold; font-size:16px; text-shadow: 0 0 5px #fff;">【真・武神絕境】${p1.name} 生命徵象跌破 10%！</span><br><span style="color:#ffffff; font-weight:bold; font-size:20px; text-shadow: 0 0 8px #fff;">❄️ 強制發動最終神技【玥之極】！時空凍結，一槍抹除！${p2.name} 的數據被徹底粉碎，瞬間死亡！</span><br><br>`;
                 triggerShake(); setTimeout(triggerShake, 100); setTimeout(triggerShake, 200); setTimeout(triggerShake, 300);
                 await new Promise(r => setTimeout(r, 800));
             }
             else if (p2.name === "趙雲" && h2 <= 10 && !p2Ult10Used) {
-                p2Ult10Used = true;
-                h1 = 0; 
+                p2Ult10Used = true; h1 = 0; 
                 battleLog.innerHTML += `<br><span style="color:#ffffff; font-weight:bold; font-size:16px; text-shadow: 0 0 5px #fff;">【真・武神絕境】敵將 ${p2.name} 生命徵象跌破 10%！</span><br><span style="color:#ffffff; font-weight:bold; font-size:20px; text-shadow: 0 0 8px #fff;">❄️ 強制發動最終神技【玥之極】！時空凍結，一槍抹除！${p1.name} 的數據被徹底粉碎，瞬間死亡！</span><br><br>`;
                 triggerShake(); setTimeout(triggerShake, 100); setTimeout(triggerShake, 200); setTimeout(triggerShake, 300);
                 await new Promise(r => setTimeout(r, 800));
@@ -956,17 +961,35 @@ async function startDuel() {
             // 🔥 趙雲專屬神技：九天龍吟驚寰宇 (30% 以下觸發，減血 50)
             // ==========================================
             if (p1.name === "趙雲" && h1 <= 30 && h1 > 10 && !p1Ult30Used && h2 > 0) {
-                p1Ult30Used = true;
-                h2 -= 50; 
+                p1Ult30Used = true; h2 -= 50; 
                 battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】${p1.name} 血量降至 30% 以下！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 強制發動專屬神技【九天龍吟驚寰宇】！槍出如龍，天地變色！${p2.name} 瞬間慘遭重創（-50 HP）！</span><br><br>`;
                 triggerShake(); setTimeout(triggerShake, 150); setTimeout(triggerShake, 300);
                 await new Promise(r => setTimeout(r, 800));
             }
             if (p2.name === "趙雲" && h2 <= 30 && h2 > 10 && !p2Ult30Used && h1 > 0) {
-                p2Ult30Used = true;
-                h1 -= 50; 
+                p2Ult30Used = true; h1 -= 50; 
                 battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】敵將 ${p2.name} 血量降至 30% 以下！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 強制發動專屬神技【九天龍吟驚寰宇】！槍出如龍，天地變色！${p1.name} 瞬間慘遭重創（-50 HP）！</span><br><br>`;
                 triggerShake(); setTimeout(triggerShake, 150); setTimeout(triggerShake, 300);
+                await new Promise(r => setTimeout(r, 800));
+            }
+
+            // ==========================================
+            // 💥 11大名將專屬絕招 (35% 以下觸發)
+            // ==========================================
+            if (ultimateSkills[p1.name] && h1 <= 35 && !p1CustomUltUsed && h2 > 0) {
+                p1CustomUltUsed = true;
+                let skill = ultimateSkills[p1.name];
+                h2 -= skill.dmg;
+                battleLog.innerHTML += `<br><span style="color:${skill.color}; font-weight:bold; font-size:15px; text-shadow: 0 0 3px ${skill.color};">【名將覺醒】${p1.name} 陷入苦戰，爆發潛能！</span><br><span style="color:${skill.color}; font-weight:bold; font-size:18px; text-shadow: 0 0 5px ${skill.color};">💥 強制發動絕招【${skill.name}】！<br>${skill.desc}<br>${p2.name} 遭受毀滅性打擊（-${skill.dmg} HP）！</span><br><br>`;
+                triggerShake(); setTimeout(triggerShake, 150);
+                await new Promise(r => setTimeout(r, 800));
+            }
+            if (ultimateSkills[p2.name] && h2 <= 35 && !p2CustomUltUsed && h1 > 0) {
+                p2CustomUltUsed = true;
+                let skill = ultimateSkills[p2.name];
+                h1 -= skill.dmg;
+                battleLog.innerHTML += `<br><span style="color:${skill.color}; font-weight:bold; font-size:15px; text-shadow: 0 0 3px ${skill.color};">【名將覺醒】敵將 ${p2.name} 陷入苦戰，爆發潛能！</span><br><span style="color:${skill.color}; font-weight:bold; font-size:18px; text-shadow: 0 0 5px ${skill.color};">💥 強制發動絕招【${skill.name}】！<br>${skill.desc}<br>${p1.name} 遭受毀滅性打擊（-${skill.dmg} HP）！</span><br><br>`;
+                triggerShake(); setTimeout(triggerShake, 150);
                 await new Promise(r => setTimeout(r, 800));
             }
 
@@ -991,17 +1014,15 @@ async function startDuel() {
             h1 = Math.max(0, h1); h2 = Math.max(0, h2);
 
             // ==========================================
-            // 🛡️ 趙雲專屬被動：弒神鎖血 (嚴格限定遇到「神仙流」)
+            // 🛡️ 趙雲專屬被動：弒神鎖血 (遇神仙流強制鎖1血)
             // ==========================================
             if (p1.name === "趙雲" && p2.rank.includes("神仙流") && h1 === 0 && !p1GodDefyUsed) {
-                h1 = 1; 
-                p1GodDefyUsed = true;
+                h1 = 1; p1GodDefyUsed = true;
                 battleLog.innerHTML += `<br><span style="color:#ffd700; font-weight:bold; font-size:16px; text-shadow: 0 0 5px #ffaa00;">【逆天改命】神仙的維度打擊降臨！但...神明之力亦無法抹殺天下第一！${p1.name} 強行鎖住最後 1 點生命！</span><br><br>`;
                 triggerShake();
             }
             if (p2.name === "趙雲" && p1.rank.includes("神仙流") && h2 === 0 && !p2GodDefyUsed) {
-                h2 = 1; 
-                p2GodDefyUsed = true;
+                h2 = 1; p2GodDefyUsed = true;
                 battleLog.innerHTML += `<br><span style="color:#ffd700; font-weight:bold; font-size:16px; text-shadow: 0 0 5px #ffaa00;">【逆天改命】神仙的維度打擊降臨！但...神明之力亦無法抹殺天下第一！${p2.name} 強行鎖住最後 1 點生命！</span><br><br>`;
                 triggerShake();
             }
@@ -1022,7 +1043,10 @@ async function startDuel() {
         }
 
         const winner = h1 > h2 ? p1.name : p2.name;
-        battleLog.innerHTML += `<br><strong style="color:var(--accent-orange); font-size:22px;">[演武終結] 最終處決結果：${winner} 傲立戰場！</strong>`;
+        // 如果是樊玥彩蛋提早結束，避免重複顯示勝利文字
+        if (!((p1.name === "趙雲" && p2.name === "樊玥") || (p1.name === "樊玥" && p2.name === "趙雲"))) {
+            battleLog.innerHTML += `<br><strong style="color:var(--accent-orange); font-size:22px;">[演武終結] 最終處決結果：${winner} 傲立戰場！</strong>`;
+        }
     }
     initChart();
 </script>
