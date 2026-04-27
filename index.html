@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三國武神演武沙盤 3.0 - 數據處決系統</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0a0a0a;
+            --text-color: #00ff41;
+            --accent-orange: #ff8c00;
+            --accent-red: #ff3131;
+            --panel-bg: rgba(20, 20, 20, 0.9);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Courier New', Courier, monospace, "Microsoft JhengHei";
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+            background-image: radial-gradient(circle, #1b1b1b 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        /* 震撼震動效果 */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        .shaking { animation: shake 0.3s; }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            border: 2px solid var(--text-color);
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+        }
+
+        h1 { text-align: center; color: var(--accent-orange); text-shadow: 2px 2px #000; border-bottom: 2px solid var(--accent-orange); padding-bottom: 10px; }
+
+        .controls { display: flex; justify-content: space-between; margin-bottom: 20px; gap: 10px; }
+        select, button {
+            background: #000; color: var(--text-color); border: 1px solid var(--text-color);
+            padding: 10px; font-size: 16px; cursor: pointer; flex: 1;
+        }
+        button:hover { background: var(--text-color); color: #000; }
+        .btn-random { color: var(--accent-orange); border-color: var(--accent-orange); }
+
+        .battle-view { display: flex; justify-content: space-between; margin-top: 20px; }
+        .fighter { width: 45%; text-align: center; border: 1px solid #333; padding: 10px; background: var(--panel-bg); }
+        .hp-bar-container { width: 100%; height: 25px; background: #222; border: 1px solid #444; margin-top: 10px; position: relative; }
+        .hp-bar { height: 100%; width: 100%; transition: width 0.3s ease; }
+        .p1-hp { background: linear-gradient(90deg, #00ff41, #008f11); }
+        .p2-hp { background: linear-gradient(90deg, #ff3131, #8b0000); }
+
+        #battleLog {
+            height: 250px; overflow-y: auto; background: #000; border: 1px solid #333;
+            padding: 10px; margin-top: 20px; font-size: 14px; line-height: 1.6;
+            color: #ccc; border-left: 4px solid var(--accent-orange);
+        }
+
+        .chart-container { margin-top: 20px; background: rgba(0,0,0,0.5); padding: 10px; border: 1px solid #333; }
+        
+        .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #555; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="mainWarroom">
+    <h1>三國武神演武沙盤 // 數據處決</h1>
+
+    <div class="controls">
+        <div>
+            <label>我軍先鋒：</label>
+            <select id="p1Select"></select>
+        </div>
+        <div>
+            <label>敵軍將領：</label>
+            <select id="p2Select"></select>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button onclick="startDuel()">發動數據處決</button>
+        <button class="btn-random" onclick="randomize()">天道隨機點將</button>
+    </div>
+
+    <div class="battle-view">
+        <div class="fighter">
+            <h2 id="p1Name">---</h2>
+            <div class="hp-bar-container"><div id="p1HpBar" class="hp-bar p1-hp"></div></div>
+            <div id="p1HpText">100/100</div>
+        </div>
+        <div style="font-size: 40px; align-self: center; color: var(--accent-red);">VS</div>
+        <div class="fighter">
+            <h2 id="p2Name">---</h2>
+            <div class="hp-bar-container"><div id="p2HpBar" class="hp-bar p2-hp"></div></div>
+            <div id="p2HpText">100/100</div>
+        </div>
+    </div>
+
+    <div id="battleLog">系統待命中...請選擇將領並按下發動。</div>
+
+    <div class="chart-container">
+        <canvas id="hpChart"></canvas>
+    </div>
+
+    <div class="footer">什年工作室《三國演義武力超百科》授權終端</div>
+</div>
+
+<script>
+    // 541 武將數據庫 (演示版，主公可自行在此擴充)
+    const generals = [
+        { name: "趙雲", power: 100, rank: "天下第一" },
+        { name: "呂布", power: 99, rank: "超一流" },
+        { name: "關羽", power: 99, rank: "超一流" },
+        { name: "張飛", power: 99, rank: "超一流" },
+        { name: "馬超", power: 98, rank: "超一流" },
+        { name: "許褚", power: 98, rank: "基準/超一流" },
+        { name: "顏良", power: 98, rank: "超一流" },
+        { name: "龐德", power: 97, rank: "準超一流" },
+        { name: "文醜", power: 97, rank: "超一流" },
+        { name: "典韋", power: 97, rank: "超一流" },
+        { name: "姜維", power: 94, rank: "頂尖一流" },
+        { name: "文鴦", power: 93, rank: "頂尖一流" },
+        { name: "魏延", power: 92, rank: "一流" },
+        { name: "鄂煥", power: 88, rank: "強二流" },
+        { name: "邢道榮", power: 84, rank: "不入流" },
+        { name: "棄天帝・劉協", power: 999, rank: "維度超越者" },
+        { name: "無量境界・樊玥", power: 500, rank: "維度超越者" }
+    ];
+
+    const moves = [
+        "使出一招【龍吟突刺】，虛空震顫！",
+        "發動【青龍擺尾】，沉重的打擊撼動了數據底層！",
+        "進入【數據溢位】狀態，瘋狂連斬！",
+        "施展【神經元超載打擊】，對方邏輯出現短路！",
+        "橫掃千軍，產生強烈的數據擾動！",
+        "冷酷格擋後反手一記重擊！",
+        "發動【絕境爆發】，戰力瞬間溢出！"
+    ];
+
+    const p1Select = document.getElementById('p1Select');
+    const p2Select = document.getElementById('p2Select');
+    const battleLog = document.getElementById('battleLog');
+    let hpChart;
+
+    // 初始化下拉選單
+    generals.forEach((g, index) => {
+        let opt1 = new Option(`${g.name} (${g.power})`, index);
+        let opt2 = new Option(`${g.name} (${g.power})`, index);
+        p1Select.add(opt1);
+        p2Select.add(opt2);
+    });
+
+    function randomize() {
+        p1Select.selectedIndex = Math.floor(Math.random() * generals.length);
+        p2Select.selectedIndex = Math.floor(Math.random() * generals.length);
+        battleLog.innerHTML = "天道已選定將領。";
+    }
+
+    function initChart() {
+        const ctx = document.getElementById('hpChart').getContext('2d');
+        if (hpChart) hpChart.destroy();
+        hpChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [0],
+                datasets: [
+                    { label: '先鋒 HP', data: [100], borderColor: '#00ff41', tension: 0.1 },
+                    { label: '敵將 HP', data: [100], borderColor: '#ff3131', tension: 0.1 }
+                ]
+            },
+            options: { responsive: true, scales: { y: { min: 0, max: 100 } } }
+        });
+    }
+
+    function triggerShake() {
+        const warroom = document.getElementById('mainWarroom');
+        warroom.classList.add('shaking');
+        setTimeout(() => warroom.classList.remove('shaking'), 300);
+    }
+
+    async function startDuel() {
+        const p1 = generals[p1Select.value];
+        const p2 = generals[p2Select.value];
+        document.getElementById('p1Name').innerText = p1.name;
+        document.getElementById('p2Name').innerText = p2.name;
+
+        let h1 = 100, h2 = 100;
+        let round = 1;
+        battleLog.innerHTML = `[系統啟動] 正在處決：${p1.name} VS ${p2.name}<br>`;
+        initChart();
+
+        while (h1 > 0 && h2 > 0 && round < 30) {
+            await new Promise(r => setTimeout(r, 600));
+            
+            // 傷害邏輯：基礎傷害 + 亂數
+            let dmg1 = Math.max(5, (p1.power * 0.15) - (p2.power * 0.05) + (Math.random() * 15 - 5));
+            let dmg2 = Math.max(5, (p2.power * 0.15) - (p1.power * 0.05) + (Math.random() * 15 - 5));
+
+            // 隨機一人攻擊
+            if (Math.random() > 0.5) {
+                h2 -= dmg1;
+                battleLog.innerHTML += `<span style="color:var(--text-color)">[第${round}合]</span> ${p1.name} ${moves[Math.floor(Math.random()*moves.length)]} 造成 ${Math.floor(dmg1)} 傷害。<br>`;
+                triggerShake();
+            } else {
+                h1 -= dmg2;
+                battleLog.innerHTML += `<span style="color:var(--accent-red)">[第${round}合]</span> ${p2.name} 咆哮著發動猛攻，${p1.name} 損血 ${Math.floor(dmg2)}。<br>`;
+                triggerShake();
+            }
+
+            h1 = Math.max(0, h1); h2 = Math.max(0, h2);
+            
+            // 更新 UI
+            document.getElementById('p1HpBar').style.width = h1 + "%";
+            document.getElementById('p2HpBar').style.width = h2 + "%";
+            document.getElementById('p1HpText').innerText = Math.floor(h1) + "/100";
+            document.getElementById('p2HpText').innerText = Math.floor(h2) + "/100";
+            
+            // 更新圖表
+            hpChart.data.labels.push(round);
+            hpChart.data.datasets[0].data.push(h1);
+            hpChart.data.datasets[1].data.push(h2);
+            hpChart.update();
+
+            battleLog.scrollTop = battleLog.scrollHeight;
+            round++;
+        }
+
+        const winner = h1 > h2 ? p1.name : p2.name;
+        battleLog.innerHTML += `<br><strong style="color:var(--accent-orange); font-size:20px;">[處決完成] 最終獲勝者：${winner}！</strong>`;
+    }
+
+    initChart();
+</script>
+</body>
+</html>
