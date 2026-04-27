@@ -1127,17 +1127,17 @@
             }
 
             // ==========================================
-            // 🔥 趙雲專屬神技：九天龍吟驚寰宇 (30% 以下)
+            // 🔥 趙雲專屬神技：九天龍吟驚寰宇 (36% 以下)
             // ==========================================
-            if (p1.name === "趙雲" && h1 <= 30 && h1 > 10 && !p1Ult30Used && h2 > 0) {
+            if (p1.name === "趙雲" && h1 <= 36 && h1 > 10 && !p1Ult30Used && h2 > 0) {
                 p1Ult30Used = true; h2 -= 50; 
-                battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】${p1.name} 血量降至 30% 以下！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 強制發動專屬神技【九天龍吟驚寰宇】！槍出如龍，天地變色！${p2.name} 瞬間慘遭重創（-50 HP）！</span><br><br>`;
+                battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】${p1.name} 血量降至 36% 以下！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 強制發動專屬神技【九天龍吟驚寰宇】！槍出如龍，天地變色！${p2.name} 瞬間慘遭重創（-50 HP）！</span><br><br>`;
                 triggerShake(); setTimeout(triggerShake, 150); setTimeout(triggerShake, 300);
                 await new Promise(r => setTimeout(r, 800));
             }
-            if (p2.name === "趙雲" && h2 <= 30 && h2 > 10 && !p2Ult30Used && h1 > 0) {
+            if (p2.name === "趙雲" && h2 <= 36 && h2 > 10 && !p2Ult30Used && h1 > 0) {
                 p2Ult30Used = true; h1 -= 50; 
-                battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】敵將 ${p2.name} 血量降至 30% 以下！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 強制發動專屬神技【九天龍吟驚寰宇】！槍出如龍，天地變色！${p1.name} 瞬間慘遭重創（-50 HP）！</span><br><br>`;
+                battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】敵將 ${p2.name} 血量降至 36% 以下！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 強制發動專屬神技【九天龍吟驚寰宇】！槍出如龍，天地變色！${p1.name} 瞬間慘遭重創（-50 HP）！</span><br><br>`;
                 triggerShake(); setTimeout(triggerShake, 150); setTimeout(triggerShake, 300);
                 await new Promise(r => setTimeout(r, 800));
             }
