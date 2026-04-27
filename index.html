@@ -887,7 +887,7 @@
         setTimeout(() => warroom.classList.remove('shaking'), 300);
     }
 
-   async function startDuel() {
+  async function startDuel() {
         const p1 = generals[p1Select.value];
         const p2 = generals[p2Select.value];
         document.getElementById('p1Name').innerText = p1.name;
@@ -915,7 +915,7 @@
             // ==========================================
             if (p1.name === "趙雲" && h1 <= 10 && !p1Ult10Used) {
                 p1Ult10Used = true;
-                h2 = 0; // 直接將對方血量歸零 (即死)
+                h2 = 0; // 直接即死
                 battleLog.innerHTML += `<br><span style="color:#ffffff; font-weight:bold; font-size:16px; text-shadow: 0 0 5px #fff;">【真・武神絕境】${p1.name} 生命徵象跌破 10%！</span><br><span style="color:#ffffff; font-weight:bold; font-size:20px; text-shadow: 0 0 8px #fff;">❄️ 強制發動最終神技【玥之極】！時空凍結，一槍抹除！${p2.name} 的數據被徹底粉碎，瞬間死亡！</span><br><br>`;
                 
                 triggerShake(); setTimeout(triggerShake, 100); setTimeout(triggerShake, 200); setTimeout(triggerShake, 300);
@@ -923,7 +923,7 @@
             }
             else if (p2.name === "趙雲" && h2 <= 10 && !p2Ult10Used) {
                 p2Ult10Used = true;
-                h1 = 0; // 直接將對方血量歸零 (即死)
+                h1 = 0; // 直接即死
                 battleLog.innerHTML += `<br><span style="color:#ffffff; font-weight:bold; font-size:16px; text-shadow: 0 0 5px #fff;">【真・武神絕境】敵將 ${p2.name} 生命徵象跌破 10%！</span><br><span style="color:#ffffff; font-weight:bold; font-size:20px; text-shadow: 0 0 8px #fff;">❄️ 強制發動最終神技【玥之極】！時空凍結，一槍抹除！${p1.name} 的數據被徹底粉碎，瞬間死亡！</span><br><br>`;
                 
                 triggerShake(); setTimeout(triggerShake, 100); setTimeout(triggerShake, 200); setTimeout(triggerShake, 300);
@@ -931,27 +931,27 @@
             }
 
             // ==========================================
-            // 🔥 趙雲專屬神技：九天龍吟驚寰宇 (30% 以下削血判定)
+            // 🔥 趙雲專屬神技：九天龍吟驚寰宇 (30% 以下觸發，效果：減血 50)
             // ==========================================
             if (p1.name === "趙雲" && h1 <= 30 && h1 > 10 && !p1Ult30Used && h2 > 0) {
                 p1Ult30Used = true;
-                let ultDmg = Math.floor(h2 / 2);
+                let ultDmg = 50; // 修改為固定傷害 50
                 h2 -= ultDmg;
-                battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】${p1.name} 血量降至 30% 以下！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 強制發動專屬神技【九天龍吟驚寰宇】！槍出如龍，天地變色！${p2.name} 瞬間損失一半生命（-${ultDmg} HP）！</span><br><br>`;
+                battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】${p1.name} 血量降至 30% 以下！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 強制發動專屬神技【九天龍吟驚寰宇】！槍出如龍，天地變色！${p2.name} 瞬間慘遭重創（-50 HP）！</span><br><br>`;
                 triggerShake(); setTimeout(triggerShake, 150); setTimeout(triggerShake, 300);
                 await new Promise(r => setTimeout(r, 800));
             }
             if (p2.name === "趙雲" && h2 <= 30 && h2 > 10 && !p2Ult30Used && h1 > 0) {
                 p2Ult30Used = true;
-                let ultDmg = Math.floor(h1 / 2);
+                let ultDmg = 50; // 修改為固定傷害 50
                 h1 -= ultDmg;
-                battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】敵將 ${p2.name} 血量降至 30% 以下！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 強制發動專屬神技【九天龍吟驚寰宇】！槍出如龍，天地變色！${p1.name} 瞬間損失一半生命（-${ultDmg} HP）！</span><br><br>`;
+                battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】敵將 ${p2.name} 血量降至 30% 以下！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 強制發動專屬神技【九天龍吟驚寰宇】！槍出如龍，天地變色！${p1.name} 瞬間慘遭重創（-50 HP）！</span><br><br>`;
                 triggerShake(); setTimeout(triggerShake, 150); setTimeout(triggerShake, 300);
                 await new Promise(r => setTimeout(r, 800));
             }
 
             // ==========================================
-            // ⚔️ 常規攻防判定 (雙方都還活著才執行)
+            // ⚔️ 常規攻防判定
             // ==========================================
             if (h1 > 0 && h2 > 0) {
                 let dmg1 = Math.max(3, (p1.power * 0.12) - (p2.power * 0.04) + (Math.random() * 12 - 4));
