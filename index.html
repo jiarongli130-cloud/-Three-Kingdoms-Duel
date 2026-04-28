@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三國武神演武沙盤 4.0 - 天下第一武道大會 (終極完整版)</title>
+    <title>三國武神演武沙盤 4.0 - 天下第一武道大會</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -1124,7 +1124,7 @@
             "祝融": { name: "火神之裔・飛刀烈焰", dmg: 28, color: "#ff8c00", desc: "擲出燃燒著數據業火的飛刀，將對手的系統模組點燃！" },
             "徐質": { name: "開山巨斧・裂地狂砸", dmg: 28, color: "#708090", desc: "不顧一切地瘋狂砸擊地面，引發劇烈的系統地震！" },
             "孫桓": { name: "江東新銳・破陣神槍", dmg: 28, color: "#1e90ff", desc: "槍尖閃爍銳利的光芒，精準刺入敵方代碼的連接點！" },
-            "諸葛尚": { name: "武侯血脈・八卦陣斬", 28: "", color: "#00fa9a", desc: "在八卦陣列的輔助下，於陣眼處發動無法躲避的絕殺！" },
+            "諸葛尚": { name: "武侯血脈・八卦陣斬", dmg: 28, color: "#00fa9a", desc: "在八卦陣列的輔助下，於陣眼處發動無法躲避的絕殺！" },
             "李典": { name: "深明大義・沉穩反擊", dmg: 27, color: "#5f9ea0", desc: "看破對方的攻擊意圖，在最完美的時機發動致命反制！" },
             "樂進": { name: "先登死士・無畏衝鋒", dmg: 27, color: "#b22222", desc: "無視任何傷害判定，強行突破防線將兵器送入敵方胸膛！" },
             "于禁": { name: "毅重之將・法度森嚴", dmg: 27, color: "#4682b4", desc: "以嚴密的刀法封鎖敵方所有行動，隨即執行系統處決！" },
@@ -1224,13 +1224,13 @@
             // ==========================================
             // ❄️ 趙雲終極神技：玥之極
             // ==========================================
-            if (p1.name === "趙雲" && h1 <= 10 && !p1Ult10Used) {
+            if (p1.name === "趙雲" && h1 <= 10 && h1 > 0 && !p1Ult10Used && h2 > 0) {
                 p1Ult10Used = true; h2 = 0; 
                 battleLog.innerHTML += `<br><span style="color:#ffffff; font-weight:bold; font-size:16px; text-shadow: 0 0 5px #fff;">【真・武神絕境】${p1.name} 生命徵象跌破 10%！</span><br><span style="color:#ffffff; font-weight:bold; font-size:20px; text-shadow: 0 0 8px #fff;">❄️ 強制發動最終神技【玥之極】！時空凍結，一槍抹除！${p2.name} 的數據被徹底粉碎，瞬間死亡！</span><br><br>`;
                 triggerShake(); setTimeout(triggerShake, 100); setTimeout(triggerShake, 200); setTimeout(triggerShake, 300);
                 await new Promise(r => setTimeout(r, 800));
             }
-            else if (p2.name === "趙雲" && h2 <= 10 && !p2Ult10Used) {
+            else if (p2.name === "趙雲" && h2 <= 10 && h2 > 0 && !p2Ult10Used && h1 > 0) {
                 p2Ult10Used = true; h1 = 0; 
                 battleLog.innerHTML += `<br><span style="color:#ffffff; font-weight:bold; font-size:16px; text-shadow: 0 0 5px #fff;">【真・武神絕境】敵將 ${p2.name} 生命徵象跌破 10%！</span><br><span style="color:#ffffff; font-weight:bold; font-size:20px; text-shadow: 0 0 8px #fff;">❄️ 強制發動最終神技【玥之極】！時空凍結，一槍抹除！${p1.name} 的數據被徹底粉碎，瞬間死亡！</span><br><br>`;
                 triggerShake(); setTimeout(triggerShake, 100); setTimeout(triggerShake, 200); setTimeout(triggerShake, 300);
@@ -1268,7 +1268,7 @@
             // ==========================================
             // 💥 72大名將專屬絕招
             // ==========================================
-            if (ultimateSkills[p1.name] && h1 <= 35 && !p1CustomUltUsed && h2 > 0) {
+            if (ultimateSkills[p1.name] && h1 <= 35 && h1 > 0 && !p1CustomUltUsed && h2 > 0) {
                 p1CustomUltUsed = true;
                 let skill = ultimateSkills[p1.name];
                 if (p2DodgeCount > 0) {
@@ -1281,7 +1281,7 @@
                 triggerShake(); setTimeout(triggerShake, 150);
                 await new Promise(r => setTimeout(r, 800));
             }
-            if (ultimateSkills[p2.name] && h2 <= 35 && !p2CustomUltUsed && h1 > 0) {
+            if (ultimateSkills[p2.name] && h2 <= 35 && h2 > 0 && !p2CustomUltUsed && h1 > 0) {
                 p2CustomUltUsed = true;
                 let skill = ultimateSkills[p2.name];
                 if (p1DodgeCount > 0) {
@@ -1298,13 +1298,13 @@
             // ==========================================
             // 💨 殘卒專屬神技：生存本能 
             // ==========================================
-            if (p1.name === "殘卒" && h1 <= 20 && !p1RemnantDodgeUsed) {
+            if (p1.name === "殘卒" && h1 <= 20 && h1 > 0 && !p1RemnantDodgeUsed) {
                 p1RemnantDodgeUsed = true; p1DodgeCount = 10;
                 battleLog.innerHTML += `<br><span style="color:#aaaaaa; font-weight:bold; font-size:15px;">【螻蟻貪生】${p1.name} 血量跌破 20%！</span><br><span style="color:#cccccc; font-weight:bold; font-size:18px;">💨 強制發動絕招【苟延殘喘】！激發 200% 求生本能，接下來將強制閃避 10次任何攻擊（玥之極除外）！</span><br><br>`;
                 triggerShake(); setTimeout(triggerShake, 200);
                 await new Promise(r => setTimeout(r, 800));
             }
-            if (p2.name === "殘卒" && h2 <= 20 && !p2RemnantDodgeUsed) {
+            if (p2.name === "殘卒" && h2 <= 20 && h2 > 0 && !p2RemnantDodgeUsed) {
                 p2RemnantDodgeUsed = true; p2DodgeCount = 10;
                 battleLog.innerHTML += `<br><span style="color:#aaaaaa; font-weight:bold; font-size:15px;">【螻蟻貪生】敵將 ${p2.name} 血量跌破 20%！</span><br><span style="color:#cccccc; font-weight:bold; font-size:18px;">💨 強制發動絕招【苟延殘喘】！激發 200% 求生本能，接下來將強制閃避 10次任何攻擊（玥之極除外）！</span><br><br>`;
                 triggerShake(); setTimeout(triggerShake, 200);
@@ -1435,7 +1435,7 @@
         const p1 = generals[idx1];
         const p2 = generals[idx2];
 
-        // ▼▼▼ 新增：趙雲專屬隱藏武力 (海選專用) ▼▼▼
+        // ▼▼▼ 趙雲專屬隱藏武力 (海選專用) ▼▼▼
         const p1ActualPower = p1.name === "趙雲" ? p1.power + 20 : p1.power;
         const p2ActualPower = p2.name === "趙雲" ? p2.power + 20 : p2.power;
         // ▲▲▲ 新增結束 ▲▲▲
@@ -1466,18 +1466,18 @@
                 if (p2ActualPower > p1ActualPower && Math.random() < instaKillChance && p1.name !== "趙雲") return parseInt(idx2);
             }
 
-            if (p1.name === "趙雲" && h1 <= 10 && !p1Ult10Used) { p1Ult10Used = true; h2 = 0; }
-            else if (p2.name === "趙雲" && h2 <= 10 && !p2Ult10Used) { p2Ult10Used = true; h1 = 0; }
+            if (p1.name === "趙雲" && h1 <= 10 && h1 > 0 && !p1Ult10Used && h2 > 0) { p1Ult10Used = true; h2 = 0; }
+            else if (p2.name === "趙雲" && h2 <= 10 && h2 > 0 && !p2Ult10Used && h1 > 0) { p2Ult10Used = true; h1 = 0; }
 
             if (p1.name === "趙雲" && h1 <= 36 && h1 > 10 && !p1Ult30Used && h2 > 0) { p1Ult30Used = true; if (p2DodgeCount > 0) p2DodgeCount--; else h2 -= 50; }
             if (p2.name === "趙雲" && h2 <= 36 && h2 > 10 && !p2Ult30Used && h1 > 0) { p2Ult30Used = true; if (p1DodgeCount > 0) p1DodgeCount--; else h1 -= 50; }
 
             let d1 = getUltDmg(p1.name), d2 = getUltDmg(p2.name);
-            if (d1 && h1 <= 35 && !p1CustomUltUsed && h2 > 0) { p1CustomUltUsed = true; if (p2DodgeCount > 0) p2DodgeCount--; else h2 -= d1; }
-            if (d2 && h2 <= 35 && !p2CustomUltUsed && h1 > 0) { p2CustomUltUsed = true; if (p1DodgeCount > 0) p1DodgeCount--; else h1 -= d2; }
+            if (d1 && h1 <= 35 && h1 > 0 && !p1CustomUltUsed && h2 > 0) { p1CustomUltUsed = true; if (p2DodgeCount > 0) p2DodgeCount--; else h2 -= d1; }
+            if (d2 && h2 <= 35 && h2 > 0 && !p2CustomUltUsed && h1 > 0) { p2CustomUltUsed = true; if (p1DodgeCount > 0) p1DodgeCount--; else h1 -= d2; }
 
-            if (p1.name === "殘卒" && h1 <= 20 && !p1RemnantDodgeUsed) { p1RemnantDodgeUsed = true; p1DodgeCount = 10; }
-            if (p2.name === "殘卒" && h2 <= 20 && !p2RemnantDodgeUsed) { p2RemnantDodgeUsed = true; p2DodgeCount = 10; }
+            if (p1.name === "殘卒" && h1 <= 20 && h1 > 0 && !p1RemnantDodgeUsed) { p1RemnantDodgeUsed = true; p1DodgeCount = 10; }
+            if (p2.name === "殘卒" && h2 <= 20 && h2 > 0 && !p2RemnantDodgeUsed) { p2RemnantDodgeUsed = true; p2DodgeCount = 10; }
 
             if (h1 > 0 && h2 > 0) {
                 let dmg1 = Math.max(3, (p1ActualPower*0.12) - (p2ActualPower*0.04) + (Math.random()*12-4));
