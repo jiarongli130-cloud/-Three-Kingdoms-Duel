@@ -1123,16 +1123,30 @@
     }
 
     function randomizeOneVsN() {
+        // 取得當前已經選定的狂龍 ID
+        let currentDragonIdx = parseInt(document.getElementById('dragonSelect').value);
+        
+        if (isNaN(currentDragonIdx)) {
+            alert("主公，請先為『一龍鬥群虎』指定一名狂龍！");
+            return;
+        }
+
         let indices = [];
-        while(indices.length < 11) {
+        // 只隨機挑選 10 名群虎
+        while(indices.length < 10) {
             let r = Math.floor(Math.random() * generals.length);
-            if(!indices.includes(r)) indices.push(r);
+            // 確保隨機選出的群虎不會互相重複，且「不會選到當前的狂龍自己」
+            if(!indices.includes(r) && r !== currentDragonIdx) {
+                indices.push(r);
+            }
         }
-        document.getElementById('dragonSelect').value = indices[0];
+        
+        // 將隨機選出的 10 人配置到群虎欄位
         for(let i=0; i<10; i++) {
-            document.getElementById('tT'+i).value = indices[i+1];
+            document.getElementById('tT'+i).value = indices[i];
         }
-        battleLog.innerHTML += `<br><span style="color:#ffd700; font-weight:bold;">🎲 天道已為【一龍鬥群虎】配置 1 龍與 10 虎陣容！</span><br>`;
+        
+        battleLog.innerHTML += `<br><span style="color:#ffd700; font-weight:bold;">🎲 天道已為當前狂龍，隨機指派了 10 名群虎對手！</span><br>`;
         battleLog.scrollTop = battleLog.scrollHeight;
     }
 
