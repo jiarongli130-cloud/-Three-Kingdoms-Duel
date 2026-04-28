@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三國武神演武沙盤 4.0 - 天下第一武道大會</title>
+    <title>三國武神演武沙盤 5.0 - 巔峰軍團戰</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -55,6 +55,7 @@
         .btn-random { color: var(--accent-orange); border-color: var(--accent-orange); }
         .btn-tournament { background: #4b0082; color: #fff; border-color: #8a2be2; font-weight: bold; text-shadow: 0 0 5px #fff; box-shadow: 0 0 10px #4b0082; }
         .btn-tournament:hover { background: #8a2be2; color: #fff; box-shadow: 0 0 20px #8a2be2;}
+        .team-selects select { margin-bottom: 5px; font-size: 14px; padding: 5px; }
         .battle-view { display: flex; justify-content: space-between; margin-top: 20px; }
         .fighter { width: 45%; text-align: center; padding: 10px; background: var(--panel-bg); }
         .hp-bar-container { width: 100%; height: 25px; background: #222; margin-top: 10px; position: relative; }
@@ -72,19 +73,18 @@
 </head>
 <body>
 <div class="container" id="mainWarroom">
-    <h1>三國武將演武沙盤 4.0 - 天下第一武道大會</h1>
+    <h1>三國武將演武沙盤 5.0 - 巔峰軍團戰</h1>
     
     <div class="controls">
         <div class="select-group">
-            <label>我軍先鋒：</label>
+            <label>單挑我軍：</label>
             <select id="p1Select"></select>
         </div>
         <div class="select-group">
-            <label style="color: var(--accent-red);">敵軍將領：</label>
+            <label style="color: var(--accent-red);">單挑敵軍：</label>
             <select id="p2Select" style="color: var(--accent-red); border: 1px solid var(--accent-red);"></select>
         </div>
     </div>
-    
     <div class="controls">
         <button onclick="startDuel()" style="flex: 1;">發動單挑處決</button>
         <button class="btn-random" onclick="randomize()" style="flex: 1;">天道隨機點將</button>
@@ -95,6 +95,26 @@
         <input type="number" id="customPower" placeholder="武力(1-99999)" style="flex: 1; min-width: 100px;">
         <input type="text" id="customRank" placeholder="階級(如: 隱藏修羅)" style="flex: 1; min-width: 120px;">
         <button onclick="addCustomGeneral()" style="color: #ffd700; border-color: #ffd700; flex: 1;">鍛造武將降臨</button>
+    </div>
+
+    <div class="controls" style="border: 1px solid #00ffff; padding: 15px; border-radius: 5px; background: rgba(0, 255, 255, 0.05); display: block;">
+        <h3 style="color: #00ffff; margin-top: 0; margin-bottom: 10px; text-shadow: 0 0 5px #00ffff;">🛡️ 6 VS 6 巔峰團戰 (車輪擂台) 🛡️</h3>
+        <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+            <div class="team-selects" style="flex: 1; border: 1px solid #00ff41; padding: 10px; border-radius: 5px;">
+                <h4 style="color:#00ff41; margin-top:0; text-align:center;">我方陣營 (青龍)</h4>
+                <select id="tA0"></select><select id="tA1"></select><select id="tA2"></select>
+                <select id="tA3"></select><select id="tA4"></select><select id="tA5"></select>
+            </div>
+            <div class="team-selects" style="flex: 1; border: 1px solid #ff3131; padding: 10px; border-radius: 5px;">
+                <h4 style="color:#ff3131; margin-top:0; text-align:center;">敵方陣營 (赤虎)</h4>
+                <select id="tB0" style="color:var(--accent-red);"></select><select id="tB1" style="color:var(--accent-red);"></select><select id="tB2" style="color:var(--accent-red);"></select>
+                <select id="tB3" style="color:var(--accent-red);"></select><select id="tB4" style="color:var(--accent-red);"></select><select id="tB5" style="color:var(--accent-red);"></select>
+            </div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-tournament" onclick="randomizeTeam()" style="flex: 1; background: #005f5f; border-color: #00ffff;">🎲 隨機配置雙方軍團</button>
+            <button class="btn-tournament" onclick="runTeamBattle()" style="flex: 2; background: #008080; border-color: #00ffff; font-size: 18px;">⚔️ 展開 6v6 團隊死鬥</button>
+        </div>
     </div>
 
     <div class="controls" style="border: 1px solid #8a2be2; padding: 15px; border-radius: 5px; background: rgba(138, 43, 226, 0.1); display: block;">
@@ -130,9 +150,9 @@
         </div>
     </div>
 
-    <div id="battleLog">系統待命中...請選擇將領並按下發動，或舉辦武道大會。</div>
+    <div id="battleLog">系統待命中...請選擇將領並按下發動，或舉辦賽事。</div>
     <div class="chart-container"><canvas id="hpChart"></canvas></div>
-    <div class="footer">什年工作室《三國演義武力超百科》授權終端 // 支援完美大逃殺推演</div>
+    <div class="footer">什年工作室《三國演義武力超百科》授權終端 // 支援 6v6 團戰與大逃殺</div>
 </div>
 
 <script>
@@ -875,7 +895,7 @@
         "啟動【雙重驗證】護盾，對手的任何攻擊都必須經過兩次折損，最終化為虛無！",
         "揮出【布林值 (Boolean)】絕殺，非生即死，強制的 False 判定讓對手瞬間暴斃！",
         "扯下【CPU散熱塔】當作巨錘，連同散熱膏將對手的腦袋砸得稀爛！",
-        "發動【液態氮超頻】，渾身散發極寒白霧，以超越系統極限的速度斬下敵首！",
+        "發動【液態氮超頻】，渾身散發極寒白霧，以超越系統極限的速度越斬下敵首！",
         "擲出【機械硬碟盤片】，如血滴子般高速旋轉，精準切斷對手的頸動脈！",
         "揮動【高壓電源線】，閃爍著致命的電弧，一鞭抽碎了敵方的高階護甲！",
         "施展【鍵盤拔鍵器】手法，殘忍地將對手盔甲上的模組一塊塊拔除！",
@@ -980,7 +1000,6 @@
     const p2Select = document.getElementById('p2Select');
     const battleLog = document.getElementById('battleLog');
     let hpChart;
-
     let tourneyRosterData = []; 
 
     function updateDropdowns() {
@@ -988,14 +1007,28 @@
         p2Select.innerHTML = '';
         const tourneySelect = document.getElementById('tourneySelect');
         if(tourneySelect) tourneySelect.innerHTML = '';
+        
+        // 6v6 團戰選單
+        const teamSelects = [
+            document.getElementById('tA0'), document.getElementById('tA1'), document.getElementById('tA2'),
+            document.getElementById('tA3'), document.getElementById('tA4'), document.getElementById('tA5'),
+            document.getElementById('tB0'), document.getElementById('tB1'), document.getElementById('tB2'),
+            document.getElementById('tB3'), document.getElementById('tB4'), document.getElementById('tB5')
+        ];
+        teamSelects.forEach(sel => { if(sel) sel.innerHTML = ''; });
 
         const sortedGenerals = [...generals].sort((a, b) => b.power - a.power);
         sortedGenerals.forEach((g) => {
             let idx = generals.indexOf(g);
             let optStr = `${g.name} (${g.power}) - ${g.rank}`;
+            
             p1Select.add(new Option(optStr, idx));
             p2Select.add(new Option(optStr, idx));
             if(tourneySelect) tourneySelect.add(new Option(optStr, idx));
+            
+            teamSelects.forEach(sel => {
+                if(sel) sel.add(new Option(optStr, idx));
+            });
         });
     }
     
@@ -1023,11 +1056,34 @@
         battleLog.innerHTML = "天道已選定隨機將領。";
     }
 
+    function randomizeTeam() {
+        let indices = [];
+        while(indices.length < 12) {
+            let r = Math.floor(Math.random() * generals.length);
+            if(!indices.includes(r)) indices.push(r);
+        }
+        document.getElementById('tA0').value = indices[0];
+        document.getElementById('tA1').value = indices[1];
+        document.getElementById('tA2').value = indices[2];
+        document.getElementById('tA3').value = indices[3];
+        document.getElementById('tA4').value = indices[4];
+        document.getElementById('tA5').value = indices[5];
+        
+        document.getElementById('tB0').value = indices[6];
+        document.getElementById('tB1').value = indices[7];
+        document.getElementById('tB2').value = indices[8];
+        document.getElementById('tB3').value = indices[9];
+        document.getElementById('tB4').value = indices[10];
+        document.getElementById('tB5').value = indices[11];
+        
+        battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold;">🎲 天道已為雙方軍團配置 12 名隨機猛將！</span><br>`;
+        battleLog.scrollTop = battleLog.scrollHeight;
+    }
+
     function addToTournament() {
         if(tourneyRosterData.length >= 12) { alert("主公，名單已滿 12 人！"); return; }
         let idx = parseInt(document.getElementById('tourneySelect').value);
         if(tourneyRosterData.includes(idx)) { alert("此武將已在名單中，無法重複參賽！"); return; }
-        
         tourneyRosterData.push(idx);
         updateRosterUI();
     }
@@ -1062,10 +1118,8 @@
         const p1 = generals[p1Select.value];
         const p2 = generals[p2Select.value];
         
-        // ▼▼▼ 趙雲專屬隱藏武力 (介面不顯示，僅算傷用) ▼▼▼
         const p1ActualPower = p1.name === "趙雲" ? p1.power + 20 : p1.power;
         const p2ActualPower = p2.name === "趙雲" ? p2.power + 20 : p2.power;
-        // ▲▲▲ 新增結束 ▲▲▲
 
         document.getElementById('p1Name').innerText = p1.name;
         document.getElementById('p1Rank').innerText = p1.rank;
@@ -1074,12 +1128,10 @@
 
         let h1 = 100, h2 = 100;
         
-        // ▼▼▼ 新增：開戰前強制刷新 UI 血量至滿血 ▼▼▼
         document.getElementById('p1HpBar').style.width = "100%";
         document.getElementById('p2HpBar').style.width = "100%";
         document.getElementById('p1HpText').innerText = "100/100";
         document.getElementById('p2HpText').innerText = "100/100";
-        // ▲▲▲ 新增結束 ▲▲▲
 
         let round = 1;
         
@@ -1173,9 +1225,6 @@
         while (h1 > 0 && h2 > 0 && round < 80) {
             await new Promise(r => setTimeout(r, isTournamentMode ? 200 : 450));
 
-            // ==========================================
-            // 🌸 宿命彩蛋：樊玥 VS 趙雲
-            // ==========================================
             if ((p1.name === "趙雲" && p2.name === "樊玥") || (p1.name === "樊玥" && p2.name === "趙雲")) {
                 if (p1.name === "樊玥") { h2 = 0; } else { h1 = 0; }
                 battleLog.innerHTML += `<br><span style="color:#ffffff; font-weight:bold; font-size:20px; text-shadow: 0 0 10px #ffffff, 0 0 20px #ffffff;">🌸 【宿命羈絆】樊玥溫柔注視，強制發動專屬招式【雲玥同心】！</span><br><span style="color:#dddddd; font-size:16px; font-style:italic;">「天下第一」的趙雲放下了手中的龍膽亮銀槍，撤除所有防禦。武神甘願在此刻溫柔落敗...</span><br><br>`;
@@ -1183,9 +1232,6 @@
                 break;
             }
 
-            // ==========================================
-            // 🌸 憐憫彩蛋：樊玥 VS 殘卒
-            // ==========================================
             if ((p1.name === "殘卒" && p2.name === "樊玥") || (p1.name === "樊玥" && p2.name === "殘卒")) {
                 if (p1.name === "樊玥") { h2 = 0; } else { h1 = 0; }
                 battleLog.innerHTML += `<br><span style="color:#ffffff; font-weight:bold; font-size:20px; text-shadow: 0 0 10px #ffffff, 0 0 20px #ffffff;">🌸 【神明垂憐】樊玥輕嘆一聲，不忍兵刃相見...</span><br><span style="color:#dddddd; font-size:16px; font-style:italic;">本就命若游絲的殘卒，在神明的溫柔注視下放下了殘破的兵器，甘願認輸...</span><br><br>`;
@@ -1193,11 +1239,8 @@
                 break;
             }
             
-            // ==========================================
-            // ⚡ 終極霸氣：武力碾壓・開場秒殺 (僅限第一回合)
-            // ==========================================
             if (round === 1) {
-                let instaKillChance = 0.015; // 設定 1.5% 的極低機率
+                let instaKillChance = 0.015; 
                 if (p1ActualPower > p2ActualPower && Math.random() < instaKillChance && p2.name !== "趙雲") {
                     h2 = 0;
                     battleLog.innerHTML += `<br><span style="color:#ff3131; font-weight:bold; font-size:20px; text-shadow: 0 0 10px #ff3131;">⚡ 【絕對武力碾壓・開場秒殺】</span><br><span style="color:#cccccc; font-size:16px;">${p1.name} 挾帶懸殊的武力差距，身形如鬼魅般閃過，在交鋒的第零秒便將 ${p2.name} 的首級無情斬落！戰鬥瞬間結束！</span><br><br>`;
@@ -1229,9 +1272,6 @@
                 }
             }
             
-            // ==========================================
-            // ❄️ 趙雲終極神技：玥之極
-            // ==========================================
             if (p1.name === "趙雲" && h1 <= 10 && h1 > 0 && !p1Ult10Used && h2 > 0) {
                 p1Ult10Used = true; h2 = 0; 
                 battleLog.innerHTML += `<br><span style="color:#ffffff; font-weight:bold; font-size:16px; text-shadow: 0 0 5px #fff;">【真・武神絕境】${p1.name} 生命徵象跌破 10%！</span><br><span style="color:#ffffff; font-weight:bold; font-size:20px; text-shadow: 0 0 8px #fff;">❄️ 強制發動最終神技【玥之極】！時空凍結，一槍抹除！${p2.name} 的數據被徹底粉碎，瞬間死亡！</span><br><br>`;
@@ -1245,9 +1285,6 @@
                 await new Promise(r => setTimeout(r, 800));
             }
 
-            // ==========================================
-            // 🔥 趙雲專屬神技：九天龍吟驚寰宇
-            // ==========================================
             if (p1.name === "趙雲" && h1 <= 36 && h1 > 10 && !p1Ult30Used && h2 > 0) {
                 p1Ult30Used = true; 
                 if (p2DodgeCount > 0) {
@@ -1277,9 +1314,6 @@
                 await new Promise(r => setTimeout(r, 800));
             }
 
-            // ==========================================
-            // 💥 72大名將專屬絕招
-            // ==========================================
             if (ultimateSkills[p1.name] && h1 <= 35 && h1 > 0 && !p1CustomUltUsed && h2 > 0) {
                 p1CustomUltUsed = true;
                 let skill = ultimateSkills[p1.name];
@@ -1311,9 +1345,6 @@
                 await new Promise(r => setTimeout(r, 800));
             }
 
-            // ==========================================
-            // 💨 殘卒專屬神技：生存本能 
-            // ==========================================
             if (p1.name === "殘卒" && h1 <= 20 && h1 > 0 && !p1RemnantDodgeUsed) {
                 p1RemnantDodgeUsed = true; p1DodgeCount = 10;
                 battleLog.innerHTML += `<br><span style="color:#aaaaaa; font-weight:bold; font-size:15px;">【螻蟻貪生】${p1.name} 血量跌破 20%！</span><br><span style="color:#cccccc; font-weight:bold; font-size:18px;">💨 強制發動絕招【苟延殘喘】！激發 200% 求生本能，接下來將強制閃避 10次任何攻擊（玥之極除外）！</span><br><br>`;
@@ -1327,59 +1358,46 @@
                 await new Promise(r => setTimeout(r, 800));
             }
 
-            // ==========================================
-            // ⚔️ 常規攻防判定 (加入完美格擋、閃避與普通格擋)
-            // ==========================================
             if (h1 > 0 && h2 > 0) {
                 let dmg1 = Math.max(3, (p1ActualPower * 0.12) - (p2ActualPower * 0.04) + (Math.random() * 12 - 4));
                 let dmg2 = Math.max(3, (p2ActualPower * 0.12) - (p1ActualPower * 0.04) + (Math.random() * 12 - 4));
                 
-                let eventRand = Math.random(); // 決定觸發何種防禦機制
+                let eventRand = Math.random(); 
 
                 if (Math.random() > 0.5) {
-                    // p1 攻擊 p2
                     if (p2DodgeCount > 0) {
                         p2DodgeCount--;
                         battleLog.innerHTML += `<span style="color:#aaaaaa;">[第${round}合] 💨 ${p2.name} 發動殘卒本能，極限閃避了 ${p1.name} 的攻擊！（剩餘閃避：${p2DodgeCount}次）</span><br>`;
                     } else if (eventRand < 0.12) {
-                        // 12% 完美閃避
                         battleLog.innerHTML += `<span style="color:#aaaaaa;">[第${round}合] 💨 敏捷如風！${p2.name} 看破了攻擊軌跡，完美閃躲了 ${p1.name} 的致命一擊！</span><br>`;
                     } else if (eventRand < 0.20) {
-                        // 8% 完美彈反 (無傷)
                         battleLog.innerHTML += `<span style="color:#ffd700;">[第${round}合] 🛡️ 完美彈反！${p2.name} 兵刃微挑，發出清脆的龍吟，【無傷】化解了 ${p1.name} 的狂暴攻勢！</span><br>`;
                         triggerShake();
                     } else if (eventRand < 0.35) {
-                        // 15% 普通格擋 (減傷 60%)
                         dmg1 = Math.floor(dmg1 * 0.4);
                         h2 -= dmg1;
                         battleLog.innerHTML += `<span style="color:#b0c4de;">[第${round}合] 🛡️ 鏗鏘巨響！${p2.name} 舉起兵器成功格擋 ${p1.name} 的猛攻，僅承受 ${Math.floor(dmg1)} 點震傷。</span><br>`;
                         triggerShake();
                     } else {
-                        // 65% 常規命中
                         h2 -= dmg1;
                         battleLog.innerHTML += `<span style="color:var(--text-color)">[第${round}合]</span> ${p1.name} ${moves[Math.floor(Math.random()*moves.length)]} 造成 ${Math.floor(dmg1)} 點數據損傷。<br>`;
                         triggerShake();
                     }
                 } else {
-                    // p2 攻擊 p1
                     if (p1DodgeCount > 0) {
                         p1DodgeCount--;
                         battleLog.innerHTML += `<span style="color:#aaaaaa;">[第${round}合] 💨 ${p1.name} 發動殘卒本能，極限閃避了 ${p2.name} 的攻擊！（剩餘閃避：${p1DodgeCount}次）</span><br>`;
                     } else if (eventRand < 0.12) {
-                        // 12% 完美閃避
                         battleLog.innerHTML += `<span style="color:#aaaaaa;">[第${round}合] 💨 敏捷如風！${p1.name} 看破了攻擊軌跡，完美閃躲了 ${p2.name} 的致命一擊！</span><br>`;
                     } else if (eventRand < 0.20) {
-                        // 8% 完美彈反 (無傷)
                         battleLog.innerHTML += `<span style="color:#ffd700;">[第${round}合] 🛡️ 完美彈反！${p1.name} 兵刃微挑，發出清脆的龍吟，【無傷】化解了 ${p2.name} 的狂暴攻勢！</span><br>`;
                         triggerShake();
                     } else if (eventRand < 0.35) {
-                        // 15% 普通格擋 (減傷 60%)
                         dmg2 = Math.floor(dmg2 * 0.4);
                         h1 -= dmg2;
                         battleLog.innerHTML += `<span style="color:#b0c4de;">[第${round}合] 🛡️ 鏗鏘巨響！${p1.name} 舉起兵器成功格擋 ${p2.name} 的猛攻，僅承受 ${Math.floor(dmg2)} 點震傷。</span><br>`;
                         triggerShake();
                     } else {
-                        // 65% 常規命中
                         h1 -= dmg2;
                         battleLog.innerHTML += `<span style="color:var(--accent-red)">[第${round}合]</span> ${p2.name} ${moves[Math.floor(Math.random()*moves.length)]} ${p1.name} 承受 ${Math.floor(dmg2)} 點邏輯破壞。<br>`;
                         triggerShake();
@@ -1389,9 +1407,6 @@
 
             h1 = Math.max(0, h1); h2 = Math.max(0, h2);
 
-            // ==========================================
-            // 🛡️ 趙雲專屬被動：弒神鎖血
-            // ==========================================
             if (p1.name === "趙雲" && p2.rank.includes("神仙流") && h1 === 0 && !p1GodDefyUsed) {
                 h1 = 1; p1GodDefyUsed = true;
                 battleLog.innerHTML += `<br><span style="color:#ffd700; font-weight:bold; font-size:16px; text-shadow: 0 0 5px #ffaa00;">【逆天改命】神仙的維度打擊降臨！但...神明之力亦無法抹殺天下第一！${p1.name} 強行鎖住最後 1 點生命！</span><br><br>`;
@@ -1403,9 +1418,6 @@
                 triggerShake();
             }
 
-            // ==========================================
-            // 💋 樊玥專屬神技：樊玥之吻
-            // ==========================================
             if (p1.name === "樊玥" && h1 <= 30 && !p1FanYueHealUsed) {
                 p1FanYueHealUsed = true; h1 = 100;
                 battleLog.innerHTML += `<br><span style="color:#ffffff; font-weight:bold; font-size:15px; text-shadow: 0 0 5px #ff69b4;">【神明恩典】${p1.name} 生命值降至極危！</span><br><span style="color:#ffffff; font-weight:bold; font-size:18px; text-shadow: 0 0 10px #ff1493;">💋 強制發動專屬神技【樊玥之吻】！純白與粉色數據流環繞全身，${p1.name} 瞬間滿血復活（HP 恢復至 100）！</span><br><br>`;
@@ -1417,7 +1429,6 @@
                 triggerShake(); setTimeout(triggerShake, 200);
             }
 
-            // 更新 UI
             document.getElementById('p1HpBar').style.width = h1 + "%";
             document.getElementById('p2HpBar').style.width = h2 + "%";
             document.getElementById('p1HpText').innerText = Math.floor(h1) + "/100";
@@ -1443,18 +1454,103 @@
     }
 
     // ==============================================================
+    // ▼▼▼ 6v6 團隊死鬥 (擂台車輪戰) 推演模組 ▼▼▼
+    // ==============================================================
+    async function runTeamBattle() {
+        const teamA = [
+            parseInt(document.getElementById('tA0').value), parseInt(document.getElementById('tA1').value),
+            parseInt(document.getElementById('tA2').value), parseInt(document.getElementById('tA3').value),
+            parseInt(document.getElementById('tA4').value), parseInt(document.getElementById('tA5').value)
+        ];
+        const teamB = [
+            parseInt(document.getElementById('tB0').value), parseInt(document.getElementById('tB1').value),
+            parseInt(document.getElementById('tB2').value), parseInt(document.getElementById('tB3').value),
+            parseInt(document.getElementById('tB4').value), parseInt(document.getElementById('tB5').value)
+        ];
+
+        // 防呆：確保名單有值
+        if (teamA.includes(NaN) || teamB.includes(NaN)) {
+            alert("主公，請先將雙方 6 名將領全數選滿！");
+            return;
+        }
+
+        const buttons = document.querySelectorAll("button");
+        buttons.forEach(b => b.disabled = true);
+
+        battleLog.innerHTML = `<h2 style="color:#00ffff; text-align:center; text-shadow: 0 0 10px #00ffff; margin-bottom:5px;">🛡️ 6 VS 6 巔峰團隊死鬥 🛡️</h2>`;
+        battleLog.innerHTML += `<div style="color:#ccc; text-align:center; margin-bottom: 15px; font-weight:bold;">
+            <span style="color:#00ff41;">【青龍陣營】</span> VS <span style="color:#ff3131;">【赤虎陣營】</span><br>
+            擂台死鬥啟動，敗者退場，勝者繼續迎戰！
+        </div><hr style="border-color:#333;">`;
+        battleLog.scrollTop = battleLog.scrollHeight;
+        await new Promise(r => setTimeout(r, 2000));
+
+        let a_idx = 0; // 青龍隊目前上場將領的索引
+        let b_idx = 0; // 赤虎隊目前上場將領的索引
+        let matchNum = 1;
+
+        while (a_idx < 6 && b_idx < 6) {
+            let pA_idx = teamA[a_idx];
+            let pB_idx = teamB[b_idx];
+            
+            battleLog.innerHTML += `<br><h3 style="color:#00ffff; border-left: 4px solid #00ffff; padding-left: 10px;">
+                ⚔️ 第 ${matchNum} 陣：<span style="color:#00ff41;">${generals[pA_idx].name}</span> VS <span style="color:#ff3131;">${generals[pB_idx].name}</span>
+            </h3>`;
+            battleLog.scrollTop = battleLog.scrollHeight;
+            await new Promise(r => setTimeout(r, 1500));
+
+            // 設定 UI 選單，讓 startDuel 讀取
+            p1Select.value = pA_idx;
+            p2Select.value = pB_idx;
+
+            // 開打 (傳入 true 代表是賽事模式，不會印出結尾那句單挑終結)
+            let winnerIndex = await startDuel(true);
+
+            if (winnerIndex === pA_idx) {
+                // A 贏了，B 死掉換下一個
+                battleLog.innerHTML += `<br><span style="color:#00ff41; font-weight:bold; font-size:16px;">🩸 [陣亡] 赤虎陣營的 ${generals[pB_idx].name} 戰死沙場！</span><br><hr style="border-color:#333; margin-top:15px;">`;
+                b_idx++;
+            } else {
+                // B 贏了，A 死掉換下一個
+                battleLog.innerHTML += `<br><span style="color:#ff3131; font-weight:bold; font-size:16px;">🩸 [陣亡] 青龍陣營的 ${generals[pA_idx].name} 戰死沙場！</span><br><hr style="border-color:#333; margin-top:15px;">`;
+                a_idx++;
+            }
+            battleLog.scrollTop = battleLog.scrollHeight;
+            matchNum++;
+            await new Promise(r => setTimeout(r, 2000));
+        }
+
+        // 結算團隊勝利
+        if (a_idx < 6) {
+            battleLog.innerHTML += `<br><div style="text-align:center; padding:20px; border: 2px solid #00ff41; background:rgba(0,255,65,0.1); box-shadow: 0 0 30px rgba(0,255,65,0.5); margin-top:20px;">
+                <h1 style="color:#00ff41; text-shadow: 0 0 15px #00ff41; font-size:30px; margin:0;">【團隊死鬥 最終勝利】</h1>
+                <h2 style="color:#ffffff; font-size:28px; margin-top:15px; text-shadow: 0 0 10px #fff;">🐉 青龍陣營 🐉</h2>
+                <p style="color:#ccc; margin-top:10px;">歷經 ${matchNum - 1} 場血戰，成功殲滅敵軍，稱霸擂台！</p>
+                <p style="color:#00ff41; font-size:14px; margin-top:5px;">(剩餘存活將領：${6 - a_idx} 名)</p>
+            </div><br><br>`;
+        } else {
+            battleLog.innerHTML += `<br><div style="text-align:center; padding:20px; border: 2px solid #ff3131; background:rgba(255,49,49,0.1); box-shadow: 0 0 30px rgba(255,49,49,0.5); margin-top:20px;">
+                <h1 style="color:#ff3131; text-shadow: 0 0 15px #ff3131; font-size:30px; margin:0;">【團隊死鬥 最終勝利】</h1>
+                <h2 style="color:#ffffff; font-size:28px; margin-top:15px; text-shadow: 0 0 10px #fff;">🐅 赤虎陣營 🐅</h2>
+                <p style="color:#ccc; margin-top:10px;">歷經 ${matchNum - 1} 場血戰，成功殲滅敵軍，稱霸擂台！</p>
+                <p style="color:#ff3131; font-size:14px; margin-top:5px;">(剩餘存活將領：${6 - b_idx} 名)</p>
+            </div><br><br>`;
+        }
+        
+        battleLog.scrollTop = battleLog.scrollHeight;
+        buttons.forEach(b => b.disabled = false);
+    }
+
+    // ==============================================================
     // ▼▼▼ 核心：全軍大逃殺 (光速海選 + 八強轉播) 推演模組 ▼▼▼
     // ==============================================================
 
-    // 專供海選使用的光速數學推演引擎 (不更新UI，0毫秒運算)
     function quickSimulate(idx1, idx2) {
         const p1 = generals[idx1];
         const p2 = generals[idx2];
 
-        // ▼▼▼ 趙雲專屬隱藏武力 (海選專用) ▼▼▼
         const p1ActualPower = p1.name === "趙雲" ? p1.power + 20 : p1.power;
         const p2ActualPower = p2.name === "趙雲" ? p2.power + 20 : p2.power;
-        // ▲▲▲ 新增結束 ▲▲▲
 
         let h1 = 100, h2 = 100;
         let round = 1;
@@ -1473,9 +1569,6 @@
             if ((p1.name === "趙雲" && p2.name === "樊玥") || (p1.name === "樊玥" && p2.name === "趙雲")) return p1.name === "樊玥" ? parseInt(idx1) : parseInt(idx2);
             if ((p1.name === "殘卒" && p2.name === "樊玥") || (p1.name === "樊玥" && p2.name === "殘卒")) return p1.name === "樊玥" ? parseInt(idx1) : parseInt(idx2);
 
-            // ==========================================
-            // ⚡ 光速海選：開場秒殺判定 (1.5% 機率)
-            // ==========================================
             if (round === 1) {
                 let instaKillChance = 0.015;
                 if (p1ActualPower > p2ActualPower && Math.random() < instaKillChance && p2.name !== "趙雲") return parseInt(idx1);
@@ -1485,13 +1578,12 @@
             if (p1.name === "趙雲" && h1 <= 10 && h1 > 0 && !p1Ult10Used && h2 > 0) { p1Ult10Used = true; h2 = 0; }
             else if (p2.name === "趙雲" && h2 <= 10 && h2 > 0 && !p2Ult10Used && h1 > 0) { p2Ult10Used = true; h1 = 0; }
 
-            // 海選專用：大絕招邏輯與趙雲 50% 格擋
-            if (p1.name === "趙雲" && h1 <= 36 && h1 > 10 && !p1Ult30Used && h2 > 0) { p1Ult30Used = true; if (p2DodgeCount > 0) p2DodgeCount--; else if (p2.name === "趙雲" && Math.random() < 0.5) { /* 趙雲無傷擋下趙雲 */ } else h2 -= 50; }
-            if (p2.name === "趙雲" && h2 <= 36 && h2 > 10 && !p2Ult30Used && h1 > 0) { p2Ult30Used = true; if (p1DodgeCount > 0) p1DodgeCount--; else if (p1.name === "趙雲" && Math.random() < 0.5) { /* 趙雲無傷擋下趙雲 */ } else h1 -= 50; }
+            if (p1.name === "趙雲" && h1 <= 36 && h1 > 10 && !p1Ult30Used && h2 > 0) { p1Ult30Used = true; if (p2DodgeCount > 0) p2DodgeCount--; else if (p2.name === "趙雲" && Math.random() < 0.5) { } else h2 -= 50; }
+            if (p2.name === "趙雲" && h2 <= 36 && h2 > 10 && !p2Ult30Used && h1 > 0) { p2Ult30Used = true; if (p1DodgeCount > 0) p1DodgeCount--; else if (p1.name === "趙雲" && Math.random() < 0.5) { } else h1 -= 50; }
 
             let d1 = getUltDmg(p1.name), d2 = getUltDmg(p2.name);
-            if (d1 && h1 <= 35 && h1 > 0 && !p1CustomUltUsed && h2 > 0) { p1CustomUltUsed = true; if (p2DodgeCount > 0) p2DodgeCount--; else if (p2.name === "趙雲" && Math.random() < 0.5) { /* 趙雲完美格擋 */ } else h2 -= d1; }
-            if (d2 && h2 <= 35 && h2 > 0 && !p2CustomUltUsed && h1 > 0) { p2CustomUltUsed = true; if (p1DodgeCount > 0) p1DodgeCount--; else if (p1.name === "趙雲" && Math.random() < 0.5) { /* 趙雲完美格擋 */ } else h1 -= d2; }
+            if (d1 && h1 <= 35 && h1 > 0 && !p1CustomUltUsed && h2 > 0) { p1CustomUltUsed = true; if (p2DodgeCount > 0) p2DodgeCount--; else if (p2.name === "趙雲" && Math.random() < 0.5) { } else h2 -= d1; }
+            if (d2 && h2 <= 35 && h2 > 0 && !p2CustomUltUsed && h1 > 0) { p2CustomUltUsed = true; if (p1DodgeCount > 0) p1DodgeCount--; else if (p1.name === "趙雲" && Math.random() < 0.5) { } else h1 -= d2; }
 
             if (p1.name === "殘卒" && h1 <= 20 && h1 > 0 && !p1RemnantDodgeUsed) { p1RemnantDodgeUsed = true; p1DodgeCount = 10; }
             if (p2.name === "殘卒" && h2 <= 20 && h2 > 0 && !p2RemnantDodgeUsed) { p2RemnantDodgeUsed = true; p2DodgeCount = 10; }
@@ -1503,17 +1595,13 @@
 
                 if (Math.random() > 0.5) { 
                     if (p2DodgeCount > 0) { p2DodgeCount--; } 
-                    // 12% 閃避 + 8% 完美格擋 = 20% 機率完全無傷
-                    else if (eventRand < 0.20) { /* 完美防禦，無傷 */ }
-                    // 15% 機率普通格擋 (減傷 60%)
+                    else if (eventRand < 0.20) { }
                     else if (eventRand < 0.35) { h2 -= dmg1 * 0.4; } 
                     else { h2 -= dmg1; }
                 } 
                 else { 
                     if (p1DodgeCount > 0) { p1DodgeCount--; } 
-                    // 12% 閃避 + 8% 完美格擋 = 20% 機率完全無傷
-                    else if (eventRand < 0.20) { /* 完美防禦，無傷 */ }
-                    // 15% 機率普通格擋 (減傷 60%)
+                    else if (eventRand < 0.20) { }
                     else if (eventRand < 0.35) { h1 -= dmg2 * 0.4; } 
                     else { h1 -= dmg2; }
                 }
@@ -1534,7 +1622,6 @@
         const buttons = document.querySelectorAll("button");
         buttons.forEach(b => b.disabled = true);
 
-        // 提取全軍名單並隨機打亂
         let activeRoster = Array.from({length: generals.length}, (_, i) => i);
         activeRoster.sort(() => Math.random() - 0.5);
 
@@ -1545,13 +1632,11 @@
 
         let roundNum = 1;
         
-        // --- 階段 1：光速海選賽 (直到剩下 8 人) ---
         while(activeRoster.length > 8) {
             battleLog.innerHTML += `<h3 style="color:#a9a9a9; text-align:center;">--- ⚔️ 光速海選 第 ${roundNum} 輪 ⚔️ ---</h3>`;
             battleLog.scrollTop = battleLog.scrollHeight;
             await new Promise(r => setTimeout(r, 800));
 
-            // 精算保送(輪空)名額，使下一輪總人數必然成為 2 的次方，最終精準降至 8 人
             let target = 8;
             while (target * 2 < activeRoster.length) target *= 2;
             let matchesToPlay = activeRoster.length - target;
@@ -1560,7 +1645,6 @@
             let nextRoster = [];
             let logs = "";
             
-            // 進行淘汰賽
             for(let i = 0; i < matchesToPlay * 2; i += 2) {
                 let w = quickSimulate(activeRoster[i], activeRoster[i+1]);
                 let loser = w == activeRoster[i] ? activeRoster[i+1] : activeRoster[i];
@@ -1568,7 +1652,6 @@
                 logs += `<span style="color:#87ceeb;">[斬殺] ${generals[w].name} 淘汰了 ${generals[loser].name}</span><br>`;
             }
             
-            // 剩下的輪空晉級
             for(let i = matchesToPlay * 2; i < activeRoster.length; i++) {
                 nextRoster.push(activeRoster[i]);
             }
@@ -1580,7 +1663,6 @@
             await new Promise(r => setTimeout(r, 1200));
         }
 
-        // --- 階段 2：轉交給傳統八強大會轉播 ---
         battleLog.innerHTML += `<br><h2 style="color:#ffd700; text-align:center; margin-top:20px; text-shadow: 0 0 10px #ffd700;">🎉 歷經血腥海選，最強八人誕生！ 🎉</h2><hr style="border-color:#333;">`;
         let eliteStr = activeRoster.map(i => `<span style="color:#00ffff; font-weight:bold;">${generals[i].name}</span>`).join("、");
         battleLog.innerHTML += `<div style="text-align:center; color:#ccc;">【八強精英】<br>${eliteStr}</div><br>`;
@@ -1628,10 +1710,8 @@
         const buttons = document.querySelectorAll("button");
         buttons.forEach(b => b.disabled = true);
 
-        // 隨機打亂陣型
         indices.sort(() => Math.random() - 0.5);
 
-        // 4名種子，8名打入圍賽
         let seeds = indices.slice(0, 4);
         let wildcards = indices.slice(4, 12);
 
@@ -1642,30 +1722,25 @@
         battleLog.scrollTop = battleLog.scrollHeight;
         await new Promise(r => setTimeout(r, 3000));
 
-        // 1. 入圍賽
         battleLog.innerHTML += `<h3 style="color:#a9a9a9; text-align:center;">--- ⚔️ 死亡入圍賽 (爭奪八強門票) ⚔️ ---</h3>`;
         let q1_w = await autoMatch(wildcards[0], wildcards[1], "入圍賽 甲組");
         let q2_w = await autoMatch(wildcards[2], wildcards[3], "入圍賽 乙組");
         let q3_w = await autoMatch(wildcards[4], wildcards[5], "入圍賽 丙組");
         let q4_w = await autoMatch(wildcards[6], wildcards[7], "入圍賽 丁組");
 
-        // 2. 八強賽
         battleLog.innerHTML += `<h3 style="color:#4169e1; text-align:center; margin-top:20px;">--- 🛡️ 八強賽 🛡️ ---</h3>`;
         let s1_w = await autoMatch(seeds[0], q1_w, "八強賽 A組");
         let s2_w = await autoMatch(seeds[1], q2_w, "八強賽 B組");
         let s3_w = await autoMatch(seeds[2], q3_w, "八強賽 C組");
         let s4_w = await autoMatch(seeds[3], q4_w, "八強賽 D組");
 
-        // 3. 四強準決賽
         battleLog.innerHTML += `<h2 style="color:#ff8c00; text-align:center; margin-top:20px; text-shadow: 0 0 10px #ff8c00;">🔥 四強準決賽 🔥</h2><hr style="border-color:#333;">`;
         let semi1 = await autoMatch(s1_w, s2_w, "準決賽 上半區");
         let semi2 = await autoMatch(s3_w, s4_w, "準決賽 下半區");
 
-        // 4. 總決賽
         battleLog.innerHTML += `<h2 style="color:#ff3131; text-align:center; margin-top:20px; text-shadow: 0 0 15px #ff3131;">👑 天下第一總決賽 👑</h2><hr style="border-color:#333;">`;
         let champion = await autoMatch(semi1, semi2, "🏆 紫禁之巔決戰 🏆");
 
-        // 5. 頒獎典禮
         battleLog.innerHTML += `<br><div style="text-align:center; padding:20px; border: 2px solid #ffd700; background:rgba(255,215,0,0.1); box-shadow: 0 0 30px rgba(255,215,0,0.5); margin-top:20px;">
             <h1 style="color:#ffd700; text-shadow: 0 0 15px #ffd700; font-size:30px; margin:0;">【武道大會 冠軍誕生】</h1>
             <h2 style="color:#ffffff; font-size:28px; margin-top:15px; text-shadow: 0 0 10px #fff;">👑 ${generals[champion].name} 👑</h2>
