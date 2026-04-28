@@ -1073,6 +1073,14 @@
         document.getElementById('p2Rank').innerText = p2.rank;
 
         let h1 = 100, h2 = 100;
+        
+        // ▼▼▼ 新增：開戰前強制刷新 UI 血量至滿血 ▼▼▼
+        document.getElementById('p1HpBar').style.width = "100%";
+        document.getElementById('p2HpBar').style.width = "100%";
+        document.getElementById('p1HpText').innerText = "100/100";
+        document.getElementById('p2HpText').innerText = "100/100";
+        // ▲▲▲ 新增結束 ▲▲▲
+
         let round = 1;
         
         let p1Ult30Used = false, p1Ult10Used = false;
@@ -1237,7 +1245,7 @@
                 await new Promise(r => setTimeout(r, 800));
             }
 
-           // ==========================================
+            // ==========================================
             // 🔥 趙雲專屬神技：九天龍吟驚寰宇
             // ==========================================
             if (p1.name === "趙雲" && h1 <= 36 && h1 > 10 && !p1Ult30Used && h2 > 0) {
@@ -1269,8 +1277,8 @@
                 await new Promise(r => setTimeout(r, 800));
             }
 
-           // ==========================================
-            // 💥 72大名將專屬絕招 (趙雲 50% 絕對格擋)
+            // ==========================================
+            // 💥 72大名將專屬絕招
             // ==========================================
             if (ultimateSkills[p1.name] && h1 <= 35 && h1 > 0 && !p1CustomUltUsed && h2 > 0) {
                 p1CustomUltUsed = true;
