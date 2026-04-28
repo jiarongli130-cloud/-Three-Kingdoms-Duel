@@ -146,6 +146,7 @@
 
     <div class="controls" style="border: 1px solid #8a2be2; padding: 15px; border-radius: 5px; background: rgba(138, 43, 226, 0.1); display: block;">
         <h3 style="color: #8a2be2; margin-top: 0; margin-bottom: 10px; text-shadow: 0 0 5px #8a2be2;">🏆 終極武道大會 🏆</h3>
+        <p style="font-size: 12px; color: #ff69b4; margin-top: -5px; margin-bottom: 15px;">【武道會禁制令】此模式為純粹武力對決，全面禁用「紅顏補血」與「神蹟加護」等干擾變數！</p>
         <div style="display: flex; gap: 10px; margin-bottom: 10px;">
             <select id="tourneySelect" style="flex: 2; background: #000; color: #8a2be2; border: 1px solid #8a2be2;"></select>
             <button onclick="addToTournament()" style="flex: 1; border-color: #8a2be2; color: #8a2be2;">加入十二強</button>
@@ -179,7 +180,7 @@
 
     <div id="battleLog">系統待命中...請選擇將領並按下發動，或舉辦賽事。</div>
     <div class="chart-container"><canvas id="hpChart"></canvas></div>
-    <div class="footer">什年工作室《三國演義武力超百科》授權終端 // 支援軍團自選與神蹟系統</div>
+    <div class="footer">什年工作室《三國演義武力超百科》授權終端 // 支援軍團自選與神蹟禁制系統</div>
 </div>
 
 <script>
@@ -1208,7 +1209,6 @@
         }
         for(let i=0; i<6; i++) {
             let drop = document.getElementById('tA'+i);
-            // +1 because index 0 is [-1] (無/不參戰)
             drop.selectedIndex = indices[i] + 1;
         }
         for(let i=0; i<6; i++) {
@@ -1275,7 +1275,7 @@
         setTimeout(() => warroom.classList.remove('shaking'), 300);
     }
 
-    async function startDuel(isTournamentMode = false) {
+    async function startDuel(isTournamentMode = false, isUltimateTournament = false) {
         const p1 = generals[p1Select.value];
         const p2 = generals[p2Select.value];
         
@@ -1457,8 +1457,8 @@
                 triggerShake(); setTimeout(triggerShake, 200);
             }
 
-            // 女將單挑/車輪戰 自我補血與狀態提升
-            if (isTournamentMode) {
+            // 女將單挑/車輪戰 自我補血與狀態提升 (武道大會禁用)
+            if (!isUltimateTournament) {
                 if (femaleHealers[p1.name] && h1 > 0 && h1 < 100 && Math.random() < 0.25) {
                     let hData = femaleHealers[p1.name];
                     h1 = Math.min(100, h1 + hData.heal);
@@ -1534,15 +1534,17 @@
                 triggerShake();
             }
 
-            if (p1.name === "樊玥" && atkPct1 <= 30 && !p1FanYueHealUsed) {
-                p1FanYueHealUsed = true; h1 = 100;
-                battleLog.innerHTML += `<br><span style="color:#ff69b4; font-weight:bold; font-size:18px;">💋 強制發動專屬神技【樊玥之吻】！${p1.name} 瞬間滿血復活！</span><br><br>`;
-                triggerShake(); setTimeout(triggerShake, 200);
-            }
-            if (p2.name === "樊玥" && atkPct2 <= 30 && !p2FanYueHealUsed) {
-                p2FanYueHealUsed = true; h2 = 100;
-                battleLog.innerHTML += `<br><span style="color:#ff69b4; font-weight:bold; font-size:18px;">💋 強制發動專屬神技【樊玥之吻】！${p2.name} 瞬間滿血復活！</span><br><br>`;
-                triggerShake(); setTimeout(triggerShake, 200);
+            if (!isUltimateTournament) {
+                if (p1.name === "樊玥" && atkPct1 <= 30 && !p1FanYueHealUsed) {
+                    p1FanYueHealUsed = true; h1 = 100;
+                    battleLog.innerHTML += `<br><span style="color:#ff69b4; font-weight:bold; font-size:18px;">💋 強制發動專屬神技【樊玥之吻】！${p1.name} 瞬間滿血復活！</span><br><br>`;
+                    triggerShake(); setTimeout(triggerShake, 200);
+                }
+                if (p2.name === "樊玥" && atkPct2 <= 30 && !p2FanYueHealUsed) {
+                    p2FanYueHealUsed = true; h2 = 100;
+                    battleLog.innerHTML += `<br><span style="color:#ff69b4; font-weight:bold; font-size:18px;">💋 強制發動專屬神技【樊玥之吻】！${p2.name} 瞬間滿血復活！</span><br><br>`;
+                    triggerShake(); setTimeout(triggerShake, 200);
+                }
             }
 
             document.getElementById('p1HpBar').style.width = h1 + "%";
@@ -2147,8 +2149,8 @@
 
             updateTeamBars();
             hpChart.data.labels.push(round);
-            hpChart.data.datasets[0].data.push(fighters.filter(f=>f.team==='A').reduce((s,f)=>s+f.hp,0) / totalMaxHpA * 100); 
-            hpChart.data.datasets[1].data.push(fighters.filter(f=>f.team==='B').reduce((s,f)=>s+f.hp,0) / totalMaxHpB * 100);
+            hpChart.data.datasets[0].data.push(fighters.filter(f=>f.team==='A').reduce((s,f)=>s+f.hp,0)/totalMaxHpA * 100); 
+            hpChart.data.datasets[1].data.push(fighters.filter(f=>f.team==='B').reduce((s,f)=>s+f.hp,0)/totalMaxHpB * 100);
             hpChart.update();
             
             battleLog.scrollTop = battleLog.scrollHeight;
@@ -2238,7 +2240,7 @@
             let skill1 = ultimateSkills[p1.name], skill2 = ultimateSkills[p2.name];
             let d1 = skill1 ? skill1.dmg : 0, d2 = skill2 ? skill2.dmg : 0;
             if (d1 && h1 <= 35 && h1 > 0 && !p1CustomUltUsed && h2 > 0) { p1CustomUltUsed = true; if (p2DodgeCount > 0) p2DodgeCount--; else if (p2.name === "趙雲" && Math.random() < 0.5) { } else qApplyDmg2(d1); }
-            if (d2 && h2 <= 35 && h2 >0 && !p2CustomUltUsed && h1 > 0) { p2CustomUltUsed = true; if (p1DodgeCount > 0) p1DodgeCount--; else if (p1.name === "趙雲" && Math.random() < 0.5) { } else qApplyDmg1(d2); }
+            if (d2 && h2 <= 35 && h2 > 0 && !p2CustomUltUsed && h1 > 0) { p2CustomUltUsed = true; if (p1DodgeCount > 0) p1DodgeCount--; else if (p1.name === "趙雲" && Math.random() < 0.5) { } else qApplyDmg1(d2); }
 
             if (p1.name === "殘卒" && h1 <= 20 && h1 > 0 && !p1RemnantDodgeUsed) { p1RemnantDodgeUsed = true; p1DodgeCount = 10; }
             if (p2.name === "殘卒" && h2 <= 20 && h2 > 0 && !p2RemnantDodgeUsed) { p2RemnantDodgeUsed = true; p2DodgeCount = 10; }
@@ -2266,8 +2268,6 @@
 
             if (p1.name === "趙雲" && p2.rank.includes("神仙流") && h1 === 0 && !p1GodDefyUsed) { h1 = 1; p1GodDefyUsed = true; }
             if (p2.name === "趙雲" && p1.rank.includes("神仙流") && h2 === 0 && !p2GodDefyUsed) { h2 = 1; p2GodDefyUsed = true; }
-            if (p1.name === "樊玥" && h1 <= 30 && !p1FanYueHealUsed) { p1FanYueHealUsed = true; h1 = 100; }
-            if (p2.name === "樊玥" && h2 <= 30 && !p2FanYueHealUsed) { p2FanYueHealUsed = true; h2 = 100; }
             round++;
         }
         return h1 > h2 ? parseInt(idx1) : parseInt(idx2);
@@ -2414,7 +2414,9 @@
         p1Select.value = parseInt(idx1);
         p2Select.value = parseInt(idx2);
         
-        let winnerIndex = await startDuel(true); 
+        // 亮特此標記：此處傳入兩個 true，分別代表 (是賽事模式, 是終極大會)
+        // 如此便能完美觸發底層禁制，徹底封印女將的補血與神蹟加護！
+        let winnerIndex = await startDuel(true, true); 
         
         battleLog.innerHTML += `<br><span style="color:#ffd700; font-weight:bold; font-size:16px;">✨ [賽局結果] 勝出者：${generals[winnerIndex].name}！晉級下一輪！</span><br><hr style="border-color:#333; margin-top:15px;">`;
         battleLog.scrollTop = battleLog.scrollHeight;
