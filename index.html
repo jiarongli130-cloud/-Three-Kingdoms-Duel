@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三國武神演武沙盤 4.0 - 天下第一武道大會</title>
+    <title>三國武神演武沙盤 4.0 - 天下第一武道大會 (終極完整版)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -1039,7 +1039,7 @@
 
     function updateRosterUI() {
         let names = tourneyRosterData.map(i => generals[i].name).join("、");
-        document.getElementById('tourneyRoster').innerText = `目前名單 (${tourneyRosterData.length}/12)：${names || "無"}`;
+        document.getElementById('tourneyRoster').innerText = `十二強指定名單 (${tourneyRosterData.length}/12)：${names || "無"}`;
     }
 
     function initChart() {
@@ -1061,6 +1061,12 @@
     async function startDuel(isTournamentMode = false) {
         const p1 = generals[p1Select.value];
         const p2 = generals[p2Select.value];
+        
+        // ▼▼▼ 趙雲專屬隱藏武力 (介面不顯示，僅算傷用) ▼▼▼
+        const p1ActualPower = p1.name === "趙雲" ? p1.power + 20 : p1.power;
+        const p2ActualPower = p2.name === "趙雲" ? p2.power + 20 : p2.power;
+        // ▲▲▲ 新增結束 ▲▲▲
+
         document.getElementById('p1Name').innerText = p1.name;
         document.getElementById('p1Rank').innerText = p1.rank;
         document.getElementById('p2Name').innerText = p2.name;
@@ -1118,7 +1124,7 @@
             "祝融": { name: "火神之裔・飛刀烈焰", dmg: 28, color: "#ff8c00", desc: "擲出燃燒著數據業火的飛刀，將對手的系統模組點燃！" },
             "徐質": { name: "開山巨斧・裂地狂砸", dmg: 28, color: "#708090", desc: "不顧一切地瘋狂砸擊地面，引發劇烈的系統地震！" },
             "孫桓": { name: "江東新銳・破陣神槍", dmg: 28, color: "#1e90ff", desc: "槍尖閃爍銳利的光芒，精準刺入敵方代碼的連接點！" },
-            "諸葛尚": { name: "武侯血脈・八卦陣斬", dmg: 28, color: "#00fa9a", desc: "在八卦陣列的輔助下，於陣眼處發動無法躲避的絕殺！" },
+            "諸葛尚": { name: "武侯血脈・八卦陣斬", 28: "", color: "#00fa9a", desc: "在八卦陣列的輔助下，於陣眼處發動無法躲避的絕殺！" },
             "李典": { name: "深明大義・沉穩反擊", dmg: 27, color: "#5f9ea0", desc: "看破對方的攻擊意圖，在最完美的時機發動致命反制！" },
             "樂進": { name: "先登死士・無畏衝鋒", dmg: 27, color: "#b22222", desc: "無視任何傷害判定，強行突破防線將兵器送入敵方胸膛！" },
             "于禁": { name: "毅重之將・法度森嚴", dmg: 27, color: "#4682b4", desc: "以嚴密的刀法封鎖敵方所有行動，隨即執行系統處決！" },
@@ -1184,7 +1190,7 @@
             // ==========================================
             if (round === 1) {
                 let instaKillChance = 0.015; // 設定 1.5% 的極低機率
-                if (p1.power > p2.power && Math.random() < instaKillChance && p2.name !== "趙雲") {
+                if (p1ActualPower > p2ActualPower && Math.random() < instaKillChance && p2.name !== "趙雲") {
                     h2 = 0;
                     battleLog.innerHTML += `<br><span style="color:#ff3131; font-weight:bold; font-size:20px; text-shadow: 0 0 10px #ff3131;">⚡ 【絕對武力碾壓・開場秒殺】</span><br><span style="color:#cccccc; font-size:16px;">${p1.name} 挾帶懸殊的武力差距，身形如鬼魅般閃過，在交鋒的第零秒便將 ${p2.name} 的首級無情斬落！戰鬥瞬間結束！</span><br><br>`;
                     triggerShake(); setTimeout(triggerShake, 300);
@@ -1198,7 +1204,7 @@
                     hpChart.data.datasets[1].data.push(h2);
                     hpChart.update();
                     break;
-                } else if (p2.power > p1.power && Math.random() < instaKillChance && p1.name !== "趙雲") {
+                } else if (p2ActualPower > p1ActualPower && Math.random() < instaKillChance && p1.name !== "趙雲") {
                     h1 = 0;
                     battleLog.innerHTML += `<br><span style="color:#ff3131; font-weight:bold; font-size:20px; text-shadow: 0 0 10px #ff3131;">⚡ 【絕對武力碾壓・開場秒殺】</span><br><span style="color:#cccccc; font-size:16px;">${p2.name} 挾帶懸殊的武力差距，身形如鬼魅般閃過，在交鋒的第零秒便將 ${p1.name} 的首級無情斬落！戰鬥瞬間結束！</span><br><br>`;
                     triggerShake(); setTimeout(triggerShake, 300);
@@ -1309,8 +1315,8 @@
             // ⚔️ 常規攻防判定 (加入完美格擋、閃避與普通格擋)
             // ==========================================
             if (h1 > 0 && h2 > 0) {
-                let dmg1 = Math.max(3, (p1.power * 0.12) - (p2.power * 0.04) + (Math.random() * 12 - 4));
-                let dmg2 = Math.max(3, (p2.power * 0.12) - (p1.power * 0.04) + (Math.random() * 12 - 4));
+                let dmg1 = Math.max(3, (p1ActualPower * 0.12) - (p2ActualPower * 0.04) + (Math.random() * 12 - 4));
+                let dmg2 = Math.max(3, (p2ActualPower * 0.12) - (p1ActualPower * 0.04) + (Math.random() * 12 - 4));
                 
                 let eventRand = Math.random(); // 決定觸發何種防禦機制
 
@@ -1428,6 +1434,12 @@
     function quickSimulate(idx1, idx2) {
         const p1 = generals[idx1];
         const p2 = generals[idx2];
+
+        // ▼▼▼ 新增：趙雲專屬隱藏武力 (海選專用) ▼▼▼
+        const p1ActualPower = p1.name === "趙雲" ? p1.power + 20 : p1.power;
+        const p2ActualPower = p2.name === "趙雲" ? p2.power + 20 : p2.power;
+        // ▲▲▲ 新增結束 ▲▲▲
+
         let h1 = 100, h2 = 100;
         let round = 1;
         let p1Ult30Used = false, p1Ult10Used = false, p2Ult30Used = false, p2Ult10Used = false;
@@ -1450,8 +1462,8 @@
             // ==========================================
             if (round === 1) {
                 let instaKillChance = 0.015;
-                if (p1.power > p2.power && Math.random() < instaKillChance && p2.name !== "趙雲") return parseInt(idx1);
-                if (p2.power > p1.power && Math.random() < instaKillChance && p1.name !== "趙雲") return parseInt(idx2);
+                if (p1ActualPower > p2ActualPower && Math.random() < instaKillChance && p2.name !== "趙雲") return parseInt(idx1);
+                if (p2ActualPower > p1ActualPower && Math.random() < instaKillChance && p1.name !== "趙雲") return parseInt(idx2);
             }
 
             if (p1.name === "趙雲" && h1 <= 10 && !p1Ult10Used) { p1Ult10Used = true; h2 = 0; }
@@ -1467,9 +1479,9 @@
             if (p1.name === "殘卒" && h1 <= 20 && !p1RemnantDodgeUsed) { p1RemnantDodgeUsed = true; p1DodgeCount = 10; }
             if (p2.name === "殘卒" && h2 <= 20 && !p2RemnantDodgeUsed) { p2RemnantDodgeUsed = true; p2DodgeCount = 10; }
 
-           if (h1 > 0 && h2 > 0) {
-                let dmg1 = Math.max(3, (p1.power*0.12) - (p2.power*0.04) + (Math.random()*12-4));
-                let dmg2 = Math.max(3, (p2.power*0.12) - (p1.power*0.04) + (Math.random()*12-4));
+            if (h1 > 0 && h2 > 0) {
+                let dmg1 = Math.max(3, (p1ActualPower*0.12) - (p2ActualPower*0.04) + (Math.random()*12-4));
+                let dmg2 = Math.max(3, (p2ActualPower*0.12) - (p1ActualPower*0.04) + (Math.random()*12-4));
                 let eventRand = Math.random();
 
                 if (Math.random() > 0.5) { 
