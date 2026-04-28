@@ -1237,7 +1237,7 @@
                 await new Promise(r => setTimeout(r, 800));
             }
 
-            // ==========================================
+           // ==========================================
             // 🔥 趙雲專屬神技：九天龍吟驚寰宇
             // ==========================================
             if (p1.name === "趙雲" && h1 <= 36 && h1 > 10 && !p1Ult30Used && h2 > 0) {
@@ -1245,6 +1245,8 @@
                 if (p2DodgeCount > 0) {
                     p2DodgeCount--;
                     battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】${p1.name} 強制發動【九天龍吟驚寰宇】！</span><br><span style="color:#aaaaaa; font-weight:bold; font-size:16px;">💨 但被敵將 ${p2.name} 以不可思議的身法極限閃避！（剩餘閃避：${p2DodgeCount}次）</span><br><br>`;
+                } else if (p2.name === "趙雲" && Math.random() < 0.5) {
+                    battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】${p1.name} 強制發動【九天龍吟驚寰宇】！</span><br><span style="color:#00ffff; font-weight:bold; font-size:18px; text-shadow: 0 0 10px #00ffff;">🛡️ 【龍膽同源】敵方 ${p2.name} 竟以同樣的神級槍法，完美化解了這毀天滅地的一擊，【無傷】擋下！</span><br><br>`;
                 } else {
                     h2 -= 50; 
                     battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】${p1.name} 血量降至 36% 以下！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 強制發動專屬神技【九天龍吟驚寰宇】！槍出如龍，天地變色！${p2.name} 瞬間慘遭重創（-50 HP）！</span><br><br>`;
@@ -1257,6 +1259,8 @@
                 if (p1DodgeCount > 0) {
                     p1DodgeCount--;
                     battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】敵將 ${p2.name} 強制發動【九天龍吟驚寰宇】！</span><br><span style="color:#aaaaaa; font-weight:bold; font-size:16px;">💨 但被 ${p1.name} 以不可思議的身法極限閃避！（剩餘閃避：${p1DodgeCount}次）</span><br><br>`;
+                } else if (p1.name === "趙雲" && Math.random() < 0.5) {
+                    battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】敵將 ${p2.name} 強制發動【九天龍吟驚寰宇】！</span><br><span style="color:#00ffff; font-weight:bold; font-size:18px; text-shadow: 0 0 10px #00ffff;">🛡️ 【龍膽同源】我方 ${p1.name} 竟以同樣的神級槍法，完美化解了這毀天滅地的一擊，【無傷】擋下！</span><br><br>`;
                 } else {
                     h1 -= 50; 
                     battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】敵將 ${p2.name} 血量降至 36% 以下！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 強制發動專屬神技【九天龍吟驚寰宇】！槍出如龍，天地變色！${p1.name} 瞬間慘遭重創（-50 HP）！</span><br><br>`;
@@ -1265,8 +1269,8 @@
                 await new Promise(r => setTimeout(r, 800));
             }
 
-            // ==========================================
-            // 💥 72大名將專屬絕招
+           // ==========================================
+            // 💥 72大名將專屬絕招 (趙雲 50% 絕對格擋)
             // ==========================================
             if (ultimateSkills[p1.name] && h1 <= 35 && h1 > 0 && !p1CustomUltUsed && h2 > 0) {
                 p1CustomUltUsed = true;
@@ -1274,6 +1278,8 @@
                 if (p2DodgeCount > 0) {
                     p2DodgeCount--;
                     battleLog.innerHTML += `<br><span style="color:${skill.color}; font-weight:bold; font-size:15px; text-shadow: 0 0 3px ${skill.color};">【名將覺醒】${p1.name} 強制發動絕招【${skill.name}】！</span><br><span style="color:#aaaaaa; font-weight:bold; font-size:16px;">💨 但被敵將 ${p2.name} 極限閃避了！（剩餘閃避：${p2DodgeCount}次）</span><br><br>`;
+                } else if (p2.name === "趙雲" && Math.random() < 0.5) {
+                    battleLog.innerHTML += `<br><span style="color:${skill.color}; font-weight:bold; font-size:15px; text-shadow: 0 0 3px ${skill.color};">【名將覺醒】${p1.name} 強制發動絕招【${skill.name}】！</span><br><span style="color:#00ffff; font-weight:bold; font-size:18px; text-shadow: 0 0 10px #00ffff;">🛡️ 【武神之壁】只聽一聲清脆龍吟！趙雲長槍一抖，以無死角的防禦【無傷】化解了這必殺大絕！</span><br><br>`;
                 } else {
                     h2 -= skill.dmg;
                     battleLog.innerHTML += `<br><span style="color:${skill.color}; font-weight:bold; font-size:15px; text-shadow: 0 0 3px ${skill.color};">【名將覺醒】${p1.name} 陷入苦戰，爆發潛能！</span><br><span style="color:${skill.color}; font-weight:bold; font-size:18px; text-shadow: 0 0 5px ${skill.color};">💥 強制發動絕招【${skill.name}】！<br>${skill.desc}<br>${p2.name} 遭受毀滅性打擊（-${skill.dmg} HP）！</span><br><br>`;
@@ -1287,6 +1293,8 @@
                 if (p1DodgeCount > 0) {
                     p1DodgeCount--;
                     battleLog.innerHTML += `<br><span style="color:${skill.color}; font-weight:bold; font-size:15px; text-shadow: 0 0 3px ${skill.color};">【名將覺醒】敵將 ${p2.name} 強制發動絕招【${skill.name}】！</span><br><span style="color:#aaaaaa; font-weight:bold; font-size:16px;">💨 但被 ${p1.name} 極限閃避了！（剩餘閃避：${p1DodgeCount}次）</span><br><br>`;
+                } else if (p1.name === "趙雲" && Math.random() < 0.5) {
+                    battleLog.innerHTML += `<br><span style="color:${skill.color}; font-weight:bold; font-size:15px; text-shadow: 0 0 3px ${skill.color};">【名將覺醒】敵將 ${p2.name} 強制發動絕招【${skill.name}】！</span><br><span style="color:#00ffff; font-weight:bold; font-size:18px; text-shadow: 0 0 10px #00ffff;">🛡️ 【武神之壁】只聽一聲清脆龍吟！趙雲長槍一抖，以無死角的防禦【無傷】化解了這必殺大絕！</span><br><br>`;
                 } else {
                     h1 -= skill.dmg;
                     battleLog.innerHTML += `<br><span style="color:${skill.color}; font-weight:bold; font-size:15px; text-shadow: 0 0 3px ${skill.color};">【名將覺醒】敵將 ${p2.name} 陷入苦戰，爆發潛能！</span><br><span style="color:${skill.color}; font-weight:bold; font-size:18px; text-shadow: 0 0 5px ${skill.color};">💥 強制發動絕招【${skill.name}】！<br>${skill.desc}<br>${p1.name} 遭受毀滅性打擊（-${skill.dmg} HP）！</span><br><br>`;
@@ -1469,12 +1477,13 @@
             if (p1.name === "趙雲" && h1 <= 10 && h1 > 0 && !p1Ult10Used && h2 > 0) { p1Ult10Used = true; h2 = 0; }
             else if (p2.name === "趙雲" && h2 <= 10 && h2 > 0 && !p2Ult10Used && h1 > 0) { p2Ult10Used = true; h1 = 0; }
 
-            if (p1.name === "趙雲" && h1 <= 36 && h1 > 10 && !p1Ult30Used && h2 > 0) { p1Ult30Used = true; if (p2DodgeCount > 0) p2DodgeCount--; else h2 -= 50; }
-            if (p2.name === "趙雲" && h2 <= 36 && h2 > 10 && !p2Ult30Used && h1 > 0) { p2Ult30Used = true; if (p1DodgeCount > 0) p1DodgeCount--; else h1 -= 50; }
+            // 海選專用：大絕招邏輯與趙雲 50% 格擋
+            if (p1.name === "趙雲" && h1 <= 36 && h1 > 10 && !p1Ult30Used && h2 > 0) { p1Ult30Used = true; if (p2DodgeCount > 0) p2DodgeCount--; else if (p2.name === "趙雲" && Math.random() < 0.5) { /* 趙雲無傷擋下趙雲 */ } else h2 -= 50; }
+            if (p2.name === "趙雲" && h2 <= 36 && h2 > 10 && !p2Ult30Used && h1 > 0) { p2Ult30Used = true; if (p1DodgeCount > 0) p1DodgeCount--; else if (p1.name === "趙雲" && Math.random() < 0.5) { /* 趙雲無傷擋下趙雲 */ } else h1 -= 50; }
 
             let d1 = getUltDmg(p1.name), d2 = getUltDmg(p2.name);
-            if (d1 && h1 <= 35 && h1 > 0 && !p1CustomUltUsed && h2 > 0) { p1CustomUltUsed = true; if (p2DodgeCount > 0) p2DodgeCount--; else h2 -= d1; }
-            if (d2 && h2 <= 35 && h2 > 0 && !p2CustomUltUsed && h1 > 0) { p2CustomUltUsed = true; if (p1DodgeCount > 0) p1DodgeCount--; else h1 -= d2; }
+            if (d1 && h1 <= 35 && h1 > 0 && !p1CustomUltUsed && h2 > 0) { p1CustomUltUsed = true; if (p2DodgeCount > 0) p2DodgeCount--; else if (p2.name === "趙雲" && Math.random() < 0.5) { /* 趙雲完美格擋 */ } else h2 -= d1; }
+            if (d2 && h2 <= 35 && h2 > 0 && !p2CustomUltUsed && h1 > 0) { p2CustomUltUsed = true; if (p1DodgeCount > 0) p1DodgeCount--; else if (p1.name === "趙雲" && Math.random() < 0.5) { /* 趙雲完美格擋 */ } else h1 -= d2; }
 
             if (p1.name === "殘卒" && h1 <= 20 && h1 > 0 && !p1RemnantDodgeUsed) { p1RemnantDodgeUsed = true; p1DodgeCount = 10; }
             if (p2.name === "殘卒" && h2 <= 20 && h2 > 0 && !p2RemnantDodgeUsed) { p2RemnantDodgeUsed = true; p2DodgeCount = 10; }
