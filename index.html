@@ -1180,6 +1180,42 @@
             }
             
             // ==========================================
+            // ⚡ 終極霸氣：武力碾壓・開場秒殺 (僅限第一回合)
+            // ==========================================
+            if (round === 1) {
+                let instaKillChance = 0.015; // 設定 1.5% 的極低機率
+                if (p1.power > p2.power && Math.random() < instaKillChance && p2.name !== "趙雲") {
+                    h2 = 0;
+                    battleLog.innerHTML += `<br><span style="color:#ff3131; font-weight:bold; font-size:20px; text-shadow: 0 0 10px #ff3131;">⚡ 【絕對武力碾壓・開場秒殺】</span><br><span style="color:#cccccc; font-size:16px;">${p1.name} 挾帶懸殊的武力差距，身形如鬼魅般閃過，在交鋒的第零秒便將 ${p2.name} 的首級無情斬落！戰鬥瞬間結束！</span><br><br>`;
+                    triggerShake(); setTimeout(triggerShake, 300);
+                    
+                    document.getElementById('p1HpBar').style.width = h1 + "%";
+                    document.getElementById('p2HpBar').style.width = h2 + "%";
+                    document.getElementById('p1HpText').innerText = Math.floor(h1) + "/100";
+                    document.getElementById('p2HpText').innerText = Math.floor(h2) + "/100";
+                    hpChart.data.labels.push(round);
+                    hpChart.data.datasets[0].data.push(h1);
+                    hpChart.data.datasets[1].data.push(h2);
+                    hpChart.update();
+                    break;
+                } else if (p2.power > p1.power && Math.random() < instaKillChance && p1.name !== "趙雲") {
+                    h1 = 0;
+                    battleLog.innerHTML += `<br><span style="color:#ff3131; font-weight:bold; font-size:20px; text-shadow: 0 0 10px #ff3131;">⚡ 【絕對武力碾壓・開場秒殺】</span><br><span style="color:#cccccc; font-size:16px;">${p2.name} 挾帶懸殊的武力差距，身形如鬼魅般閃過，在交鋒的第零秒便將 ${p1.name} 的首級無情斬落！戰鬥瞬間結束！</span><br><br>`;
+                    triggerShake(); setTimeout(triggerShake, 300);
+                    
+                    document.getElementById('p1HpBar').style.width = h1 + "%";
+                    document.getElementById('p2HpBar').style.width = h2 + "%";
+                    document.getElementById('p1HpText').innerText = Math.floor(h1) + "/100";
+                    document.getElementById('p2HpText').innerText = Math.floor(h2) + "/100";
+                    hpChart.data.labels.push(round);
+                    hpChart.data.datasets[0].data.push(h1);
+                    hpChart.data.datasets[1].data.push(h2);
+                    hpChart.update();
+                    break;
+                }
+            }
+            
+            // ==========================================
             // ❄️ 趙雲終極神技：玥之極
             // ==========================================
             if (p1.name === "趙雲" && h1 <= 10 && !p1Ult10Used) {
@@ -1408,6 +1444,15 @@
         while(h1 > 0 && h2 > 0 && round < 80) {
             if ((p1.name === "趙雲" && p2.name === "樊玥") || (p1.name === "樊玥" && p2.name === "趙雲")) return p1.name === "樊玥" ? parseInt(idx1) : parseInt(idx2);
             if ((p1.name === "殘卒" && p2.name === "樊玥") || (p1.name === "樊玥" && p2.name === "殘卒")) return p1.name === "樊玥" ? parseInt(idx1) : parseInt(idx2);
+
+            // ==========================================
+            // ⚡ 光速海選：開場秒殺判定 (1.5% 機率)
+            // ==========================================
+            if (round === 1) {
+                let instaKillChance = 0.015;
+                if (p1.power > p2.power && Math.random() < instaKillChance && p2.name !== "趙雲") return parseInt(idx1);
+                if (p2.power > p1.power && Math.random() < instaKillChance && p1.name !== "趙雲") return parseInt(idx2);
+            }
 
             if (p1.name === "趙雲" && h1 <= 10 && !p1Ult10Used) { p1Ult10Used = true; h2 = 0; }
             else if (p2.name === "趙雲" && h2 <= 10 && !p2Ult10Used) { p2Ult10Used = true; h1 = 0; }
