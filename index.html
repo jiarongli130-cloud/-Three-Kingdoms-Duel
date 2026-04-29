@@ -3,313 +3,673 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三國武神演武沙盤 7.0 - 狂龍極限無雙 (造物主版)</title>
+    <title>三國武神演武沙盤 7.0 - 狂龍極限無雙 (逆天化仙完全體)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --bg-color: #0a0a0a; --text-color: #00ff41; --accent-orange: #ff8c00; --accent-red: #ff3131; --panel-bg: rgba(20, 20, 20, 0.9); --border-color: #00ff41; }
-        body.god-mode { --bg-color: #110500; --text-color: #ffd700; --accent-orange: #ff0000; --accent-red: #ff0000; --border-color: #ffd700; background-image: radial-gradient(circle, #330000 1px, transparent 1px); }
-        body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Courier New', Courier, monospace, "Microsoft JhengHei"; margin: 0; padding: 20px; overflow-x: hidden; background-image: radial-gradient(circle, #1b1b1b 1px, transparent 1px); background-size: 30px 30px; transition: background-color 2s, color 2s; }
-        #matrixCanvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; opacity: 0; pointer-events: none; transition: opacity 3s; }
-        body.god-mode #matrixCanvas { opacity: 0.3; }
-        @keyframes shake { 0%, 100% {transform: translate(0, 0);} 25% {transform: translate(-3px, 2px);} 50% {transform: translate(3px, -2px);} 75% {transform: translate(-3px, -2px);} }
+        :root {
+            --bg-color: #0a0a0a;
+            --text-color: #00ff41;
+            --accent-orange: #ff8c00;
+            --accent-red: #ff3131;
+            --panel-bg: rgba(20, 20, 20, 0.9);
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Courier New', Courier, monospace, "Microsoft JhengHei";
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+            background-image: radial-gradient(circle, #1b1b1b 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
         .shaking { animation: shake 0.3s; }
-        .container { max-width: 900px; margin: 0 auto; border: 2px solid var(--border-color); padding: 20px; box-shadow: 0 0 20px rgba(0, 255, 65, 0.2); transition: border-color 2s, box-shadow 2s; }
-        body.god-mode .container { box-shadow: 0 0 40px rgba(255, 215, 0, 0.4); }
+        .intense-shake { animation: shake 0.1s infinite; }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            border: 2px solid var(--text-color);
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+            transition: all 0.5s ease;
+        }
         h1 { text-align: center; color: var(--accent-orange); text-shadow: 2px 2px #000; border-bottom: 2px solid var(--accent-orange); padding-bottom: 10px; }
         .controls { display: flex; flex-wrap: wrap; justify-content: space-between; margin-bottom: 20px; gap: 10px; }
         .select-group { flex: 1; min-width: 200px; }
-        select, button, input { background: #000; color: var(--text-color); border: 1px solid var(--border-color); padding: 10px; font-size: 16px; cursor: pointer; width: 100%; box-sizing: border-box; transition: color 1s, border-color 1s; }
+        select, button, input {
+            background: #000; color: var(--text-color); border: 1px solid var(--text-color);
+            padding: 10px; font-size: 16px; cursor: pointer; width: 100%; box-sizing: border-box;
+        }
         button:hover { background: var(--text-color); color: #000; }
+        .btn-random { color: var(--accent-orange); border-color: var(--accent-orange); }
         .btn-tournament { background: #4b0082; color: #fff; border-color: #8a2be2; font-weight: bold; text-shadow: 0 0 5px #fff; box-shadow: 0 0 10px #4b0082; }
         .btn-tournament:hover { background: #8a2be2; color: #fff; box-shadow: 0 0 20px #8a2be2;}
         .team-selects select { margin-bottom: 5px; font-size: 14px; padding: 5px; }
         .battle-view { display: flex; justify-content: space-between; margin-top: 20px; }
-        .fighter { width: 45%; text-align: center; padding: 10px; background: var(--panel-bg); border: 1px solid var(--border-color); }
-        .fighter.p2-box { border-color: var(--accent-red); }
-        .hp-bar-container { width: 100%; height: 25px; background: #222; margin-top: 10px; border: 1px solid var(--border-color); }
+        .fighter { width: 45%; text-align: center; padding: 10px; background: var(--panel-bg); }
+        .hp-bar-container { width: 100%; height: 25px; background: #222; margin-top: 10px; position: relative; }
         .hp-bar { height: 100%; width: 100%; transition: width 0.3s ease; }
-        .p1-hp { background: linear-gradient(90deg, var(--text-color), #008f11); }
-        .p2-hp { background: linear-gradient(90deg, var(--accent-red), #8b0000); }
-        #battleLog { height: 350px; overflow-y: auto; background: #000; border: 1px solid #333; padding: 15px; margin-top: 20px; font-size: 14px; line-height: 1.6; color: #ccc; border-left: 4px solid var(--accent-orange); scroll-behavior: smooth; }
+        .p1-hp { background: linear-gradient(90deg, #00ff41, #008f11); }
+        .p2-hp { background: linear-gradient(90deg, #ff3131, #8b0000); }
+        #battleLog {
+            height: 350px; overflow-y: auto; background: #000; border: 1px solid #333;
+            padding: 15px; margin-top: 20px; font-size: 14px; line-height: 1.6;
+            color: #ccc; border-left: 4px solid var(--accent-orange); scroll-behavior: smooth;
+        }
         .chart-container { margin-top: 20px; background: rgba(0,0,0,0.5); padding: 10px; border: 1px solid #333; }
-        .achievements-panel { margin-top: 20px; padding: 15px; border: 1px dashed #555; background: rgba(20,20,20,0.8); }
-        .achievements-panel h3 { margin-top: 0; color: #8a2be2; text-align: center; }
-        .ach-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
-        .ach-item { border: 1px solid #333; padding: 10px; text-align: center; font-size: 12px; color: #555; filter: grayscale(100%); transition: all 0.5s; }
-        .ach-item.unlocked { border-color: #ffd700; color: #ffd700; filter: grayscale(0%); box-shadow: 0 0 10px rgba(255,215,0,0.3); }
-        .ach-item.unlocked .ach-title { font-weight: bold; text-shadow: 0 0 5px #ffd700; }
-        #loreButton { display: none; margin-top: 15px; background: #8b0000; border-color: #ff0000; font-weight: bold; color: #fff; text-shadow: 0 0 10px #ff0000; box-shadow: 0 0 20px #ff0000; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% {box-shadow: 0 0 10px #ff0000;} 50% {box-shadow: 0 0 30px #ff0000;} 100% {box-shadow: 0 0 10px #ff0000;} }
-        #loreModal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.9); z-index: 999; justify-content: center; align-items: center; }
-        .modal-content { background: #111; border: 2px solid #ffd700; padding: 30px; max-width: 600px; color: #ccc; box-shadow: 0 0 50px rgba(255,215,0,0.5); text-align: left; }
-        .prompt-box { background: #000; border: 1px dashed #555; padding: 10px; color: #00ff41; margin-top: 15px; user-select: all; }
+        .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #555; }
     </style>
 </head>
 <body>
-<canvas id="matrixCanvas"></canvas>
 <div class="container" id="mainWarroom">
-    <h1 id="mainTitle">三國武神演武沙盤 7.0 - 狂龍極限無雙</h1>
+    <h1>三國武神演武沙盤 7.0 - 狂龍極限無雙</h1>
     
     <div class="controls">
-        <div class="select-group"><label>單挑我軍：</label><select id="p1Select"></select></div>
-        <div class="select-group"><label style="color: var(--accent-red);">單挑敵軍：</label><select id="p2Select" style="color: var(--accent-red);"></select></div>
+        <div class="select-group">
+            <label>單挑我軍：</label>
+            <select id="p1Select"></select>
+        </div>
+        <div class="select-group">
+            <label style="color: var(--accent-red);">單挑敵軍：</label>
+            <select id="p2Select" style="color: var(--accent-red); border: 1px solid var(--accent-red);"></select>
+        </div>
     </div>
     <div class="controls">
-        <button onclick="startDuel()" style="flex: 1;">⚔️ 發動單挑</button>
-        <button onclick="randomize()" style="flex: 1; color: var(--accent-orange); border-color: var(--accent-orange);">🎲 隨機點將</button>
+        <button onclick="startDuel()" style="flex: 1;">發動單挑處決</button>
+        <button class="btn-random" onclick="randomize()" style="flex: 1;">天道隨機點將</button>
     </div>
 
-    <div class="controls" style="border: 1px dashed var(--accent-orange); padding: 15px; background: rgba(255, 140, 0, 0.05);">
-        <input type="text" id="customName" placeholder="自創姓名" style="flex: 1;">
-        <input type="number" id="customPower" placeholder="武力(1-99999)" style="flex: 1;">
-        <input type="text" id="customRank" placeholder="階級(如: 隱藏修羅)" style="flex: 1;">
-        <button onclick="addCustomGeneral()" style="color: #ffd700; flex: 1;">鍛造武將降臨</button>
-    </div>
-
-    <div class="controls" style="border: 1px solid #ffd700; padding: 15px; background: rgba(255, 215, 0, 0.05); display: block; margin-bottom: 20px;">
-        <h3 style="color: #ffd700; margin-top: 0;">🐉 一龍鬥群虎 (無加成極限挑戰) 🐅</h3>
-        <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
-            <div class="team-selects" style="flex: 1; border: 1px solid var(--border-color); padding: 10px;">
-                <h4 style="color:var(--text-color); margin-top:0; text-align:center;">狂龍</h4>
-                <select id="dragonSelect"></select>
+    <div class="controls" style="border: 2px solid #ff00ff; padding: 15px; border-radius: 5px; background: rgba(255, 0, 255, 0.05); display: block; margin-bottom: 20px;">
+        <h3 style="color: #ff00ff; margin-top: 0; margin-bottom: 10px; text-shadow: 0 0 5px #ff00ff;">🌌 異界靈魂鍛造台 (主角專屬) 🌌</h3>
+        <p style="font-size: 12px; color: #aaa; margin-top: -5px; margin-bottom: 15px;">鍛造專屬武將，賦予隨機天賦。在五境試煉中浴血獲勝可獲取 EXP 升級。達成「五境大滿貫」將觸發破界神蹟！</p>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <input type="text" id="avatarName" placeholder="輸入異界武將姓名" style="flex: 2;">
+            <button onclick="forgeAvatar()" style="flex: 1; background: #4b0082; color: #ff00ff; border-color: #ff00ff; font-weight: bold;">🎲 隨機天賦降臨</button>
+        </div>
+        <div id="avatarPanel" style="color: #ccc; font-size: 14px; background: #000; padding: 10px; border: 1px dashed #ff00ff; display: none;">
+            <strong id="avName" style="color:#00ffff; font-size: 16px;">姓名</strong> | 
+            <span id="avLevel" style="color:#ffd700; font-weight:bold;">Lv.1</span> | 
+            當前武力: <span id="avPower" style="color:#ff3131; font-weight:bold;">?</span> | 
+            EXP: <span id="avExp" style="color:#00ff41;">0 / 100</span><br>
+            <div style="margin-top: 5px; color:#aaa; font-size:12px;">【五境試煉進度】：
+                <span id="mark1VsN" style="margin-right: 5px;">一龍鬥十虎(未)</span> | 
+                <span id="markArena" style="margin-right: 5px; margin-left: 5px;">擂台車輪(未)</span> | 
+                <span id="markMelee" style="margin-right: 5px; margin-left: 5px;">同場混戰(未)</span> | 
+                <span id="markTourney" style="margin-right: 5px; margin-left: 5px;">十二強(未)</span> | 
+                <span id="markRoyale" style="margin-left: 5px;">全軍大亂鬥(未)</span>
             </div>
-            <div class="team-selects" style="flex: 2; border: 1px solid var(--accent-red); padding: 10px;">
-                <h4 style="color:var(--accent-red); margin-top:0; text-align:center;">群虎 (可選 1~10 人，可設不參戰)</h4>
+        </div>
+    </div>
+
+    <div class="controls" style="border: 1px solid #ffd700; padding: 15px; border-radius: 5px; background: rgba(255, 215, 0, 0.05); display: block; margin-bottom: 20px;">
+        <h3 style="color: #ffd700; margin-top: 0; margin-bottom: 10px; text-shadow: 0 0 5px #ffd700;">🐉 一龍鬥群虎 (無加成極限挑戰) 🐅</h3>
+        <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+            <div class="team-selects" style="flex: 1; border: 1px solid #00ff41; padding: 10px; border-radius: 5px; min-width: 250px;">
+                <h4 style="color:#00ff41; margin-top:0; text-align:center;">狂龍 (單挑者)</h4>
+                <select id="dragonSelect" style="background:#001a00; border-color:#00ff41; color:#00ff41; font-weight:bold; font-size: 16px;"></select>
+            </div>
+            <div class="team-selects" style="flex: 2; border: 1px solid #ff3131; padding: 10px; border-radius: 5px; min-width: 300px;">
+                <h4 style="color:#ff3131; margin-top:0; text-align:center;">群虎 (可選 1~10 人圍攻)</h4>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
-                    <select id="tT0"></select><select id="tT1"></select><select id="tT2"></select><select id="tT3"></select><select id="tT4"></select>
-                    <select id="tT5"></select><select id="tT6"></select><select id="tT7"></select><select id="tT8"></select><select id="tT9"></select>
+                    <select id="tT0" style="color:var(--accent-red);"></select><select id="tT1" style="color:var(--accent-red);"></select>
+                    <select id="tT2" style="color:var(--accent-red);"></select><select id="tT3" style="color:var(--accent-red);"></select>
+                    <select id="tT4" style="color:var(--accent-red);"></select><select id="tT5" style="color:var(--accent-red);"></select>
+                    <select id="tT6" style="color:var(--accent-red);"></select><select id="tT7" style="color:var(--accent-red);"></select>
+                    <select id="tT8" style="color:var(--accent-red);"></select><select id="tT9" style="color:var(--accent-red);"></select>
                 </div>
             </div>
         </div>
         <div style="display: flex; gap: 10px;">
-            <button class="btn-tournament" onclick="randomizeOneVsN()" style="flex: 1;">🎲 隨機配置</button>
-            <button class="btn-tournament" onclick="runOneVsN()" style="flex: 2; background: #8b0000;">🔥 我要打十個！</button>
+            <button class="btn-tournament" onclick="randomizeOneVsN()" style="flex: 1; background: #b8860b; border-color: #ffd700;">🎲 隨機選出 1 龍 10 虎</button>
+            <button class="btn-tournament" onclick="runOneVsN()" style="flex: 2; background: #8b0000; border-color: #ffd700; font-size: 18px; box-shadow: 0 0 10px #ffd700;">🔥 我要打十個！(發動極限圍毆戰)</button>
         </div>
     </div>
 
-    <div class="controls" style="border: 1px solid #00ffff; padding: 15px; background: rgba(0, 255, 255, 0.05); display: block;">
-        <h3 style="color: #00ffff; margin-top: 0;">🛡️ 軍團死鬥 (最多 6 VS 6) 🛡️</h3>
+    <div class="controls" style="border: 1px solid #00ffff; padding: 15px; border-radius: 5px; background: rgba(0, 255, 255, 0.05); display: block;">
+        <h3 style="color: #00ffff; margin-top: 0; margin-bottom: 10px; text-shadow: 0 0 5px #00ffff;">🛡️ 軍團死鬥 (最多 6 VS 6) 🛡️</h3>
         <div style="display: flex; gap: 15px; margin-bottom: 15px;">
-            <div class="team-selects" style="flex: 1; border: 1px solid var(--border-color); padding: 10px;">
-                <h4 style="color:var(--text-color); text-align:center;">我方陣營 (青龍)</h4>
+            <div class="team-selects" style="flex: 1; border: 1px solid #00ff41; padding: 10px; border-radius: 5px;">
+                <h4 style="color:#00ff41; margin-top:0; text-align:center;">我方陣營 (青龍)</h4>
                 <select id="tA0"></select><select id="tA1"></select><select id="tA2"></select>
                 <select id="tA3"></select><select id="tA4"></select><select id="tA5"></select>
             </div>
-            <div class="team-selects" style="flex: 1; border: 1px solid var(--accent-red); padding: 10px;">
-                <h4 style="color:var(--accent-red); text-align:center;">敵方陣營 (赤虎)</h4>
-                <select id="tB0"></select><select id="tB1"></select><select id="tB2"></select>
-                <select id="tB3"></select><select id="tB4"></select><select id="tB5"></select>
+            <div class="team-selects" style="flex: 1; border: 1px solid #ff3131; padding: 10px; border-radius: 5px;">
+                <h4 style="color:#ff3131; margin-top:0; text-align:center;">敵方陣營 (赤虎)</h4>
+                <select id="tB0" style="color:var(--accent-red);"></select><select id="tB1" style="color:var(--accent-red);"></select><select id="tB2" style="color:var(--accent-red);"></select>
+                <select id="tB3" style="color:var(--accent-red);"></select><select id="tB4" style="color:var(--accent-red);"></select><select id="tB5" style="color:var(--accent-red);"></select>
             </div>
         </div>
         <div style="display: flex; gap: 10px;">
-            <button class="btn-tournament" onclick="randomizeTeam()" style="flex: 1;">🎲 隨機滿編配置</button>
-            <button class="btn-tournament" onclick="runTeamBattle()" style="flex: 2;">⚔️ 擂台車輪戰</button>
-            <button class="btn-tournament" onclick="runGroupMeleeBattle()" style="flex: 2; background: #8b0000;">🔥 同場大亂鬥</button>
+            <button class="btn-tournament" onclick="randomizeTeam()" style="flex: 1; background: #005f5f; border-color: #00ffff;">🎲 隨機滿編配置</button>
+            <button class="btn-tournament" onclick="runTeamBattle()" style="flex: 2; background: #008080; border-color: #00ffff; font-size: 16px;">⚔️ 擂台車輪戰</button>
+            <button class="btn-tournament" onclick="runGroupMeleeBattle()" style="flex: 2; background: #8b0000; border-color: #ff3131; font-size: 16px; box-shadow: 0 0 10px #8b0000;">🔥 同場大亂鬥</button>
         </div>
     </div>
 
-    <div class="controls" style="border: 1px solid #8a2be2; padding: 15px; background: rgba(138, 43, 226, 0.1); display: block;">
-        <h3 style="color: #8a2be2; margin-top: 0;">🏆 終極武道大會 🏆</h3>
+    <div class="controls" style="border: 1px solid #8a2be2; padding: 15px; border-radius: 5px; background: rgba(138, 43, 226, 0.1); display: block;">
+        <h3 style="color: #8a2be2; margin-top: 0; margin-bottom: 10px; text-shadow: 0 0 5px #8a2be2;">🏆 終極武道大會 🏆</h3>
         <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-            <select id="tourneySelect" style="flex: 2;"></select>
+            <select id="tourneySelect" style="flex: 2; background: #000; color: #8a2be2; border: 1px solid #8a2be2;"></select>
             <button onclick="addToTournament()" style="flex: 1; border-color: #8a2be2; color: #8a2be2;">加入十二強</button>
             <button onclick="clearTournament()" style="flex: 1; border-color: #ff3131; color: #ff3131;">清空名單</button>
         </div>
-        <div id="tourneyRoster" style="margin-bottom: 15px; color: #ccc;">十二強指定名單 (0/12)：無</div>
+        <div id="tourneyRoster" style="margin-bottom: 15px; color: #ccc; font-size: 14px;">十二強指定名單 (0/12)：無</div>
         <div style="display: flex; gap: 10px; margin-bottom: 10px;">
             <button class="btn-tournament" onclick="runTournament(false)" style="flex: 1;">⚔️ 舉辦指定大會(12人)</button>
             <button class="btn-tournament" onclick="runTournament(true)" style="flex: 1;">🎲 舉辦隨機大會(12人)</button>
         </div>
-        <button class="btn-tournament" onclick="runGlobalTournament()" style="width: 100%;">🌍 舉辦全軍大亂鬥 (全庫大逃殺)</button>
-    </div>
-
-    <div class="achievements-panel">
-        <h3>📜 天機密卷 (成就系統) 📜</h3>
-        <div class="ach-grid">
-            <div id="ach_instakill" class="ach-item"><div class="ach-title">【瞬獄秒殺】</div><div class="ach-desc">開局第零秒發動武力碾壓</div></div>
-            <div id="ach_yunyue" class="ach-item"><div class="ach-title">【雲玥同心】</div><div class="ach-desc">觸發武神與神明的羈絆</div></div>
-            <div id="ach_ant" class="ach-item"><div class="ach-title">【螻蟻之怒】</div><div class="ach-desc">殘卒逆襲擊殺超一流</div></div>
-            <div id="ach_wushen" class="ach-item"><div class="ach-title">【武神之怒】</div><div class="ach-desc">單局發動 10 次玥之極</div></div>
-            <div id="ach_godslayer" class="ach-item"><div class="ach-title">【逆天弒神】</div><div class="ach-desc">以凡人之軀擊殺神仙</div></div>
-        </div>
-        <button id="loreButton" onclick="openLoreModal()">🔥 查閱天機神卷 (解鎖終極 Prompt) 🔥</button>
+        <button class="btn-tournament" onclick="runGlobalTournament()" style="width: 100%; background: #4b0082; border-color: #8a2be2;">🌍 舉辦全軍大亂鬥 (全庫將領大逃殺)</button>
     </div>
 
     <div class="battle-view">
-        <div class="fighter">
-            <h2 id="p1Name" style="color: var(--text-color);">---</h2>
-            <div id="p1Rank">等級</div>
-            <div class="hp-bar-container"><div id="p1HpBar" class="hp-bar p1-hp"></div></div>
-            <div id="p1HpText">100/100</div>
+        <div class="fighter" style="border: 1px solid var(--text-color); box-shadow: 0 0 10px rgba(0, 255, 65, 0.1);">
+            <h2 id="p1Name" style="color: var(--text-color); text-shadow: 0 0 5px var(--text-color);">---</h2>
+            <div id="p1Rank" style="font-size:12px; color: var(--text-color);">等級</div>
+            <div class="hp-bar-container" style="border: 1px solid var(--text-color);"><div id="p1HpBar" class="hp-bar p1-hp"></div></div>
+            <div id="p1HpText" style="color: var(--text-color); font-weight: bold; margin-top: 5px;">100/100</div>
         </div>
-        <div style="font-size: 40px; align-self: center; color: var(--accent-red);">VS</div>
-        <div class="fighter p2-box">
-            <h2 id="p2Name" style="color: var(--accent-red);">---</h2>
-            <div id="p2Rank" style="color: var(--accent-red);">等級</div>
-            <div class="hp-bar-container" style="border-color:var(--accent-red);"><div id="p2HpBar" class="hp-bar p2-hp"></div></div>
-            <div id="p2HpText" style="color: var(--accent-red);">100/100</div>
+        
+        <div style="font-size: 40px; align-self: center; color: var(--accent-red); text-shadow: 0 0 10px var(--accent-red);">VS</div>
+        
+        <div class="fighter" style="border: 1px solid var(--accent-red); box-shadow: 0 0 15px rgba(255, 49, 49, 0.2);">
+            <h2 id="p2Name" style="color: var(--accent-red); text-shadow: 0 0 5px var(--accent-red);">---</h2>
+            <div id="p2Rank" style="font-size:12px; color: var(--accent-red);">等級</div>
+            <div class="hp-bar-container" style="border: 1px solid var(--accent-red);"><div id="p2HpBar" class="hp-bar p2-hp"></div></div>
+            <div id="p2HpText" style="color: var(--accent-red); font-weight: bold; margin-top: 5px;">100/100</div>
         </div>
     </div>
 
-    <div id="battleLog">系統待命中...請選擇將領並按下發動。</div>
+    <div id="battleLog">系統待命中...請選擇將領並按下發動，或舉辦賽事。</div>
     <div class="chart-container"><canvas id="hpChart"></canvas></div>
-    <div class="footer">什年工作室《三國演義武力超百科》授權終端 // 造物主完整無錯版</div>
-</div>
-
-<div id="loreModal">
-    <div class="modal-content">
-        <h2>🔥 墨軍師的視覺詠唱 (Prompt) 🔥</h2>
-        <p>主公！您已逆天改命，喚醒了造物主模式！請將這段咒語餵入 Midjourney，召喚屬於您的狂暴武神：</p>
-        <div class="prompt-box">/imagine prompt: A violent fusion of Ferocious Chinese Ink Wash Painting and Cyberpunk Glitch Art. A god-like Chinese ancient warrior (Zhao Yun style), wearing shattered hyper-tech silver armor mixed with traditional Han dynasty robes. He is holding a glowing dragon-spear that pierces through digital matrix blocks. Intense oppressive atmosphere, dark crimson and neon green accents, heavy ink splatters bleeding into pixelated corrupted data errors. Cinematic lighting, low angle, masterpiece, hyper-detailed, 8k resolution, brutal, epic scale --ar 16:9 --stylize 750 --v 6.0</div>
-        <button onclick="closeLoreModal()" style="margin-top:20px; background:#333;">關閉卷軸</button>
-    </div>
+    <div class="footer">什年工作室《三國演義武力超百科》授權終端 // 支援軍團自選與神蹟禁制系統 // 異界靈魂升級模組啟動</div>
 </div>
 
 <script>
-    // 矩陣背景
-    const canvas = document.getElementById('matrixCanvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*三國演義武力超百科什年墨軍師趙雲呂布數據處決'.split('');
-    const fontSize = 16; const columns = canvas.width / fontSize; const drops = [];
-    for (let i = 0; i < columns; i++) drops[i] = 1;
-    setInterval(() => {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#ff0000'; ctx.font = fontSize + 'px monospace';
-        for (let i = 0; i < drops.length; i++) {
-            ctx.fillText(letters[Math.floor(Math.random() * letters.length)], i * fontSize, drops[i] * fontSize);
-            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
-            drops[i]++;
-        }
-    }, 33);
-
-    // 核心數據
+    // ==============================================================
+    // ▼▼▼ 全局數據與核心陣列 (Global Scope) ▼▼▼
+    // ==============================================================
     let generals = [
-        {"name": "趙雲", "power": 100, "rank": "天下第一"}, {"name": "關羽", "power": 99, "rank": "超一流"},
-        {"name": "張飛", "power": 99, "rank": "超一流"}, {"name": "馬超", "power": 99, "rank": "超一流"},
-        {"name": "黃忠", "power": 99, "rank": "超一流"}, {"name": "呂布", "power": 99, "rank": "超一流"},
-        {"name": "許褚", "power": 98, "rank": "超一流"}, {"name": "典韋", "power": 98, "rank": "超一流"},
-        {"name": "文醜", "power": 98, "rank": "超一流"}, {"name": "顏良", "power": 98, "rank": "超一流"},
-        {"name": "龐德", "power": 97, "rank": "準超一流"}, {"name": "兀突骨", "power": 97, "rank": "準超一流"},
-        {"name": "張郃", "power": 96, "rank": "頂尖一流"}, {"name": "張遼", "power": 95, "rank": "頂尖一流"},
-        {"name": "夏侯惇", "power": 95, "rank": "頂尖一流"}, {"name": "姜維", "power": 95, "rank": "頂尖一流"},
-        {"name": "太史慈", "power": 94, "rank": "頂尖一流"}, {"name": "孫策", "power": 94, "rank": "頂尖一流"},
-        {"name": "夏侯淵", "power": 94, "rank": "頂尖一流"}, {"name": "凌統", "power": 94, "rank": "頂尖一流"},
-        {"name": "甘寧", "power": 94, "rank": "頂尖一流"}, {"name": "周泰", "power": 94, "rank": "頂尖一流"},
-        {"name": "鄧艾", "power": 94, "rank": "頂尖一流"}, {"name": "文鴦", "power": 94, "rank": "頂尖一流"},
-        {"name": "李嚴", "power": 94, "rank": "頂尖一流"}, {"name": "高覽", "power": 93, "rank": "頂尖一流"},
-        {"name": "張任", "power": 93, "rank": "頂尖一流"}, {"name": "徐晃", "power": 92, "rank": "強一流"},
-        {"name": "曹洪", "power": 92, "rank": "強一流"}, {"name": "曹彰", "power": 91, "rank": "強一流"},
-        {"name": "陳武", "power": 91, "rank": "強一流"}, {"name": "鄂煥", "power": 91, "rank": "強一流"},
-        {"name": "魏延", "power": 90, "rank": "中一流"}, {"name": "關興", "power": 90, "rank": "中一流"},
-        {"name": "張苞", "power": 90, "rank": "中一流"}, {"name": "文聘", "power": 90, "rank": "中一流"},
-        {"name": "華雄", "power": 89, "rank": "中一流"}, {"name": "祝融", "power": 88, "rank": "中一流"},
-        {"name": "徐質", "power": 88, "rank": "中一流"}, {"name": "孫桓", "power": 88, "rank": "中一流"},
-        {"name": "諸葛尚", "power": 88, "rank": "中一流"}, {"name": "李典", "power": 87, "rank": "弱一流"},
-        {"name": "樂進", "power": 87, "rank": "弱一流"}, {"name": "于禁", "power": 86, "rank": "弱一流"},
-        {"name": "馬岱", "power": 86, "rank": "弱一流"}, {"name": "程普", "power": 85, "rank": "弱一流"},
-        {"name": "黃蓋", "power": 85, "rank": "弱一流"}, {"name": "韓當", "power": 85, "rank": "弱一流"},
-        {"name": "呂蒙", "power": 85, "rank": "弱一流"}, {"name": "嚴顏", "power": 85, "rank": "弱一流"},
-        {"name": "高順", "power": 85, "rank": "弱一流"}, {"name": "臧霸", "power": 85, "rank": "弱一流"},
-        {"name": "王雙", "power": 85, "rank": "弱一流"}, {"name": "冷苞", "power": 85, "rank": "弱一流"},
-        {"name": "周倉", "power": 85, "rank": "弱一流"}, {"name": "楊阜", "power": 85, "rank": "弱一流"},
-        {"name": "馬雲騄", "power": 85, "rank": "弱一流"}, {"name": "公孫瓚", "power": 84, "rank": "弱一流"},
-        {"name": "麯義", "power": 84, "rank": "弱一流"}, {"name": "邢道榮", "power": 83, "rank": "弱一流"},
-        {"name": "孫堅", "power": 83, "rank": "弱一流"}, {"name": "鄧忠", "power": 83, "rank": "弱一流"},
-        {"name": "潘璋", "power": 82, "rank": "強二流"}, {"name": "曹仁", "power": 82, "rank": "強二流"},
-        {"name": "劉備", "power": 82, "rank": "強二流"}, {"name": "侯成", "power": 81, "rank": "強二流"},
-        {"name": "楊仁", "power": 81, "rank": "強二流"}, {"name": "傅僉", "power": 81, "rank": "強二流"},
-        {"name": "越吉", "power": 81, "rank": "強二流"}, {"name": "何慢", "power": 81, "rank": "強二流"},
-        {"name": "秦慶童", "power": 81, "rank": "強二流"}, {"name": "關平", "power": 80, "rank": "中二流"},
-        {"name": "劉封", "power": 80, "rank": "中二流"}, {"name": "王平", "power": 80, "rank": "中二流"},
-        {"name": "張翼", "power": 80, "rank": "中二流"}, {"name": "曹休", "power": 80, "rank": "中二流"},
-        {"name": "牛金", "power": 80, "rank": "中二流"}, {"name": "武安國", "power": 80, "rank": "中二流"},
-        {"name": "管亥", "power": 79, "rank": "中二流"}, {"name": "潘遂", "power": 79, "rank": "中二流"},
-        {"name": "張繡", "power": 79, "rank": "中二流"}, {"name": "王威", "power": 79, "rank": "中二流"},
-        {"name": "廖化", "power": 78, "rank": "弱二流"}, {"name": "摩沙柯", "power": 78, "rank": "弱二流"},
-        {"name": "紀靈", "power": 78, "rank": "弱二流"}, {"name": "蔣欽", "power": 78, "rank": "弱二流"},
-        {"name": "徐盛", "power": 78, "rank": "弱二流"}, {"name": "董襲", "power": 78, "rank": "弱二流"},
-        {"name": "吳蘭", "power": 77, "rank": "弱二流"}, {"name": "雷同", "power": 77, "rank": "弱二流"},
-        {"name": "呂曠", "power": 76, "rank": "弱二流"}, {"name": "陳應", "power": 76, "rank": "弱二流"},
-        {"name": "楊昂", "power": 76, "rank": "弱二流"}, {"name": "董卓", "power": 76, "rank": "弱二流"},
-        {"name": "車冑", "power": 75, "rank": "弱二流"}, {"name": "曹豹", "power": 75, "rank": "弱二流"},
-        {"name": "李通", "power": 75, "rank": "弱二流"}, {"name": "王方", "power": 75, "rank": "弱二流"},
-        {"name": "宋謙", "power": 75, "rank": "弱二流"}, {"name": "賈華", "power": 75, "rank": "弱二流"},
-        {"name": "李封", "power": 75, "rank": "弱二流"}, {"name": "岑利", "power": 75, "rank": "弱二流"},
-        {"name": "袁尚", "power": 74, "rank": "強三流"}, {"name": "王忠", "power": 74, "rank": "強三流"},
-        {"name": "方悅", "power": 74, "rank": "強三流"}, {"name": "朱然", "power": 74, "rank": "強三流"},
-        {"name": "袁紹", "power": 74, "rank": "強三流"}, {"name": "馬騰", "power": 74, "rank": "強三流"},
-        {"name": "朱桓", "power": 74, "rank": "強三流"}, {"name": "鄧賢", "power": 74, "rank": "強三流"},
-        {"name": "木鹿大王", "power": 74, "rank": "強三流"}, {"name": "李豐", "power": 74, "rank": "強三流"},
-        {"name": "孟坦", "power": 74, "rank": "強三流"}, {"name": "何平", "power": 73, "rank": "強三流"},
-        {"name": "張虎（韓當）", "power": 73, "rank": "強三流"}, {"name": "伍伯", "power": 73, "rank": "強三流"},
-        {"name": "鮑隆", "power": 73, "rank": "強三流"}, {"name": "韓德", "power": 72, "rank": "中三流"},
-        {"name": "鍾縉", "power": 72, "rank": "中三流"}, {"name": "鍾紳", "power": 72, "rank": "中三流"},
-        {"name": "韓瑛", "power": 72, "rank": "中三流"}, {"name": "韓瑤", "power": 72, "rank": "中三流"},
-        {"name": "韓瓊", "power": 72, "rank": "中三流"}, {"name": "韓琪", "power": 72, "rank": "中三流"},
-        {"name": "荀正", "power": 71, "rank": "中三流"}, {"name": "高昇", "power": 71, "rank": "中三流"},
-        {"name": "張先", "power": 71, "rank": "中三流"}, {"name": "劉辟（典韋）", "power": 71, "rank": "中三流"},
-        {"name": "宋憲", "power": 71, "rank": "中三流"}, {"name": "蔡瑁", "power": 71, "rank": "中三流"},
-        {"name": "徐榮", "power": 71, "rank": "中三流"}, {"name": "喬蕤", "power": 71, "rank": "中三流"},
-        {"name": "干糜", "power": 71, "rank": "中三流"}, {"name": "文虎", "power": 71, "rank": "中三流"},
-        {"name": "張嶷", "power": 70, "rank": "弱三流"}, {"name": "吳懿", "power": 70, "rank": "弱三流"},
-        {"name": "裴元超", "power": 70, "rank": "弱三流"}, {"name": "金環三結", "power": 70, "rank": "弱三流"},
-        {"name": "朱讚", "power": 70, "rank": "弱三流"}, {"name": "薛顒", "power": 70, "rank": "弱三流"},
-        {"name": "郝萌", "power": 70, "rank": "弱三流"}, {"name": "夏侯蘭", "power": 70, "rank": "弱三流"},
-        {"name": "何儀", "power": 70, "rank": "弱三流"}, {"name": "張英", "power": 70, "rank": "弱三流"},
-        {"name": "劉峻", "power": 70, "rank": "弱三流"}, {"name": "馬漢", "power": 70, "rank": "弱三流"},
-        {"name": "馬忠（吳國）", "power": 70, "rank": "弱三流"}, {"name": "魏績", "power": 70, "rank": "弱三流"},
-        {"name": "劉岱", "power": 69, "rank": "弱三流"}, {"name": "梁剛", "power": 69, "rank": "弱三流"},
-        {"name": "樂就", "power": 69, "rank": "弱三流"}, {"name": "汪昭", "power": 69, "rank": "弱三流"},
-        {"name": "孟達", "power": 68, "rank": "強四流"}, {"name": "劉辟（高覽）", "power": 68, "rank": "強四流"},
-        {"name": "侯選", "power": 68, "rank": "強四流"}, {"name": "程欽", "power": 68, "rank": "強四流"},
-        {"name": "李堪", "power": 68, "rank": "強四流"}, {"name": "張橫", "power": 68, "rank": "強四流"},
-        {"name": "成宜", "power": 68, "rank": "強四流"}, {"name": "楊秋", "power": 68, "rank": "強四流"},
-        {"name": "韓浩", "power": 68, "rank": "強四流"}, {"name": "夏侯尚", "power": 68, "rank": "強四流"},
-        {"name": "史蹟", "power": 68, "rank": "強四流"}, {"name": "張勳", "power": 68, "rank": "強四流"},
-        {"name": "任夔", "power": 68, "rank": "強四流"}, {"name": "曹遵", "power": 68, "rank": "強四流"},
-        {"name": "徐商", "power": 68, "rank": "強四流"}, {"name": "呂健", "power": 68, "rank": "強四流"},
-        {"name": "胡卓兒", "power": 68, "rank": "強四流"}, {"name": "龔都", "power": 68, "rank": "強四流"},
-        {"name": "丁奉", "power": 67, "rank": "中四流"}, {"name": "成廉", "power": 67, "rank": "中四流"},
-        {"name": "成濟", "power": 67, "rank": "中四流"}, {"name": "孫峻", "power": 67, "rank": "中四流"},
-        {"name": "劉曄", "power": 67, "rank": "中四流"}, {"name": "晏明", "power": 67, "rank": "中四流"},
-        {"name": "周昔", "power": 67, "rank": "中四流"}, {"name": "呂公", "power": 66, "rank": "中四流"},
-        {"name": "韓猛", "power": 66, "rank": "中四流"}, {"name": "孫觀", "power": 66, "rank": "中四流"},
-        {"name": "呂敦", "power": 66, "rank": "中四流"}, {"name": "尹禮", "power": 66, "rank": "中四流"},
-        {"name": "呂稀", "power": 66, "rank": "中四流"}, {"name": "昌奇", "power": 66, "rank": "中四流"},
-        {"name": "胡軫", "power": 66, "rank": "中四流"}, {"name": "謝雄", "power": 66, "rank": "中四流"},
-        {"name": "龔起", "power": 66, "rank": "中四流"}, {"name": "王直", "power": 66, "rank": "中四流"},
-        {"name": "韓遂", "power": 65, "rank": "弱四流"}, {"name": "夏侯霸", "power": 65, "rank": "弱四流"},
-        {"name": "曹性", "power": 65, "rank": "弱四流"}, {"name": "蔣舒", "power": 65, "rank": "弱四流"},
-        {"name": "呂虔", "power": 65, "rank": "弱四流"}, {"name": "王基", "power": 65, "rank": "弱四流"},
-        {"name": "梁興", "power": 65, "rank": "弱四流"}, {"name": "朱雋", "power": 65, "rank": "弱四流"},
-        {"name": "鄧龍", "power": 65, "rank": "弱四流"}, {"name": "陳泰", "power": 64, "rank": "弱四流"},
-        {"name": "王傾", "power": 64, "rank": "弱四流"}, {"name": "辛弘", "power": 64, "rank": "弱四流"},
-        {"name": "周瑜", "power": 64, "rank": "弱四流"}, {"name": "孫權", "power": 64, "rank": "弱四流"},
-        {"name": "田續", "power": 64, "rank": "弱四流"}, {"name": "呂翔", "power": 64, "rank": "弱四流"},
-        {"name": "焦炳", "power": 64, "rank": "弱四流"}, {"name": "慕容烈", "power": 64, "rank": "弱四流"},
-        {"name": "俞涉", "power": 64, "rank": "弱四流"}, {"name": "張普", "power": 64, "rank": "弱四流"},
-        {"name": "審配", "power": 64, "rank": "弱四流"}, {"name": "伍孚", "power": 64, "rank": "弱四流"},
-        {"name": "申義", "power": 64, "rank": "弱四流"}, {"name": "曹營將領", "power": 60, "rank": "大眾臉"},
-        {"name": "殘卒", "power": 33, "rank": "弱十一流"}, {"name": "樊玥", "power": 33, "rank": "弱十一流"},
-        {"name": "張梁", "power": 33, "rank": "弱十一流"}, {"name": "糜芳", "power": 33, "rank": "弱十一流"},
-        {"name": "孫仁", "power": 33, "rank": "弱十一流"}, {"name": "秦朗之弟", "power": 33, "rank": "弱十一流"},
-        {"name": "貂蟬", "power": 32, "rank": "不入流"}, {"name": "鄒氏", "power": 32, "rank": "不入流"},
-        {"name": "嚴氏", "power": 32, "rank": "不入流"}, {"name": "甄氏", "power": 32, "rank": "不入流"},
-        {"name": "黃氏（黃月英）", "power": 32, "rank": "不入流"}, {"name": "徐氏", "power": 32, "rank": "不入流"},
-        {"name": "大喬", "power": 32, "rank": "不入流"}, {"name": "小喬", "power": 32, "rank": "不入流"},
-        {"name": "郭氏", "power": 32, "rank": "不入流"}, {"name": "糜氏", "power": 32, "rank": "不入流"},
-        {"name": "甘氏", "power": 32, "rank": "不入流"}, {"name": "棄天帝", "power": 999, "rank": "神仙流(魔皇)"},
-        {"name": "南斗", "power": 980, "rank": "神仙流(註生)"}, {"name": "北斗", "power": 980, "rank": "神仙流(註死)"},
-        {"name": "南華老仙", "power": 950, "rank": "神仙流(T1)"}, {"name": "左慈", "power": 950, "rank": "神仙流(T1)"},
-        {"name": "于吉", "power": 950, "rank": "神仙流(T1)"}, {"name": "民王", "power": 900, "rank": "神仙流(T2)"},
-        {"name": "李意", "power": 900, "rank": "神仙流(T2)"}, {"name": "紫虛上人", "power": 850, "rank": "神仙流(T3)"},
+        {"name": "趙雲", "power": 100, "rank": "天下第一"},
+        {"name": "關羽", "power": 99, "rank": "超一流"},
+        {"name": "張飛", "power": 99, "rank": "超一流"},
+        {"name": "馬超", "power": 99, "rank": "超一流"},
+        {"name": "黃忠", "power": 99, "rank": "超一流"},
+        {"name": "呂布", "power": 99, "rank": "超一流"},
+        {"name": "許褚", "power": 98, "rank": "超一流"},
+        {"name": "典韋", "power": 98, "rank": "超一流"},
+        {"name": "文醜", "power": 98, "rank": "超一流"},
+        {"name": "顏良", "power": 98, "rank": "超一流"},
+        {"name": "龐德", "power": 97, "rank": "準超一流"},
+        {"name": "兀突骨", "power": 97, "rank": "準超一流"},
+        {"name": "張郃", "power": 96, "rank": "頂尖一流"},
+        {"name": "張遼", "power": 95, "rank": "頂尖一流"},
+        {"name": "夏侯惇", "power": 95, "rank": "頂尖一流"},
+        {"name": "姜維", "power": 95, "rank": "頂尖一流"},
+        {"name": "太史慈", "power": 94, "rank": "頂尖一流"},
+        {"name": "孫策", "power": 94, "rank": "頂尖一流"},
+        {"name": "夏侯淵", "power": 94, "rank": "頂尖一流"},
+        {"name": "凌統", "power": 94, "rank": "頂尖一流"},
+        {"name": "甘寧", "power": 94, "rank": "頂尖一流"},
+        {"name": "周泰", "power": 94, "rank": "頂尖一流"},
+        {"name": "鄧艾", "power": 94, "rank": "頂尖一流"},
+        {"name": "文鴦", "power": 94, "rank": "頂尖一流"},
+        {"name": "李嚴", "power": 94, "rank": "頂尖一流"},
+        {"name": "高覽", "power": 93, "rank": "頂尖一流"},
+        {"name": "張任", "power": 93, "rank": "頂尖一流"},
+        {"name": "徐晃", "power": 92, "rank": "強一流"},
+        {"name": "曹洪", "power": 92, "rank": "強一流"},
+        {"name": "曹彰", "power": 91, "rank": "強一流"},
+        {"name": "陳武", "power": 91, "rank": "強一流"},
+        {"name": "鄂煥", "power": 91, "rank": "強一流"},
+        {"name": "魏延", "power": 90, "rank": "中一流"},
+        {"name": "關興", "power": 90, "rank": "中一流"},
+        {"name": "張苞", "power": 90, "rank": "中一流"},
+        {"name": "文聘", "power": 90, "rank": "中一流"},
+        {"name": "華雄", "power": 89, "rank": "中一流"},
+        {"name": "祝融", "power": 88, "rank": "中一流"},
+        {"name": "徐質", "power": 88, "rank": "中一流"},
+        {"name": "孫桓", "power": 88, "rank": "中一流"},
+        {"name": "諸葛尚", "power": 88, "rank": "中一流"},
+        {"name": "李典", "power": 87, "rank": "弱一流"},
+        {"name": "樂進", "power": 87, "rank": "弱一流"},
+        {"name": "于禁", "power": 86, "rank": "弱一流"},
+        {"name": "馬岱", "power": 86, "rank": "弱一流"},
+        {"name": "程普", "power": 85, "rank": "弱一流"},
+        {"name": "黃蓋", "power": 85, "rank": "弱一流"},
+        {"name": "韓當", "power": 85, "rank": "弱一流"},
+        {"name": "呂蒙", "power": 85, "rank": "弱一流"},
+        {"name": "嚴顏", "power": 85, "rank": "弱一流"},
+        {"name": "高順", "power": 85, "rank": "弱一流"},
+        {"name": "臧霸", "power": 85, "rank": "弱一流"},
+        {"name": "王雙", "power": 85, "rank": "弱一流"},
+        {"name": "冷苞", "power": 85, "rank": "弱一流"},
+        {"name": "周倉", "power": 85, "rank": "弱一流"},
+        {"name": "楊阜", "power": 85, "rank": "弱一流"},
+        {"name": "馬雲騄", "power": 85, "rank": "弱一流"},
+        {"name": "公孫瓚", "power": 84, "rank": "弱一流"},
+        {"name": "麯義", "power": 84, "rank": "弱一流"},
+        {"name": "邢道榮", "power": 83, "rank": "弱一流"},
+        {"name": "孫堅", "power": 83, "rank": "弱一流"},
+        {"name": "鄧忠", "power": 83, "rank": "弱一流"},
+        {"name": "潘璋", "power": 82, "rank": "強二流"},
+        {"name": "曹仁", "power": 82, "rank": "強二流"},
+        {"name": "劉備", "power": 82, "rank": "強二流"},
+        {"name": "侯成", "power": 81, "rank": "強二流"},
+        {"name": "楊仁", "power": 81, "rank": "強二流"},
+        {"name": "傅僉", "power": 81, "rank": "強二流"},
+        {"name": "越吉", "power": 81, "rank": "強二流"},
+        {"name": "何慢", "power": 81, "rank": "強二流"},
+        {"name": "秦慶童", "power": 81, "rank": "強二流"},
+        {"name": "關平", "power": 80, "rank": "中二流"},
+        {"name": "劉封", "power": 80, "rank": "中二流"},
+        {"name": "王平", "power": 80, "rank": "中二流"},
+        {"name": "張翼", "power": 80, "rank": "中二流"},
+        {"name": "曹休", "power": 80, "rank": "中二流"},
+        {"name": "牛金", "power": 80, "rank": "中二流"},
+        {"name": "武安國", "power": 80, "rank": "中二流"},
+        {"name": "管亥", "power": 79, "rank": "中二流"},
+        {"name": "潘遂", "power": 79, "rank": "中二流"},
+        {"name": "張繡", "power": 79, "rank": "中二流"},
+        {"name": "王威", "power": 79, "rank": "中二流"},
+        {"name": "廖化", "power": 78, "rank": "弱二流"},
+        {"name": "摩沙柯", "power": 78, "rank": "弱二流"},
+        {"name": "紀靈", "power": 78, "rank": "弱二流"},
+        {"name": "蔣欽", "power": 78, "rank": "弱二流"},
+        {"name": "徐盛", "power": 78, "rank": "弱二流"},
+        {"name": "董襲", "power": 78, "rank": "弱二流"},
+        {"name": "吳蘭", "power": 77, "rank": "弱二流"},
+        {"name": "雷同", "power": 77, "rank": "弱二流"},
+        {"name": "呂曠", "power": 76, "rank": "弱二流"},
+        {"name": "陳應", "power": 76, "rank": "弱二流"},
+        {"name": "楊昂", "power": 76, "rank": "弱二流"},
+        {"name": "董卓", "power": 76, "rank": "弱二流"},
+        {"name": "車冑", "power": 75, "rank": "弱二流"},
+        {"name": "曹豹", "power": 75, "rank": "弱二流"},
+        {"name": "李通", "power": 75, "rank": "弱二流"},
+        {"name": "王方", "power": 75, "rank": "弱二流"},
+        {"name": "宋謙", "power": 75, "rank": "弱二流"},
+        {"name": "賈華", "power": 75, "rank": "弱二流"},
+        {"name": "李封", "power": 75, "rank": "弱二流"},
+        {"name": "岑利", "power": 75, "rank": "弱二流"},
+        {"name": "袁尚", "power": 74, "rank": "強三流"},
+        {"name": "王忠", "power": 74, "rank": "強三流"},
+        {"name": "方悅", "power": 74, "rank": "強三流"},
+        {"name": "朱然", "power": 74, "rank": "強三流"},
+        {"name": "袁紹", "power": 74, "rank": "強三流"},
+        {"name": "馬騰", "power": 74, "rank": "強三流"},
+        {"name": "朱桓", "power": 74, "rank": "強三流"},
+        {"name": "鄧賢", "power": 74, "rank": "強三流"},
+        {"name": "木鹿大王", "power": 74, "rank": "強三流"},
+        {"name": "李豐", "power": 74, "rank": "強三流"},
+        {"name": "孟坦", "power": 74, "rank": "強三流"},
+        {"name": "何平", "power": 73, "rank": "強三流"},
+        {"name": "張虎（韓當）", "power": 73, "rank": "強三流"},
+        {"name": "伍伯", "power": 73, "rank": "強三流"},
+        {"name": "鮑隆", "power": 73, "rank": "強三流"},
+        {"name": "韓德", "power": 72, "rank": "中三流"},
+        {"name": "鍾縉", "power": 72, "rank": "中三流"},
+        {"name": "鍾紳", "power": 72, "rank": "中三流"},
+        {"name": "韓瑛", "power": 72, "rank": "中三流"},
+        {"name": "韓瑤", "power": 72, "rank": "中三流"},
+        {"name": "韓瓊", "power": 72, "rank": "中三流"},
+        {"name": "韓琪", "power": 72, "rank": "中三流"},
+        {"name": "荀正", "power": 71, "rank": "中三流"},
+        {"name": "高昇", "power": 71, "rank": "中三流"},
+        {"name": "張先", "power": 71, "rank": "中三流"},
+        {"name": "劉辟（典韋）", "power": 71, "rank": "中三流"},
+        {"name": "宋憲", "power": 71, "rank": "中三流"},
+        {"name": "蔡瑁", "power": 71, "rank": "中三流"},
+        {"name": "徐榮", "power": 71, "rank": "中三流"},
+        {"name": "喬蕤", "power": 71, "rank": "中三流"},
+        {"name": "干糜", "power": 71, "rank": "中三流"},
+        {"name": "文虎", "power": 71, "rank": "中三流"},
+        {"name": "張嶷", "power": 70, "rank": "弱三流"},
+        {"name": "吳懿", "power": 70, "rank": "弱三流"},
+        {"name": "裴元超", "power": 70, "rank": "弱三流"},
+        {"name": "金環三結", "power": 70, "rank": "弱三流"},
+        {"name": "朱讚", "power": 70, "rank": "弱三流"},
+        {"name": "薛顒", "power": 70, "rank": "弱三流"},
+        {"name": "郝萌", "power": 70, "rank": "弱三流"},
+        {"name": "夏侯蘭", "power": 70, "rank": "弱三流"},
+        {"name": "何儀", "power": 70, "rank": "弱三流"},
+        {"name": "張英", "power": 70, "rank": "弱三流"},
+        {"name": "劉峻", "power": 70, "rank": "弱三流"},
+        {"name": "馬漢", "power": 70, "rank": "弱三流"},
+        {"name": "馬忠（吳國）", "power": 70, "rank": "弱三流"},
+        {"name": "魏績", "power": 70, "rank": "弱三流"},
+        {"name": "劉岱", "power": 69, "rank": "弱三流"},
+        {"name": "梁剛", "power": 69, "rank": "弱三流"},
+        {"name": "樂就", "power": 69, "rank": "弱三流"},
+        {"name": "汪昭", "power": 69, "rank": "弱三流"},
+        {"name": "孟達", "power": 68, "rank": "強四流"},
+        {"name": "劉辟（高覽）", "power": 68, "rank": "強四流"},
+        {"name": "侯選", "power": 68, "rank": "強四流"},
+        {"name": "程欽", "power": 68, "rank": "強四流"},
+        {"name": "李堪", "power": 68, "rank": "強四流"},
+        {"name": "張橫", "power": 68, "rank": "強四流"},
+        {"name": "成宜", "power": 68, "rank": "強四流"},
+        {"name": "楊秋", "power": 68, "rank": "強四流"},
+        {"name": "韓浩", "power": 68, "rank": "強四流"},
+        {"name": "夏侯尚", "power": 68, "rank": "強四流"},
+        {"name": "史蹟", "power": 68, "rank": "強四流"},
+        {"name": "張勳", "power": 68, "rank": "強四流"},
+        {"name": "任夔", "power": 68, "rank": "強四流"},
+        {"name": "曹遵", "power": 68, "rank": "強四流"},
+        {"name": "徐商", "power": 68, "rank": "強四流"},
+        {"name": "呂健", "power": 68, "rank": "強四流"},
+        {"name": "胡卓兒", "power": 68, "rank": "強四流"},
+        {"name": "龔都", "power": 68, "rank": "強四流"},
+        {"name": "丁奉", "power": 67, "rank": "中四流"},
+        {"name": "成廉", "power": 67, "rank": "中四流"},
+        {"name": "成濟", "power": 67, "rank": "中四流"},
+        {"name": "孫峻", "power": 67, "rank": "中四流"},
+        {"name": "劉曄", "power": 67, "rank": "中四流"},
+        {"name": "晏明", "power": 67, "rank": "中四流"},
+        {"name": "周昔", "power": 67, "rank": "中四流"},
+        {"name": "呂公", "power": 66, "rank": "中四流"},
+        {"name": "韓猛", "power": 66, "rank": "中四流"},
+        {"name": "孫觀", "power": 66, "rank": "中四流"},
+        {"name": "呂敦", "power": 66, "rank": "中四流"},
+        {"name": "尹禮", "power": 66, "rank": "中四流"},
+        {"name": "呂稀", "power": 66, "rank": "中四流"},
+        {"name": "昌奇", "power": 66, "rank": "中四流"},
+        {"name": "胡軫", "power": 66, "rank": "中四流"},
+        {"name": "謝雄", "power": 66, "rank": "中四流"},
+        {"name": "龔起", "power": 66, "rank": "中四流"},
+        {"name": "王直", "power": 66, "rank": "中四流"},
+        {"name": "韓遂", "power": 65, "rank": "弱四流"},
+        {"name": "夏侯霸", "power": 65, "rank": "弱四流"},
+        {"name": "曹性", "power": 65, "rank": "弱四流"},
+        {"name": "蔣舒", "power": 65, "rank": "弱四流"},
+        {"name": "呂虔", "power": 65, "rank": "弱四流"},
+        {"name": "王基", "power": 65, "rank": "弱四流"},
+        {"name": "梁興", "power": 65, "rank": "弱四流"},
+        {"name": "朱雋", "power": 65, "rank": "弱四流"},
+        {"name": "鄧龍", "power": 65, "rank": "弱四流"},
+        {"name": "陳泰", "power": 64, "rank": "弱四流"},
+        {"name": "王傾", "power": 64, "rank": "弱四流"},
+        {"name": "辛弘", "power": 64, "rank": "弱四流"},
+        {"name": "周瑜", "power": 64, "rank": "弱四流"},
+        {"name": "孫權", "power": 64, "rank": "弱四流"},
+        {"name": "田續", "power": 64, "rank": "弱四流"},
+        {"name": "呂翔", "power": 64, "rank": "弱四流"},
+        {"name": "焦炳", "power": 64, "rank": "弱四流"},
+        {"name": "慕容烈", "power": 64, "rank": "弱四流"},
+        {"name": "俞涉", "power": 64, "rank": "弱四流"},
+        {"name": "張普", "power": 64, "rank": "弱四流"},
+        {"name": "審配", "power": 64, "rank": "弱四流"},
+        {"name": "伍孚", "power": 64, "rank": "弱四流"},
+        {"name": "申義", "power": 64, "rank": "弱四流"},
+        {"name": "曹營名將_500", "power": 64, "rank": "弱四流"},
+        {"name": "鄧茂", "power": 63, "rank": "強五流"},
+        {"name": "程遠志", "power": 63, "rank": "強五流"},
+        {"name": "穆順", "power": 63, "rank": "強五流"},
+        {"name": "李暹", "power": 63, "rank": "強五流"},
+        {"name": "孔秀", "power": 63, "rank": "強五流"},
+        {"name": "尹楷", "power": 63, "rank": "強五流"},
+        {"name": "張虎（趙雲）", "power": 63, "rank": "強五流"},
+        {"name": "楊齡", "power": 63, "rank": "強五流"},
+        {"name": "周善", "power": 63, "rank": "強五流"},
+        {"name": "夏侯存", "power": 63, "rank": "強五流"},
+        {"name": "萬政", "power": 63, "rank": "強五流"},
+        {"name": "李蒙", "power": 63, "rank": "強五流"},
+        {"name": "陳生（張飛）", "power": 63, "rank": "強五流"},
+        {"name": "張衛", "power": 63, "rank": "強五流"},
+        {"name": "司馬師", "power": 62, "rank": "強五流"},
+        {"name": "曹操", "power": 62, "rank": "強五流"},
+        {"name": "黃祖", "power": 62, "rank": "強五流"},
+        {"name": "馬玩", "power": 62, "rank": "強五流"},
+        {"name": "傅彤", "power": 62, "rank": "強五流"},
+        {"name": "潘鳳", "power": 62, "rank": "強五流"},
+        {"name": "宗寶", "power": 62, "rank": "強五流"},
+        {"name": "李傕", "power": 61, "rank": "中五流"},
+        {"name": "郭汜", "power": 61, "rank": "中五流"},
+        {"name": "夏侯恩", "power": 61, "rank": "中五流"},
+        {"name": "淳于芳", "power": 61, "rank": "中五流"},
+        {"name": "卞喜", "power": 61, "rank": "中五流"},
+        {"name": "蔡陽", "power": 61, "rank": "中五流"},
+        {"name": "秦琪", "power": 61, "rank": "中五流"},
+        {"name": "王植", "power": 61, "rank": "中五流"},
+        {"name": "韓福", "power": 61, "rank": "中五流"},
+        {"name": "李別", "power": 61, "rank": "中五流"},
+        {"name": "關紀", "power": 61, "rank": "中五流"},
+        {"name": "耿武", "power": 61, "rank": "中五流"},
+        {"name": "鍾進", "power": 61, "rank": "中五流"},
+        {"name": "蹋頓", "power": 61, "rank": "中五流"},
+        {"name": "楊欣", "power": 61, "rank": "中五流"},
+        {"name": "陳式", "power": 61, "rank": "中五流"},
+        {"name": "嚴興", "power": 61, "rank": "中五流"},
+        {"name": "陳生（孫策）", "power": 61, "rank": "中五流"},
+        {"name": "朱光", "power": 60, "rank": "中五流"},
+        {"name": "楊白", "power": 60, "rank": "中五流"},
+        {"name": "祖茂", "power": 60, "rank": "中五流"},
+        {"name": "忙牙長", "power": 60, "rank": "中五流"},
+        {"name": "岑璧", "power": 60, "rank": "中五流"},
+        {"name": "夏侯懋", "power": 59, "rank": "弱五流"},
+        {"name": "張濟", "power": 59, "rank": "弱五流"},
+        {"name": "樊稠", "power": 59, "rank": "弱五流"},
+        {"name": "韓暹", "power": 59, "rank": "弱五流"},
+        {"name": "楊奉", "power": 59, "rank": "弱五流"},
+        {"name": "文欽", "power": 59, "rank": "弱五流"},
+        {"name": "祖鵠", "power": 58, "rank": "弱五流"},
+        {"name": "馬延", "power": 58, "rank": "弱五流"},
+        {"name": "凌操", "power": 58, "rank": "弱五流"},
+        {"name": "蔡中", "power": 58, "rank": "弱五流"},
+        {"name": "蔡勳", "power": 58, "rank": "弱五流"},
+        {"name": "張顗", "power": 58, "rank": "弱五流"},
+        {"name": "張尚", "power": 58, "rank": "弱五流"},
+        {"name": "墨觴", "power": 58, "rank": "弱五流"},
+        {"name": "張南", "power": 58, "rank": "弱五流"},
+        {"name": "張顧", "power": 58, "rank": "弱五流"},
+        {"name": "常雍", "power": 58, "rank": "弱五流"},
+        {"name": "鍾繇", "power": 58, "rank": "弱五流"},
+        {"name": "于銓", "power": 57, "rank": "強六流"},
+        {"name": "袁譚", "power": 57, "rank": "強六流"},
+        {"name": "司馬炎", "power": 57, "rank": "強六流"},
+        {"name": "李樂", "power": 57, "rank": "強六流"},
+        {"name": "楊鋒", "power": 57, "rank": "強六流"},
+        {"name": "崔勇", "power": 57, "rank": "強六流"},
+        {"name": "彭安", "power": 57, "rank": "強六流"},
+        {"name": "朱褒", "power": 57, "rank": "強六流"},
+        {"name": "雍闓", "power": 57, "rank": "強六流"},
+        {"name": "李異", "power": 57, "rank": "強六流"},
+        {"name": "崔禹", "power": 57, "rank": "強六流"},
+        {"name": "郭淮", "power": 56, "rank": "中六流"},
+        {"name": "譚雄", "power": 56, "rank": "中六流"},
+        {"name": "董禧", "power": 56, "rank": "中六流"},
+        {"name": "周平", "power": 56, "rank": "中六流"},
+        {"name": "謝琪", "power": 56, "rank": "中六流"},
+        {"name": "夏恂", "power": 56, "rank": "中六流"},
+        {"name": "薛則", "power": 56, "rank": "中六流"},
+        {"name": "鮑忠", "power": 56, "rank": "中六流"},
+        {"name": "陳造", "power": 56, "rank": "中六流"},
+        {"name": "陳能", "power": 56, "rank": "中六流"},
+        {"name": "夏侯德", "power": 56, "rank": "中六流"},
+        {"name": "張寶", "power": 55, "rank": "中六流"},
+        {"name": "史煥", "power": 55, "rank": "中六流"},
+        {"name": "常雕", "power": 55, "rank": "中六流"},
+        {"name": "朱異", "power": 55, "rank": "中六流"},
+        {"name": "孟獲", "power": 54, "rank": "弱六流"},
+        {"name": "郝昭", "power": 54, "rank": "弱六流"},
+        {"name": "戈定", "power": 54, "rank": "弱六流"},
+        {"name": "黃邵", "power": 54, "rank": "弱六流"},
+        {"name": "焦觸", "power": 54, "rank": "弱六流"},
+        {"name": "嚴綱", "power": 54, "rank": "弱六流"},
+        {"name": "趙弘", "power": 54, "rank": "弱六流"},
+        {"name": "孫夏", "power": 54, "rank": "弱六流"},
+        {"name": "蘇飛", "power": 54, "rank": "弱六流"},
+        {"name": "段煨", "power": 54, "rank": "弱六流"},
+        {"name": "伍習", "power": 54, "rank": "弱六流"},
+        {"name": "陸遜", "power": 53, "rank": "強七流"},
+        {"name": "翟元", "power": 53, "rank": "強七流"},
+        {"name": "曹真", "power": 53, "rank": "強七流"},
+        {"name": "毋丘儉", "power": 53, "rank": "強七流"},
+        {"name": "趙統", "power": 53, "rank": "強七流"},
+        {"name": "趙廣", "power": 53, "rank": "強七流"},
+        {"name": "夏侯傑", "power": 53, "rank": "強七流"},
+        {"name": "李鵬", "power": 53, "rank": "強七流"},
+        {"name": "岑威", "power": 53, "rank": "強七流"},
+        {"name": "鄧芝", "power": 52, "rank": "中七流"},
+        {"name": "孟優", "power": 52, "rank": "中七流"},
+        {"name": "公孫淵", "power": 52, "rank": "中七流"},
+        {"name": "師纂", "power": 52, "rank": "中七流"},
+        {"name": "成何", "power": 52, "rank": "中七流"},
+        {"name": "陳橫", "power": 52, "rank": "中七流"},
+        {"name": "馬謖", "power": 51, "rank": "弱七流"},
+        {"name": "嚴白虎", "power": 51, "rank": "弱七流"},
+        {"name": "樊能", "power": 51, "rank": "弱七流"},
+        {"name": "杜遠", "power": 51, "rank": "弱七流"},
+        {"name": "嚴整", "power": 51, "rank": "弱七流"},
+        {"name": "諸葛亮", "power": 50, "rank": "強八流"},
+        {"name": "鄭文", "power": 50, "rank": "強八流"},
+        {"name": "全琮", "power": 50, "rank": "強八流"},
+        {"name": "秦良", "power": 50, "rank": "強八流"},
+        {"name": "鄭倫", "power": 50, "rank": "強八流"},
+        {"name": "顧奮", "power": 49, "rank": "中八流"},
+        {"name": "牛輔", "power": 49, "rank": "中八流"},
+        {"name": "孫禮", "power": 49, "rank": "中八流"},
+        {"name": "鍾會", "power": 49, "rank": "中八流"},
+        {"name": "諸葛瞻", "power": 49, "rank": "中八流"},
+        {"name": "丁原", "power": 49, "rank": "中八流"},
+        {"name": "張燕", "power": 49, "rank": "中八流"},
+        {"name": "諸葛誕", "power": 48, "rank": "弱八流"},
+        {"name": "王匡", "power": 48, "rank": "弱八流"},
+        {"name": "張楊", "power": 47, "rank": "弱八流"},
+        {"name": "呂常", "power": 47, "rank": "弱八流"},
+        {"name": "唐咨", "power": 47, "rank": "弱八流"},
+        {"name": "張超", "power": 46, "rank": "強九流"},
+        {"name": "鮑信", "power": 46, "rank": "強九流"},
+        {"name": "張約", "power": 46, "rank": "強九流"},
+        {"name": "淳于丹", "power": 45, "rank": "強九流"},
+        {"name": "劉表", "power": 45, "rank": "強九流"},
+        {"name": "諸葛恪", "power": 44, "rank": "中九流"},
+        {"name": "薛蘭", "power": 44, "rank": "中九流"},
+        {"name": "沈瑩", "power": 44, "rank": "中九流"},
+        {"name": "孫歆", "power": 44, "rank": "中九流"},
+        {"name": "焦伯", "power": 44, "rank": "中九流"},
+        {"name": "桓嘉", "power": 43, "rank": "弱九流"},
+        {"name": "韓宗", "power": 43, "rank": "弱九流"},
+        {"name": "卑衍", "power": 43, "rank": "弱九流"},
+        {"name": "韓忠", "power": 43, "rank": "弱九流"},
+        {"name": "胡赤兒", "power": 43, "rank": "弱九流"},
+        {"name": "李肅", "power": 42, "rank": "強十流"},
+        {"name": "王濬", "power": 42, "rank": "強十流"},
+        {"name": "荀覬", "power": 42, "rank": "強十流"},
+        {"name": "楊醜", "power": 41, "rank": "強十流"},
+        {"name": "董荼奴", "power": 41, "rank": "強十流"},
+        {"name": "曹丕", "power": 41, "rank": "強十流"},
+        {"name": "盧植", "power": 40, "rank": "中十流"},
+        {"name": "皇甫嵩", "power": 40, "rank": "中十流"},
+        {"name": "馬忠（蜀國）", "power": 39, "rank": "中十流"},
+        {"name": "盧遜", "power": 39, "rank": "中十流"},
+        {"name": "眭固", "power": 39, "rank": "中十流"},
+        {"name": "朵思大王", "power": 38, "rank": "弱十流"},
+        {"name": "邊洪", "power": 38, "rank": "弱十流"},
+        {"name": "孫高", "power": 38, "rank": "弱十流"},
+        {"name": "傅英", "power": 38, "rank": "弱十流"},
+        {"name": "耿紀", "power": 38, "rank": "弱十流"},
+        {"name": "陳矯", "power": 37, "rank": "弱十流"},
+        {"name": "司馬懿", "power": 36, "rank": "強十一流"},
+        {"name": "陳宮", "power": 36, "rank": "強十一流"},
+        {"name": "杜預", "power": 35, "rank": "強十一流"},
+        {"name": "鄒靖", "power": 35, "rank": "強十一流"},
+        {"name": "杜路", "power": 35, "rank": "強十一流"},
+        {"name": "劉寧", "power": 35, "rank": "強十一流"},
+        {"name": "孫翊", "power": 35, "rank": "強十一流"},
+        {"name": "司馬昭", "power": 34, "rank": "中十一流"},
+        {"name": "張角", "power": 34, "rank": "中十一流"},
+        {"name": "羊祜", "power": 34, "rank": "中十一流"},
+        {"name": "仇覽", "power": 34, "rank": "中十一流"},
+        {"name": "王必", "power": 34, "rank": "中十一流"},
+        {"name": "何進", "power": 34, "rank": "中十一流"},
+        {"name": "殘卒", "power": 33, "rank": "弱十一流"},
+        {"name": "樊玥", "power": 33, "rank": "弱十一流"},
+        {"name": "張梁", "power": 33, "rank": "弱十一流"},
+        {"name": "糜芳", "power": 33, "rank": "弱十一流"},
+        {"name": "孫仁（孫尚香）", "power": 33, "rank": "弱十一流"},
+        {"name": "秦朗之弟", "power": 33, "rank": "弱十一流"},
+        {"name": "薛喬", "power": 32, "rank": "不入流"},
+        {"name": "蹇碩", "power": 32, "rank": "不入流"},
+        {"name": "郭勝", "power": 32, "rank": "不入流"},
+        {"name": "劉焉", "power": 32, "rank": "不入流"},
+        {"name": "樊陵", "power": 32, "rank": "不入流"},
+        {"name": "許相", "power": 32, "rank": "不入流"},
+        {"name": "呂伯奢", "power": 32, "rank": "不入流"},
+        {"name": "袁術", "power": 32, "rank": "不入流"},
+        {"name": "孔伷", "power": 32, "rank": "不入流"},
+        {"name": "韓馥", "power": 32, "rank": "不入流"},
+        {"name": "陳壽", "power": 32, "rank": "不入流"},
+        {"name": "張邈", "power": 32, "rank": "不入流"},
+        {"name": "喬瑁", "power": 32, "rank": "不入流"},
+        {"name": "袁遺", "power": 32, "rank": "不入流"},
+        {"name": "孔融", "power": 32, "rank": "不入流"},
+        {"name": "陶謙", "power": 32, "rank": "不入流"},
+        {"name": "李儒", "power": 32, "rank": "不入流"},
+        {"name": "貂蟬", "power": 32, "rank": "不入流"},
+        {"name": "王允", "power": 32, "rank": "不入流"},
+        {"name": "賈詡", "power": 32, "rank": "不入流"},
+        {"name": "劉協", "power": 32, "rank": "不入流"},
+        {"name": "荀彧", "power": 32, "rank": "不入流"},
+        {"name": "程昱", "power": 32, "rank": "不入流"},
+        {"name": "郭嘉", "power": 32, "rank": "不入流"},
+        {"name": "陳登", "power": 32, "rank": "不入流"},
+        {"name": "糜竺", "power": 32, "rank": "不入流"},
+        {"name": "鄒氏", "power": 32, "rank": "不入流"},
+        {"name": "陳珪", "power": 32, "rank": "不入流"},
+        {"name": "嚴氏", "power": 32, "rank": "不入流"},
+        {"name": "董承", "power": 32, "rank": "不入流"},
+        {"name": "甄氏", "power": 32, "rank": "不入流"},
+        {"name": "許攸", "power": 32, "rank": "不入流"},
+        {"name": "徐庶", "power": 32, "rank": "不入流"},
+        {"name": "龐統", "power": 32, "rank": "不入流"},
+        {"name": "黃氏（黃月英）", "power": 32, "rank": "不入流"},
+        {"name": "徐氏", "power": 32, "rank": "不入流"},
+        {"name": "大喬", "power": 32, "rank": "不入流"},
+        {"name": "小喬", "power": 32, "rank": "不入流"},
+        {"name": "趙範", "power": 32, "rank": "不入流"},
+        {"name": "郭氏", "power": 32, "rank": "不入流"},
+        {"name": "劉禪", "power": 32, "rank": "不入流"},
+        {"name": "糜氏", "power": 32, "rank": "不入流"},
+        {"name": "甘氏", "power": 32, "rank": "不入流"},
+        {"name": "秦朗", "power": 32, "rank": "不入流"},
+        {"name": "曹髦", "power": 32, "rank": "不入流"},
+        {"name": "夏侯玄", "power": 32, "rank": "不入流"},
+        {"name": "戴員", "power": 32, "rank": "不入流"},
+        {"name": "棄天帝", "power": 999, "rank": "神仙流(魔皇 T0)"},
+        {"name": "南斗", "power": 980, "rank": "神仙流(註生 T0)"},
+        {"name": "北斗", "power": 980, "rank": "神仙流(註死 T0)"},
+        {"name": "南華老仙", "power": 950, "rank": "神仙流(T1)"},
+        {"name": "左慈", "power": 950, "rank": "神仙流(T1)"},
+        {"name": "于吉", "power": 950, "rank": "神仙流(T1)"},
+        {"name": "民王", "power": 900, "rank": "神仙流(T2)"},
+        {"name": "李意", "power": 900, "rank": "神仙流(T2)"},
+        {"name": "紫虛上人", "power": 850, "rank": "神仙流(T3)"},
         {"name": "管輅", "power": 850, "rank": "神仙流(T3)"}
     ];
 
-    const femaleHealers = { "樊玥": { heal: 40, buff: 15 }, "貂蟬": { heal: 35, buff: 0 }, "鄒氏": { heal: 30, buff: 0 }, "嚴氏": { heal: 25, buff: 0 }, "甄氏": { heal: 22, buff: 0 }, "黃氏（黃月英）": { heal: 18, buff: 0 }, "徐氏": { heal: 15, buff: 0 }, "大喬": { heal: 12, buff: 0 }, "小喬": { heal: 10, buff: 0 }, "郭氏": { heal: 8, buff: 0 }, "糜氏": { heal: 6, buff: 0 }, "甘氏": { heal: 4, buff: 0 } };
+    // 女性武將補血與狀態增益權重字典
+    const femaleHealers = {
+        "樊玥": { heal: 40, buff: 15 }, "貂蟬": { heal: 35, buff: 0 }, "鄒氏": { heal: 30, buff: 0 },
+        "嚴氏": { heal: 25, buff: 0 }, "甄氏": { heal: 22, buff: 0 }, "黃氏（黃月英）": { heal: 18, buff: 0 },
+        "徐氏": { heal: 15, buff: 0 }, "大喬": { heal: 12, buff: 0 }, "小喬": { heal: 10, buff: 0 },
+        "郭氏": { heal: 8, buff: 0 }, "糜氏": { heal: 6, buff: 0 }, "甘氏": { heal: 4, buff: 0 }
+    };
 
-    const ultimateSkills = {
+    // 名將大絕招與詠唱詞資料庫
+    let ultimateSkills = {
         "關羽": { name: "威震華夏・武聖偃月劈", dmg: 48, color: "#00ff41", desc: "青龍偃月刀劃破虛空，爆發出武聖的傲氣與無盡殺意！" },
         "張飛": { name: "燕人咆哮・萬人敵碎擊", dmg: 47, color: "#ff3131", desc: "丈八蛇矛化作狂暴黑龍，伴隨雷霆怒吼撕裂敵方防線！" },
         "馬超": { name: "神威天將・絕影雷霆刺", dmg: 46, color: "#00ffff", desc: "身披銀甲如白晝流星，長槍刺出無數雷電殘影！" },
@@ -329,350 +689,789 @@
 
     const moves = [
         "使出一招【龍吟突刺】，虛空震顫！", "化作一道殘影，發動【量子閃擊】！", "槍尖迸發出數據火花，刺出【百鳥朝鳳】！",
-        "發動【青龍擺尾】，沉重的打擊撼動了數據底層！", "橫掃千軍，產生強烈的數據擾動！", "高高躍起，挾帶千鈞之力使出【泰山壓頂】！",
-        "觸發【武神血脈】，攻擊力瞬間呈幾何級數暴增！", "無視防禦機制，發起一波【降維打擊】般的無情連打！",
-        "冷酷格擋後反手一記重擊！", "以不可思議的角度扭轉身軀，施展【燕返】反擊！", "看破敵方攻擊軌跡，優雅閃避並順勢反切一刀！",
-        "施展傳說中的【拖刀計】，刃口摩擦出駭人的數據火花，反手一斬！", "武器表面覆蓋【反編譯塗層】，一擊劈碎對方的護甲代碼！",
-        "引發【核心恐慌】，釋放無差別大範圍氣場爆發！", "在空中迴旋兩周半，劈出【位元碎裂斬】！",
-        "一聲怒吼，發動【霸王卸甲】，刪除自身防禦代碼換取極致的攻擊速度！", "釋放【演算法黑洞】，強行吸收對方的攻擊數據後加倍奉還！"
+        "以突破幀數的極速，連續刺出致命三槍！", "發動【青龍擺尾】，沉重的打擊撼動了數據底層！", "橫掃千軍，產生強烈的數據擾動！",
+        "高高躍起，挾帶千鈞之力使出【泰山壓頂】！", "揮舞重兵器狂砸，引發物理引擎崩壞！", "進入【數據溢位】狀態，瘋狂連斬！",
+        "觸發【武神血脈】，攻擊力瞬間呈幾何級數暴增！", "無視防禦機制，發起一波無情連打！", "啟動【無極限超頻】模式進行絞殺！"
     ];
 
-    // UI 控制
-    const p1Select = document.getElementById('p1Select'); const p2Select = document.getElementById('p2Select');
-    const battleLog = document.getElementById('battleLog'); let hpChart; let tourneyRosterData = [];
+    const p1Select = document.getElementById('p1Select');
+    const p2Select = document.getElementById('p2Select');
+    const battleLog = document.getElementById('battleLog');
+    let hpChart;
+    let tourneyRosterData = []; 
 
-    // ==============================================================
-    // ▼▼▼ 成就與造物主系統 ▼▼▼
-    // ==============================================================
-    let ACH = JSON.parse(localStorage.getItem('sg_achievements')) || { instakill: false, yunyue: false, ant: false, wushen: false, godslayer: false };
+    // ▼▼▼ 主角追蹤與養成系統 ▼▼▼
+    let customAvatar = {
+        isActive: false, genIndex: -1, name: "", level: 1, exp: 0,
+        wins: { oneVsN: false, arena: false, melee: false, tourney: false, royale: false },
+        ascended: false
+    };
 
-    function unlockAchievement(id, title, desc) {
-        if (!ACH[id]) {
-            ACH[id] = true; localStorage.setItem('sg_achievements', JSON.stringify(ACH));
-            document.getElementById('ach_' + id).classList.add('unlocked');
-            battleLog.innerHTML += `<div style="text-align:center; padding:10px; margin:10px 0; border:2px dashed #ffd700; background:rgba(255,215,0,0.1);"><h3 style="color:#ffd700; margin:0; text-shadow:0 0 5px #ffd700;">🌟 天機密卷解鎖：${title} 🌟</h3><p style="color:#ccc; font-size:12px; margin:5px 0 0 0;">${desc}</p></div>`;
-            triggerShake(); checkAllAchievements();
-        }
-    }
+    function forgeAvatar() {
+        let name = document.getElementById('avatarName').value.trim();
+        if (!name) { alert("主公，請賜予主角姓名！"); return; }
+        if (customAvatar.isActive) { alert("主公，異界靈魂已存在，唯有破界或刷新方能重鑄！"); return; }
 
-    function checkAllAchievements() {
-        if (ACH.instakill && ACH.yunyue && ACH.ant && ACH.wushen && ACH.godslayer) {
-            if (!document.body.classList.contains('god-mode')) {
-                document.body.classList.add('god-mode');
-                document.getElementById('mainTitle').innerText = "三國武神演武沙盤 - 【真・造物主模式】";
-                document.getElementById('loreButton').style.display = 'block';
-                if (!generals.find(g => g.name === "造物主・什年")) {
-                    generals.push({name: "造物主・什年", power: 99999, rank: "天道化身"});
-                    generals.push({name: "篡史魔仙・毛宗崗", power: 1, rank: "欺世盜名"});
-                    updateDropdowns();
-                }
-                battleLog.innerHTML += `<div style="text-align:center; padding:20px; border:3px solid #ff0000; background:rgba(255,0,0,0.2); box-shadow:0 0 50px #ff0000;"><h1 style="color:#ff0000; text-shadow:0 0 15px #ff0000;">⚠️ 系統警告：逆天改命完成 ⚠️</h1><p style="color:#fff; font-size:16px;">主公！五大天機已全數點亮！沙盤底層邏輯遭到覆寫！</p><p style="color:#ffd700; font-weight:bold;">【造物主・什年】與【篡史魔仙・毛宗崗】已永久加入將領庫！</p></div><br>`;
-                battleLog.scrollTop = battleLog.scrollHeight;
-            }
-        }
-    }
+        let initPower = Math.floor(Math.random() * 36) + 50; 
+        let rank = "異界凡骨";
 
-    function initAchievementsUI() {
-        if (ACH.instakill) document.getElementById('ach_instakill').classList.add('unlocked');
-        if (ACH.yunyue) document.getElementById('ach_yunyue').classList.add('unlocked');
-        if (ACH.ant) document.getElementById('ach_ant').classList.add('unlocked');
-        if (ACH.wushen) document.getElementById('ach_wushen').classList.add('unlocked');
-        if (ACH.godslayer) document.getElementById('ach_godslayer').classList.add('unlocked');
-        checkAllAchievements();
-    }
-    
-    function openLoreModal() { document.getElementById('loreModal').style.display = 'flex'; }
-    function closeLoreModal() { document.getElementById('loreModal').style.display = 'none'; }
-
-    // ==============================================================
-    // ▼▼▼ 選單與基礎操作 ▼▼▼
-    // ==============================================================
-    function updateDropdowns() {
-        p1Select.innerHTML = ''; p2Select.innerHTML = '';
-        const tourneySelect = document.getElementById('tourneySelect'); if(tourneySelect) tourneySelect.innerHTML = '';
+        generals.push({ name: name, power: initPower, rank: rank });
+        customAvatar.isActive = true;
+        customAvatar.genIndex = generals.length - 1;
+        customAvatar.name = name;
         
-        const teamSelects = [ document.getElementById('tA0'), document.getElementById('tA1'), document.getElementById('tA2'), document.getElementById('tA3'), document.getElementById('tA4'), document.getElementById('tA5'), document.getElementById('tB0'), document.getElementById('tB1'), document.getElementById('tB2'), document.getElementById('tB3'), document.getElementById('tB4'), document.getElementById('tB5') ];
+        updateDropdowns();
+        updateAvatarUI();
+        
+        document.getElementById('avatarPanel').style.display = "block";
+        battleLog.innerHTML += `<br><span style="color:#ff00ff; font-weight:bold; font-size:16px;">🌌 【天道異象】異界靈魂「${name}」降生！初始天賦武力：${initPower}。開始他的修羅之路！</span><br><br>`;
+        battleLog.scrollTop = battleLog.scrollHeight;
+    }
+
+    function gainAvatarExp(amount, modeKey) {
+        if (!customAvatar.isActive || customAvatar.ascended) return;
+
+        customAvatar.exp += amount;
+        battleLog.innerHTML += `<br><span style="color:#ffd700; font-size:14px;">✨ 「${customAvatar.name}」汲取了戰場煞氣，獲得 ${amount} 點 EXP！</span><br>`;
+
+        let needExp = customAvatar.level * 100;
+        while (customAvatar.exp >= needExp) {
+            customAvatar.exp -= needExp;
+            customAvatar.level++;
+            generals[customAvatar.genIndex].power += 2; 
+            generals[customAvatar.genIndex].rank = `異界修羅 Lv.${customAvatar.level}`;
+            battleLog.innerHTML += `<span style="color:#00ffff; font-weight:bold; font-size:16px;">🌟 【境界突破】「${customAvatar.name}」升級至 Lv.${customAvatar.level}！武力永久提升！</span><br>`;
+            needExp = customAvatar.level * 100;
+        }
+
+        if (modeKey && !customAvatar.wins[modeKey]) {
+            customAvatar.wins[modeKey] = true;
+            battleLog.innerHTML += `<span style="color:#ff8c00; font-weight:bold;">🏆 達成五境試煉成就：解鎖該模式印記！</span><br>`;
+        }
+
+        updateAvatarUI();
+        checkAscension();
+    }
+
+    function updateAvatarUI() {
+        if (!customAvatar.isActive) return;
+        document.getElementById('avName').innerText = customAvatar.name;
+        document.getElementById('avLevel').innerText = customAvatar.ascended ? "MAX" : `Lv.${customAvatar.level}`;
+        document.getElementById('avPower').innerText = generals[customAvatar.genIndex].power;
+        document.getElementById('avExp').innerText = customAvatar.ascended ? "∞" : `${customAvatar.exp} / ${customAvatar.level * 100}`;
+        
+        document.getElementById('mark1VsN').innerText = customAvatar.wins.oneVsN ? "一龍鬥十虎(✔)" : "一龍鬥十虎(未)";
+        document.getElementById('mark1VsN').style.color = customAvatar.wins.oneVsN ? "#00ff41" : "#aaa";
+        document.getElementById('markArena').innerText = customAvatar.wins.arena ? "擂台車輪(✔)" : "擂台車輪(未)";
+        document.getElementById('markArena').style.color = customAvatar.wins.arena ? "#00ff41" : "#aaa";
+        document.getElementById('markMelee').innerText = customAvatar.wins.melee ? "同場混戰(✔)" : "同場混戰(未)";
+        document.getElementById('markMelee').style.color = customAvatar.wins.melee ? "#00ff41" : "#aaa";
+        document.getElementById('markTourney').innerText = customAvatar.wins.tourney ? "十二強(✔)" : "十二強(未)";
+        document.getElementById('markTourney').style.color = customAvatar.wins.tourney ? "#00ff41" : "#aaa";
+        document.getElementById('markRoyale').innerText = customAvatar.wins.royale ? "全軍大亂鬥(✔)" : "全軍大亂鬥(未)";
+        document.getElementById('markRoyale').style.color = customAvatar.wins.royale ? "#00ff41" : "#aaa";
+    }
+
+    function checkAscension() {
+        let w = customAvatar.wins;
+        if (w.oneVsN && w.arena && w.melee && w.tourney && w.royale && !customAvatar.ascended) {
+            customAvatar.ascended = true;
+            triggerCataclysm();
+        }
+    }
+
+    function triggerCataclysm() {
+        const warroom = document.getElementById('mainWarroom');
+        warroom.style.transition = "none";
+        let shakeIntensity = 20;
+        let shakeInterval = setInterval(() => {
+            let x = (Math.random() - 0.5) * shakeIntensity;
+            let y = (Math.random() - 0.5) * shakeIntensity;
+            warroom.style.transform = `translate(${x}px, ${y}px)`;
+        }, 50);
+
+        setTimeout(() => {
+            clearInterval(shakeInterval);
+            warroom.style.transform = "translate(0,0)";
+            warroom.style.border = "5px solid #ff3131"; 
+            warroom.style.boxShadow = "0 0 50px rgba(255,49,49,0.8)";
+            
+            battleLog.innerHTML += `<br><div style="text-align:center; padding:20px; border: 2px solid #ff00ff; background:rgba(255,0,255,0.1); box-shadow: 0 0 30px rgba(255,0,255,0.5); margin-top:20px; animation: shake 0.5s infinite;">
+                <h1 style="color:#ff00ff; text-shadow: 0 0 20px #ff00ff;">⚠ 【系統警告：源碼飛升】 ⚠</h1>
+                <h2 style="color:#ffffff;">👑 ${customAvatar.name} 👑</h2>
+                <p style="color:#00ffff; font-weight:bold;">已踏破五大絕境！肉身化為數據，靈魂超脫矩陣！</p>
+                <p style="color:#ff3131;">解鎖究極奧義【第四維度・源碼湮滅】！武力突破極限！</p>
+                <h3 style="color:#ff3131; margin-top: 15px;">⚠ 破界降臨：隱藏弒神名單已解鎖 ⚠</h3>
+            </div><br><br>`;
+            
+            generals[customAvatar.genIndex].power += 50; 
+            generals[customAvatar.genIndex].rank = "超越神明 (Glitch God)";
+            ultimateSkills[customAvatar.name] = { 
+                name: "第四維度・源碼湮滅", dmg: 999, color: "#ff00ff", 
+                desc: "雙眼爆發賽博亂碼，直接撕裂沙盤底層邏輯，降下無視防禦的系統級刪除指令！" 
+            };
+
+            const hiddenRoster = [
+                { "name": "造物主・什年", "power": 99999, "rank": "天道化身 (萬物刪除者)", "isCreator": true },
+                { "name": "篡史魔仙・毛宗崗", "power": 1, "rank": "欺世盜名 (10000 HP 沙包)", "isSandbag": true }
+            ];
+            hiddenRoster.forEach(h => {
+                if (!generals.find(g => g.name === h.name)) generals.unshift(h);
+            });
+            ultimateSkills["造物主・什年"] = { 
+                name: "什年之怒・降維刪除", dmg: 999999, color: "#ffffff", 
+                desc: "主公本尊降臨，筆尖輕劃，直接從物理層面抹除敵軍的一切存在紀錄！" 
+            };
+            
+            updateAvatarUI();
+            updateDropdowns();
+            battleLog.scrollTop = battleLog.scrollHeight;
+        }, 3000);
+    }
+
+    function getMaxHp(name) {
+        if (name === "篡史魔仙・毛宗崗") return 10000;
+        return 100;
+    }
+
+    function getAtkDmg(attackerName, atkPower, defPower) {
+        if (attackerName === "篡史魔仙・毛宗崗") return 0;
+        if (attackerName === "造物主・什年") return 99999;
+        return Math.max(3, (atkPower * 0.12) - (defPower * 0.04) + (Math.random() * 12 - 4));
+    }
+
+    function updateDropdowns() {
+        let oldP1 = p1Select.value; let oldP2 = p2Select.value;
+        p1Select.innerHTML = ''; p2Select.innerHTML = '';
+        const tourneySelect = document.getElementById('tourneySelect');
+        if(tourneySelect) tourneySelect.innerHTML = '';
+        
+        const teamSelects = [
+            document.getElementById('tA0'), document.getElementById('tA1'), document.getElementById('tA2'),
+            document.getElementById('tA3'), document.getElementById('tA4'), document.getElementById('tA5'),
+            document.getElementById('tB0'), document.getElementById('tB1'), document.getElementById('tB2'),
+            document.getElementById('tB3'), document.getElementById('tB4'), document.getElementById('tB5')
+        ];
         teamSelects.forEach(sel => { if(sel) { sel.innerHTML = ''; sel.add(new Option("[--- 無/不參戰 ---]", -1)); } });
 
-        const dragonSelect = document.getElementById('dragonSelect'); if (dragonSelect) dragonSelect.innerHTML = '';
+        const dragonSelect = document.getElementById('dragonSelect');
+        if (dragonSelect) dragonSelect.innerHTML = '';
 
-        const tigerSelects = [ document.getElementById('tT0'), document.getElementById('tT1'), document.getElementById('tT2'), document.getElementById('tT3'), document.getElementById('tT4'), document.getElementById('tT5'), document.getElementById('tT6'), document.getElementById('tT7'), document.getElementById('tT8'), document.getElementById('tT9') ];
+        const tigerSelects = [
+            document.getElementById('tT0'), document.getElementById('tT1'), document.getElementById('tT2'),
+            document.getElementById('tT3'), document.getElementById('tT4'), document.getElementById('tT5'),
+            document.getElementById('tT6'), document.getElementById('tT7'), document.getElementById('tT8'),
+            document.getElementById('tT9')
+        ];
         tigerSelects.forEach(sel => { if(sel) { sel.innerHTML = ''; sel.add(new Option("[--- 無/不參戰 ---]", -1)); } });
 
-        const sortedGenerals = [...generals].sort((a, b) => b.power - a.power);
-        sortedGenerals.forEach((g) => {
-            let idx = generals.indexOf(g); let optStr = `${g.name} (${g.power}) - ${g.rank}`;
-            p1Select.add(new Option(optStr, idx)); p2Select.add(new Option(optStr, idx));
+        generals.forEach((g, idx) => {
+            let optStr = `${g.name} (${g.power}) - ${g.rank}`;
+            p1Select.add(new Option(optStr, idx));
+            p2Select.add(new Option(optStr, idx));
             if(tourneySelect) tourneySelect.add(new Option(optStr, idx));
             if (dragonSelect) dragonSelect.add(new Option(optStr, idx));
             teamSelects.forEach(sel => { if(sel) sel.add(new Option(optStr, idx)); });
             tigerSelects.forEach(sel => { if(sel) sel.add(new Option(optStr, idx)); });
         });
+        
+        if(oldP1) p1Select.value = oldP1;
+        if(oldP2) p2Select.value = oldP2;
+    }
+    
+    updateDropdowns();
+
+    function randomize() {
+        p1Select.selectedIndex = Math.floor(Math.random() * generals.length);
+        p2Select.selectedIndex = Math.floor(Math.random() * generals.length);
+        battleLog.innerHTML = "天道已選定隨機將領。";
     }
 
-    function addCustomGeneral() {
-        const nameInput = document.getElementById('customName').value.trim(); const powerInput = parseInt(document.getElementById('customPower').value); const rankInput = document.getElementById('customRank').value.trim() || "異界降臨";
-        if (!nameInput || isNaN(powerInput) || powerInput < 1 || powerInput > 99999) return alert("請輸入正確數值！");
-        generals.push({ name: nameInput, power: powerInput, rank: rankInput }); updateDropdowns();
-        battleLog.innerHTML += `<br><span style="color:#ffd700; font-weight:bold;">⚡ 【天道異象】「${nameInput}」加入沙盤！</span><br>`;
-    }
-
-    function randomize() { p1Select.selectedIndex = Math.floor(Math.random()*generals.length); p2Select.selectedIndex = Math.floor(Math.random()*generals.length); }
     function randomizeTeam() {
-        let idxs = []; while(idxs.length<12){ let r=Math.floor(Math.random()*generals.length); if(!idxs.includes(r))idxs.push(r); }
-        for(let i=0;i<6;i++){ document.getElementById('tA'+i).selectedIndex=idxs[i]+1; document.getElementById('tB'+i).selectedIndex=idxs[i+6]+1; }
+        let indices = [];
+        while(indices.length < 12) {
+            let r = Math.floor(Math.random() * generals.length);
+            if(!indices.includes(r)) indices.push(r);
+        }
+        for(let i=0; i<6; i++) document.getElementById('tA'+i).selectedIndex = indices[i] + 1;
+        for(let i=0; i<6; i++) document.getElementById('tB'+i).selectedIndex = indices[i+6] + 1;
+        battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold;">🎲 天道已為雙方軍團配置 12 名隨機滿編猛將！</span><br>`;
+        battleLog.scrollTop = battleLog.scrollHeight;
     }
+
     function randomizeOneVsN() {
-        let dIdx = parseInt(document.getElementById('dragonSelect').value); if(isNaN(dIdx)) return;
-        let idxs = []; while(idxs.length<10){ let r=Math.floor(Math.random()*generals.length); if(!idxs.includes(r) && r!==dIdx)idxs.push(r); }
-        for(let i=0;i<10;i++) document.getElementById('tT'+i).selectedIndex = idxs[i]+1;
+        let currentDragonIdx = parseInt(document.getElementById('dragonSelect').value);
+        if (isNaN(currentDragonIdx)) { alert("主公，請先為『一龍鬥群虎』指定一名狂龍！"); return; }
+        let indices = [];
+        while(indices.length < 10) {
+            let r = Math.floor(Math.random() * generals.length);
+            if(!indices.includes(r) && r !== currentDragonIdx) indices.push(r);
+        }
+        for(let i=0; i<10; i++) document.getElementById('tT'+i).selectedIndex = indices[i] + 1;
+        battleLog.innerHTML += `<br><span style="color:#ffd700; font-weight:bold;">🎲 天道已為當前狂龍，隨機指派了 10 名群虎對手！</span><br>`;
+        battleLog.scrollTop = battleLog.scrollHeight;
     }
+
     function addToTournament() {
-        if(tourneyRosterData.length>=12) return alert("名單已滿！"); let idx = parseInt(document.getElementById('tourneySelect').value);
-        if(tourneyRosterData.includes(idx)) return alert("已在名單中！"); tourneyRosterData.push(idx); updateRosterUI();
+        if(tourneyRosterData.length >= 12) { alert("主公，名單已滿 12 人！"); return; }
+        let idx = parseInt(document.getElementById('tourneySelect').value);
+        if(tourneyRosterData.includes(idx)) { alert("此武將已在名單中，無法重複參賽！"); return; }
+        tourneyRosterData.push(idx);
+        updateRosterUI();
     }
+
     function clearTournament() { tourneyRosterData = []; updateRosterUI(); }
-    function updateRosterUI() { document.getElementById('tourneyRoster').innerText = `十二強名單 (${tourneyRosterData.length}/12)：${tourneyRosterData.map(i=>generals[i].name).join("、")||"無"}`; }
+
+    function updateRosterUI() {
+        let names = tourneyRosterData.map(i => generals[i].name).join("、");
+        document.getElementById('tourneyRoster').innerText = `十二強指定名單 (${tourneyRosterData.length}/12)：${names || "無"}`;
+    }
 
     function initChart() {
-        const ctx = document.getElementById('hpChart').getContext('2d'); if(hpChart) hpChart.destroy();
-        hpChart = new Chart(ctx, { type: 'line', data: { labels: [0], datasets: [{ label: '青龍方 HP', data: [100], borderColor: '#00ff41' }, { label: '赤虎方 HP', data: [100], borderColor: '#ff3131' }] }, options: { scales: { y: { min: 0, max: 100 } } } });
+        const ctx = document.getElementById('hpChart').getContext('2d');
+        if (hpChart) hpChart.destroy();
+        hpChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels: [0], datasets: [{ label: '先鋒 HP', data: [100], borderColor: '#00ff41', tension: 0.1 }, { label: '敵將 HP', data: [100], borderColor: '#ff3131', tension: 0.1 }] },
+            options: { responsive: true, scales: { y: { min: 0 } } }
+        });
     }
-    function triggerShake() { document.getElementById('mainWarroom').classList.add('shaking'); setTimeout(()=>document.getElementById('mainWarroom').classList.remove('shaking'),300); }
 
-    // ==============================================================
-    // ▼▼▼ 單挑核心引擎 (startDuel) ▼▼▼
-    // ==============================================================
+    function triggerShake() {
+        const warroom = document.getElementById('mainWarroom');
+        warroom.classList.add('shaking');
+        setTimeout(() => warroom.classList.remove('shaking'), 300);
+    }
+
     async function startDuel(isTournamentMode = false, isUltimateTournament = false) {
-        const p1 = generals[p1Select.value]; const p2 = generals[p2Select.value];
-        let p1ActualPower = p1.name==="趙雲"?p1.power+20:p1.power; let p2ActualPower = p2.name==="趙雲"?p2.power+20:p2.power;
-        if (p1.name.includes("造物主") || p1.name.includes("毛宗崗")) p1ActualPower = p1.power;
-        if (p2.name.includes("造物主") || p2.name.includes("毛宗崗")) p2ActualPower = p2.power;
+        const p1 = generals[p1Select.value];
+        const p2 = generals[p2Select.value];
+        
+        let p1ActualPower = p1.name === "趙雲" ? p1.power + 20 : p1.power;
+        let p2ActualPower = p2.name === "趙雲" ? p2.power + 20 : p2.power;
 
-        document.getElementById('p1Name').innerText = p1.name; document.getElementById('p1Rank').innerText = p1.rank;
-        document.getElementById('p2Name').innerText = p2.name; document.getElementById('p2Rank').innerText = p2.rank;
+        document.getElementById('p1Name').innerText = p1.name;
+        document.getElementById('p1Rank').innerText = p1.rank;
+        document.getElementById('p2Name').innerText = p2.name;
+        document.getElementById('p2Rank').innerText = p2.rank;
 
-        let h1 = p1.name.includes("毛宗崗") ? 10000 : 100; let h2 = p2.name.includes("毛宗崗") ? 10000 : 100;
-        let m1 = h1, m2 = h2;
-        document.getElementById('p1HpBar').style.width = "100%"; document.getElementById('p2HpBar').style.width = "100%";
-        document.getElementById('p1HpText').innerText = `${h1}/${m1}`; document.getElementById('p2HpText').innerText = `${h2}/${m2}`;
+        let maxH1 = getMaxHp(p1.name), maxH2 = getMaxHp(p2.name);
+        let h1 = maxH1, h2 = maxH2;
+        
+        document.getElementById('p1HpBar').style.width = "100%";
+        document.getElementById('p2HpBar').style.width = "100%";
+        document.getElementById('p1HpText').innerText = h1 + "/" + maxH1;
+        document.getElementById('p2HpText').innerText = h2 + "/" + maxH2;
 
-        let round = 1, p1Ult30Used = false, p2Ult30Used = false, p1Ult10Count = 0, p2Ult10Count = 0; 
+        let round = 1;
+        let p1Ult30Used = false, p2Ult30Used = false;
+        let p1Ult10Count = 0, p2Ult10Count = 0; 
         let p1GodDefyUsed = false, p2GodDefyUsed = false, p1CustomUltUsed = false, p2CustomUltUsed = false;
-        let p1DodgeCount = 0, p2DodgeCount = 0, p1NineSunsUsed = false, p2NineSunsUsed = false;
+        let p1FanYueHealUsed = false, p2FanYueHealUsed = false;
+        let p1DodgeCount = 0, p2DodgeCount = 0, p1RemnantDodgeUsed = false, p2RemnantDodgeUsed = false;
+        let p1NineSunsUsed = false, p2NineSunsUsed = false;
 
-        function applyDmg1(dmg, logStr) { if (p1.name==="趙雲" && h1-dmg<=0 && !p1NineSunsUsed) { p1NineSunsUsed=true; battleLog.innerHTML+=`<span style="color:#ff4500;">🔥 【九陽之火】${p1.name} 閃避了致命一擊！</span><br>`; triggerShake(); } else { h1-=dmg; battleLog.innerHTML+=logStr; triggerShake(); } }
-        function applyDmg2(dmg, logStr) { if (p2.name==="趙雲" && h2-dmg<=0 && !p2NineSunsUsed) { p2NineSunsUsed=true; battleLog.innerHTML+=`<span style="color:#ff4500;">🔥 【九陽之火】${p2.name} 閃避了致命一擊！</span><br>`; triggerShake(); } else { h2-=dmg; battleLog.innerHTML+=logStr; triggerShake(); } }
+        function applyDmg1(dmg, logStr) {
+            if (p1.name === "趙雲" && h1 - dmg <= 0 && !p1NineSunsUsed) {
+                p1NineSunsUsed = true;
+                battleLog.innerHTML += `<span style="color:#ff4500; font-weight:bold; font-size:16px;">🔥 【絕境涅槃】生死一瞬！${p1.name} 發動【九陽之火】！化身無盡烈陽，強行閃避了致命一擊！</span><br>`;
+                triggerShake();
+            } else { h1 -= dmg; battleLog.innerHTML += logStr; triggerShake(); }
+        }
+        function applyDmg2(dmg, logStr) {
+            if (p2.name === "趙雲" && h2 - dmg <= 0 && !p2NineSunsUsed) {
+                p2NineSunsUsed = true;
+                battleLog.innerHTML += `<span style="color:#ff4500; font-weight:bold; font-size:16px;">🔥 【絕境涅槃】生死一瞬！${p2.name} 發動【九陽之火】！化身無盡烈陽，強行閃避了致命一擊！</span><br>`;
+                triggerShake();
+            } else { h2 -= dmg; battleLog.innerHTML += logStr; triggerShake(); }
+        }
 
-        if (!isTournamentMode) battleLog.innerHTML = `[對決啟動] ${p1.name} VS ${p2.name}<br>`;
+        if (!isTournamentMode) {
+            battleLog.innerHTML = `[對決啟動] ${p1.name} VS ${p2.name}<br>系統正在進行武力維度模擬...<br>`;
+        }
         initChart();
 
-        while (h1 > 0 && h2 > 0 && round < 80) {
-            await new Promise(r => setTimeout(r, isTournamentMode ? 100 : 350));
+        while (h1 > 0 && h2 > 0 && round < 250) {
+            await new Promise(r => setTimeout(r, isTournamentMode ? 50 : 250));
 
-            if (p1.name === "造物主・什年") { h2 = 0; battleLog.innerHTML += `<span style="color:#ff0000;">⚡ 【降維刪除】${p2.name} 的代碼消散！</span><br>`; triggerShake(); break; }
-            if (p2.name === "造物主・什年") { h1 = 0; battleLog.innerHTML += `<span style="color:#ff0000;">⚡ 【降維刪除】${p1.name} 的代碼消散！</span><br>`; triggerShake(); break; }
-
-            if ((p1.name==="趙雲"&&p2.name==="樊玥") || (p1.name==="樊玥"&&p2.name==="趙雲")) { if(p1.name==="樊玥") h2=0; else h1=0; battleLog.innerHTML += `🌸 【雲玥同心】趙雲甘願落敗...<br>`; unlockAchievement('yunyue','【雲玥同心】','觸發羈絆'); triggerShake(); break; }
+            if ((p1.name === "趙雲" && p2.name === "樊玥") || (p1.name === "樊玥" && p2.name === "趙雲") || (p1.name === "殘卒" && p2.name === "樊玥") || (p1.name === "樊玥" && p2.name === "殘卒")) {
+                if (p1.name === "樊玥") h2 = 0; else h1 = 0;
+                battleLog.innerHTML += `<br><span style="color:#ffffff; font-weight:bold; font-size:20px;">🌸 【宿命羈絆】樊玥溫柔注視，對手甘願落敗...</span><br><br>`;
+                triggerShake(); break;
+            }
             
             if (round === 1) {
-                if (p1ActualPower > p2ActualPower && Math.random()<0.015 && p2.name!=="趙雲" && !p2.name.includes("毛宗崗")) { h2=0; battleLog.innerHTML+=`⚡ 【瞬獄秒殺】${p1.name} 第零秒斬落對手！<br>`; unlockAchievement('instakill','【瞬獄秒殺】','開局秒殺'); triggerShake(); break; }
-                if (p2ActualPower > p1ActualPower && Math.random()<0.015 && p1.name!=="趙雲" && !p1.name.includes("毛宗崗")) { h1=0; battleLog.innerHTML+=`⚡ 【瞬獄秒殺】${p2.name} 第零秒斬落對手！<br>`; unlockAchievement('instakill','【瞬獄秒殺】','開局秒殺'); triggerShake(); break; }
+                let instaKillChance = 0.015; 
+                if (p1ActualPower > p2ActualPower && Math.random() < instaKillChance && p2.name !== "趙雲" && p2.name !== "篡史魔仙・毛宗崗") {
+                    h2 = 0; battleLog.innerHTML += `<br><span style="color:#ff3131; font-weight:bold; font-size:20px;">⚡ 【絕對武力碾壓・開場秒殺】${p1.name} 將 ${p2.name} 秒殺！</span><br><br>`;
+                    triggerShake(); break;
+                } else if (p2ActualPower > p1ActualPower && Math.random() < instaKillChance && p1.name !== "趙雲" && p1.name !== "篡史魔仙・毛宗崗") {
+                    h1 = 0; battleLog.innerHTML += `<br><span style="color:#ff3131; font-weight:bold; font-size:20px;">⚡ 【絕對武力碾壓・開場秒殺】${p2.name} 將 ${p1.name} 秒殺！</span><br><br>`;
+                    triggerShake(); break;
+                }
+            }
+            
+            let atkPct1 = h1 / maxH1 * 100;
+            let atkPct2 = h2 / maxH2 * 100;
+
+            if (p1.name === "趙雲" && atkPct1 <= 10 && h1 > 0 && p1Ult10Count < 1 && h2 > 0) {
+                p1Ult10Count++; 
+                if(p2.name === "趙雲" && !p2NineSunsUsed) { p2NineSunsUsed = true; }
+                else { h2 = 0; battleLog.innerHTML += `<br><span style="color:#ffffff; font-weight:bold; font-size:20px;">❄️ 【玥之極】${p1.name} 抹除了 ${p2.name}！</span><br><br>`; }
+                triggerShake(); await new Promise(r => setTimeout(r, 400));
+            }
+            else if (p2.name === "趙雲" && atkPct2 <= 10 && h2 > 0 && p2Ult10Count < 1 && h1 > 0) {
+                p2Ult10Count++; 
+                if(p1.name === "趙雲" && !p1NineSunsUsed) { p1NineSunsUsed = true; }
+                else { h1 = 0; battleLog.innerHTML += `<br><span style="color:#ffffff; font-weight:bold; font-size:20px;">❄️ 【玥之極】${p2.name} 抹除了 ${p1.name}！</span><br><br>`; }
+                triggerShake(); await new Promise(r => setTimeout(r, 400));
             }
 
-            let atkPct1 = h1/m1*100, atkPct2 = h2/m2*100;
-            if (p1.name==="趙雲" && atkPct1<=10 && p1Ult10Count<1) { p1Ult10Count++; if(p2.name==="趙雲"&&!p2NineSunsUsed){p2NineSunsUsed=true;} else{h2=0;} battleLog.innerHTML+=`❄️ 【玥之極】${p1.name} 抹除敵軍！<br>`; triggerShake(); }
-            if (p2.name==="趙雲" && atkPct2<=10 && p2Ult10Count<1) { p2Ult10Count++; if(p1.name==="趙雲"&&!p1NineSunsUsed){p1NineSunsUsed=true;} else{h1=0;} battleLog.innerHTML+=`❄️ 【玥之極】${p2.name} 抹除敵軍！<br>`; triggerShake(); }
+            let skill1 = ultimateSkills[p1.name];
+            if (skill1 && atkPct1 <= 35 && h1 > 0 && !p1CustomUltUsed && h2 > 0) {
+                p1CustomUltUsed = true;
+                if (p2DodgeCount > 0) { p2DodgeCount--; battleLog.innerHTML += `<span style="color:#aaaaaa;">💨 敵將極限閃避了大絕！</span><br>`; }
+                else { applyDmg2(skill1.dmg, `<span style="color:${skill1.color}; font-weight:bold;">💥 【名將覺醒】${p1.name} 發動【${skill1.name}】！(-${skill1.dmg} HP)</span><br>`); }
+                triggerShake(); await new Promise(r => setTimeout(r, 400));
+            }
+            let skill2 = ultimateSkills[p2.name];
+            if (skill2 && atkPct2 <= 35 && h2 > 0 && !p2CustomUltUsed && h1 > 0) {
+                p2CustomUltUsed = true;
+                if (p1DodgeCount > 0) { p1DodgeCount--; battleLog.innerHTML += `<span style="color:#aaaaaa;">💨 我軍極限閃避了大絕！</span><br>`; }
+                else { applyDmg1(skill2.dmg, `<span style="color:${skill2.color}; font-weight:bold;">💥 【名將覺醒】${p2.name} 發動【${skill2.name}】！(-${skill2.dmg} HP)</span><br>`); }
+                triggerShake(); await new Promise(r => setTimeout(r, 400));
+            }
 
-            if (p1.name==="趙雲" && atkPct1<=36 && !p1Ult30Used) { p1Ult30Used=true; if(p2DodgeCount>0)p2DodgeCount--; else applyDmg2(50, `🔥 ${p1.name} 發動【九天龍吟】！<br>`); }
-            if (p2.name==="趙雲" && atkPct2<=36 && !p2Ult30Used) { p2Ult30Used=true; if(p1DodgeCount>0)p1DodgeCount--; else applyDmg1(50, `🔥 ${p2.name} 發動【九天龍吟】！<br>`); }
-
-            if (ultimateSkills[p1.name] && atkPct1<=35 && !p1CustomUltUsed) { p1CustomUltUsed=true; if(p2DodgeCount>0)p2DodgeCount--; else applyDmg2(ultimateSkills[p1.name].dmg, `💥 ${p1.name} 發動【${ultimateSkills[p1.name].name}】！<br>`); }
-            if (ultimateSkills[p2.name] && atkPct2<=35 && !p2CustomUltUsed) { p2CustomUltUsed=true; if(p1DodgeCount>0)p1DodgeCount--; else applyDmg1(ultimateSkills[p2.name].dmg, `💥 ${p2.name} 發動【${ultimateSkills[p2.name].name}】！<br>`); }
-
-            if (p1.name==="殘卒" && atkPct1<=20 && !p1RemnantDodgeUsed) { p1RemnantDodgeUsed=true; p1DodgeCount=10; }
-            if (p2.name==="殘卒" && atkPct2<=20 && !p2RemnantDodgeUsed) { p2RemnantDodgeUsed=true; p2DodgeCount=10; }
+            if (p1.name === "殘卒" && atkPct1 <= 20 && h1 > 0 && !p1RemnantDodgeUsed) { p1RemnantDodgeUsed = true; p1DodgeCount = 10; battleLog.innerHTML += `<span style="color:#ccc;">💨 【螻蟻貪生】${p1.name} 獲得 10次閃避！</span><br>`; }
+            if (p2.name === "殘卒" && atkPct2 <= 20 && h2 > 0 && !p2RemnantDodgeUsed) { p2RemnantDodgeUsed = true; p2DodgeCount = 10; battleLog.innerHTML += `<span style="color:#ccc;">💨 【螻蟻貪生】${p2.name} 獲得 10次閃避！</span><br>`; }
 
             if (!isUltimateTournament) {
-                if (femaleHealers[p1.name] && h1<m1 && Math.random()<0.25) { h1=Math.min(m1,h1+femaleHealers[p1.name].heal); p1ActualPower+=femaleHealers[p1.name].buff; battleLog.innerHTML+=`💖 ${p1.name} 紅顏補血！<br>`; }
-                if (femaleHealers[p2.name] && h2<m2 && Math.random()<0.25) { h2=Math.min(m2,h2+femaleHealers[p2.name].heal); p2ActualPower+=femaleHealers[p2.name].buff; battleLog.innerHTML+=`💖 ${p2.name} 紅顏補血！<br>`; }
+                if (femaleHealers[p1.name] && h1 > 0 && h1 < maxH1 && Math.random() < 0.25) {
+                    let hData = femaleHealers[p1.name]; h1 = Math.min(maxH1, h1 + hData.heal); p1ActualPower += hData.buff;
+                    battleLog.innerHTML += `<span style="color:#ff69b4;">💖 【紅顏祈禱】${p1.name} 恢復生命！</span><br>`; triggerShake();
+                }
+                if (femaleHealers[p2.name] && h2 > 0 && h2 < maxH2 && Math.random() < 0.25) {
+                    let hData = femaleHealers[p2.name]; h2 = Math.min(maxH2, h2 + hData.heal); p2ActualPower += hData.buff;
+                    battleLog.innerHTML += `<span style="color:#ff69b4;">💖 【紅顏祈禱】${p2.name} 恢復生命！</span><br>`; triggerShake();
+                }
             }
 
-            if (h1>0 && h2>0) {
-                let dmg1 = p1.name.includes("毛宗崗") ? 0 : Math.max(3, (p1ActualPower*0.12)-(p2ActualPower*0.04)+(Math.random()*12-4));
-                let dmg2 = p2.name.includes("毛宗崗") ? 0 : Math.max(3, (p2ActualPower*0.12)-(p1ActualPower*0.04)+(Math.random()*12-4));
-                if (Math.random()>0.5 && !p1.name.includes("毛宗崗")) {
-                    if (p2DodgeCount>0) p2DodgeCount--; else if(Math.random()<0.12){} else if(Math.random()<0.35) applyDmg2(dmg1*0.4, `🛡️ ${p2.name} 格擋。<br>`); else applyDmg2(dmg1, `⚔️ ${p1.name} 造成 ${Math.floor(dmg1)} 傷害。<br>`);
-                } else if (!p2.name.includes("毛宗崗")) {
-                    if (p1DodgeCount>0) p1DodgeCount--; else if(Math.random()<0.12){} else if(Math.random()<0.35) applyDmg1(dmg2*0.4, `🛡️ ${p1.name} 格擋。<br>`); else applyDmg1(dmg2, `⚔️ ${p2.name} 造成 ${Math.floor(dmg2)} 傷害。<br>`);
+            if (h1 > 0 && h2 > 0) {
+                let dmg1 = getAtkDmg(p1.name, p1ActualPower, p2ActualPower);
+                let dmg2 = getAtkDmg(p2.name, p2ActualPower, p1ActualPower);
+                let eventRand = Math.random(); 
+
+                if (Math.random() > 0.5) {
+                    if (p2DodgeCount > 0) { p2DodgeCount--; battleLog.innerHTML += `<span style="color:#aaaaaa;">[第${round}合] 💨 ${p2.name} 閃避了攻擊！</span><br>`; } 
+                    else if (eventRand < 0.12) { battleLog.innerHTML += `<span style="color:#aaaaaa;">[第${round}合] 💨 ${p2.name} 完美閃躲！</span><br>`; } 
+                    else if (eventRand < 0.20) { battleLog.innerHTML += `<span style="color:#ffd700;">[第${round}合] 🛡️ 完美彈反！${p2.name} 無傷！</span><br>`; } 
+                    else if (eventRand < 0.35) { applyDmg2(Math.floor(dmg1 * 0.4), `<span style="color:#b0c4de;">[第${round}合] 🛡️ ${p2.name} 成功格擋，承受微傷。</span><br>`); } 
+                    else { 
+                        if(p1.name !== "篡史魔仙・毛宗崗") applyDmg2(dmg1, `<span style="color:var(--text-color)">[第${round}合]</span> ${p1.name} 攻擊，造成 ${Math.floor(dmg1)} 點損傷。<br>`); 
+                    }
+                } else {
+                    if (p1DodgeCount > 0) { p1DodgeCount--; battleLog.innerHTML += `<span style="color:#aaaaaa;">[第${round}合] 💨 ${p1.name} 閃避了攻擊！</span><br>`; } 
+                    else if (eventRand < 0.12) { battleLog.innerHTML += `<span style="color:#aaaaaa;">[第${round}合] 💨 ${p1.name} 完美閃躲！</span><br>`; } 
+                    else if (eventRand < 0.20) { battleLog.innerHTML += `<span style="color:#ffd700;">[第${round}合] 🛡️ 完美彈反！${p1.name} 無傷！</span><br>`; } 
+                    else if (eventRand < 0.35) { applyDmg1(Math.floor(dmg2 * 0.4), `<span style="color:#b0c4de;">[第${round}合] 🛡️ ${p1.name} 成功格擋，承受微傷。</span><br>`); } 
+                    else { 
+                        if(p2.name !== "篡史魔仙・毛宗崗") applyDmg1(dmg2, `<span style="color:var(--accent-red)">[第${round}合]</span> ${p2.name} 攻擊，造成 ${Math.floor(dmg2)} 點損傷。<br>`); 
+                    }
                 }
             }
 
             h1 = Math.max(0, h1); h2 = Math.max(0, h2);
-            if (h1<=0 && p1.rank.includes("神仙") && !p2.rank.includes("神仙")) unlockAchievement('godslayer','【逆天弒神】','凡人殺神');
-            if (h2<=0 && p2.rank.includes("神仙") && !p1.rank.includes("神仙")) unlockAchievement('godslayer','【逆天弒神】','凡人殺神');
-            if (h1<=0 && p1.rank==="超一流" && p2.name==="殘卒") unlockAchievement('ant','【螻蟻之怒】','殘卒殺超一流');
-            if (h2<=0 && p2.rank==="超一流" && p1.name==="殘卒") unlockAchievement('ant','【螻蟻之怒】','殘卒殺超一流');
 
-            document.getElementById('p1HpBar').style.width=(h1/m1*100)+"%"; document.getElementById('p2HpBar').style.width=(h2/m2*100)+"%";
-            document.getElementById('p1HpText').innerText=`${Math.floor(h1)}/${m1}`; document.getElementById('p2HpText').innerText=`${Math.floor(h2)}/${m2}`;
-            hpChart.data.labels.push(round); hpChart.data.datasets[0].data.push(h1/m1*100); hpChart.data.datasets[1].data.push(h2/m2*100); hpChart.update();
-            battleLog.scrollTop = battleLog.scrollHeight; round++;
+            if (p1.name === "趙雲" && p2.rank.includes("神仙流") && h1 === 0 && !p1GodDefyUsed) { h1 = 1; p1GodDefyUsed = true; battleLog.innerHTML += `<span style="color:#ffd700;">【逆天改命】${p1.name} 鎖血 1 滴！</span><br>`; }
+            if (p2.name === "趙雲" && p1.rank.includes("神仙流") && h2 === 0 && !p2GodDefyUsed) { h2 = 1; p2GodDefyUsed = true; battleLog.innerHTML += `<span style="color:#ffd700;">【逆天改命】${p2.name} 鎖血 1 滴！</span><br>`; }
+
+            document.getElementById('p1HpBar').style.width = (h1/maxH1*100) + "%";
+            document.getElementById('p2HpBar').style.width = (h2/maxH2*100) + "%";
+            document.getElementById('p1HpText').innerText = Math.floor(h1) + "/" + maxH1;
+            document.getElementById('p2HpText').innerText = Math.floor(h2) + "/" + maxH2;
+            
+            hpChart.data.labels.push(round);
+            hpChart.data.datasets[0].data.push(h1);
+            hpChart.data.datasets[1].data.push(h2);
+            hpChart.update();
+
+            battleLog.scrollTop = battleLog.scrollHeight;
+            round++;
         }
-        return h1>h2 ? p1Select.value : p2Select.value;
+
+        const winner = h1 > h2 ? p1.name : p2.name;
+        if (!isTournamentMode) battleLog.innerHTML += `<br><strong style="color:var(--accent-orange); font-size:22px;">[演武終結] 最終處決結果：${winner} 傲立戰場！</strong>`;
+        
+        return h1 > h2 ? parseInt(p1Select.value) : parseInt(p2Select.value);
     }
 
-    // ==============================================================
-    // ▼▼▼ 一龍鬥群虎 (runOneVsN) ▼▼▼
-    // ==============================================================
+    // ▼▼▼ 一龍鬥群虎 (1 vs N 無雙戰) 推演模組 ▼▼▼
     async function runOneVsN() {
         const dIdx = parseInt(document.getElementById('dragonSelect').value);
-        const tIdxs = []; for(let i=0;i<10;i++) { let v=parseInt(document.getElementById('tT'+i).value); if(v>=0) tIdxs.push(v); }
-        if(tIdxs.length<1) return alert("請至少選1名對手！");
-        document.querySelectorAll("button").forEach(b=>b.disabled=true);
+        const tIdxs = [];
+        for(let i=0; i<10; i++) {
+            let val = parseInt(document.getElementById('tT'+i).value);
+            if(!isNaN(val) && val >= 0) tIdxs.push(val);
+        }
+        if(tIdxs.length < 1) { alert("主公，請至少選擇 1 名群虎參戰！"); return; }
+
+        const buttons = document.querySelectorAll("button");
+        buttons.forEach(b => b.disabled = true);
 
         const dGen = generals[dIdx];
-        let f = [{ id:'D', team:'A', name:dGen.name, actualPower:dGen.name==="趙雲"?dGen.power+20:dGen.power, hp:dGen.name.includes("毛")?10000:100, maxHp:dGen.name.includes("毛")?10000:100, isDead:false, ult10Count:0, customUltUsed:false, color:'#00ff41' }];
-        let totalHp = 0;
-        tIdxs.forEach((idx,i) => {
-            let g = generals[idx]; let mHp = g.name.includes("毛")?10000:100; totalHp+=mHp;
-            f.push({ id:'T'+i, team:'B', name:g.name, actualPower:g.name==="趙雲"?g.power+20:g.power, hp:mHp, maxHp:mHp, isDead:false, ult10Count:0, customUltUsed:false, color:'#ff3131' });
-        });
+        const dActualPower = dGen.name === "趙雲" ? dGen.power + 20 : dGen.power; 
 
-        document.getElementById('p1Name').innerText="狂龍: "+dGen.name; document.getElementById('p2Name').innerText=`群虎 (${tIdxs.length}人)`;
-        battleLog.innerHTML = `<h2 style="color:#ffd700;">🐉 一龍鬥群虎 🐅</h2><hr>`;
-        let round = 1, turnA = true; initChart();
+        let fighters = [];
+        fighters.push({ id: 'D', team: 'A', name: dGen.name, power: dGen.power, rank: dGen.rank, actualPower: dActualPower, hp: getMaxHp(dGen.name), maxHp: getMaxHp(dGen.name), dodgeCount: 0, ult10Count: 0, customUltUsed: false, isDead: false, color: '#00ff41' });
+        
+        for(let i=0; i<tIdxs.length; i++) {
+            let g = generals[tIdxs[i]];
+            let p = g.name === "趙雲" ? g.power + 20 : g.power;
+            fighters.push({ id: 'T'+i, team: 'B', name: g.name, power: g.power, rank: g.rank, actualPower: p, hp: getMaxHp(g.name), maxHp: getMaxHp(g.name), dodgeCount: 0, ult10Count: 0, customUltUsed: false, isDead: false, color: '#ff3131' });
+        }
 
-        while(f[0].hp>0 && f.filter(x=>x.team==='B'&&!x.isDead).length>0 && round<800) {
-            await new Promise(r=>setTimeout(r,150));
-            let alive = f.filter(x=>!x.isDead);
-            let atk = turnA ? f[0] : alive.filter(x=>x.team==='B')[Math.floor(Math.random()*(alive.length-1))];
-            let def = turnA ? alive.filter(x=>x.team==='B')[Math.floor(Math.random()*(alive.length-1))] : f[0];
+        const totalTigersHp = fighters.filter(f=>f.team==='B').reduce((s,f)=>s+f.maxHp,0);
+
+        function update1vNBars() {
+            let dragon = fighters[0];
+            let tigersHp = fighters.filter(f=>f.team==='B').reduce((s,f)=>s+f.hp,0);
+            document.getElementById('p1HpBar').style.width = (dragon.hp/dragon.maxHp*100) + "%";
+            document.getElementById('p2HpBar').style.width = (tigersHp/totalTigersHp*100) + "%";
+            document.getElementById('p1HpText').innerText = Math.floor(dragon.hp) + " / " + dragon.maxHp;
+            document.getElementById('p2HpText').innerText = Math.floor(tigersHp) + " / " + totalTigersHp;
+        }
+
+        update1vNBars();
+        battleLog.innerHTML = `<h2 style="color:#ffd700; text-align:center;">🐉 一龍鬥群虎 (1 VS ${tIdxs.length} 純淨極限戰) 🐅</h2>`;
+        battleLog.scrollTop = battleLog.scrollHeight;
+        await new Promise(r => setTimeout(r, 1000));
+
+        let round = 1; let turnA = true; 
+        initChart();
+
+        while(fighters[0].hp > 0 && fighters.filter(f=>f.team==='B' && !f.isDead).length > 0 && round < 1000) {
+            await new Promise(r => setTimeout(r, 100)); 
+            
+            let alive = fighters.filter(f => !f.isDead);
+            let attacker, defender, targets;
+
+            if (turnA) {
+                attacker = fighters[0]; targets = alive.filter(f => f.team !== attacker.team);
+                defender = targets[Math.floor(Math.random() * targets.length)];
+            } else {
+                let tigers = alive.filter(f => f.team === 'B');
+                attacker = tigers[Math.floor(Math.random() * tigers.length)];
+                defender = fighters[0];
+            }
             turnA = !turnA;
 
-            if (atk.name==="造物主・什年") { def.hp=0; def.isDead=true; battleLog.innerHTML+=`<span style="color:red;">⚡ 造物主秒殺 ${def.name}！</span><br>`; }
-            else if (atk.name==="趙雲" && (atk.hp/atk.maxHp)<=0.1 && atk.ult10Count<10) {
-                atk.ult10Count++; def.hp=0; def.isDead=true; battleLog.innerHTML+=`❄️ 趙雲發動玥之極抹除 ${def.name}！<br>`;
-                if(atk.ult10Count===10) unlockAchievement('wushen','【武神之怒】','10次玥之極');
-            } else if (ultimateSkills[atk.name] && (atk.hp/atk.maxHp)<=0.35 && !atk.customUltUsed) {
-                atk.customUltUsed=true; def.hp-=ultimateSkills[atk.name].dmg; battleLog.innerHTML+=`💥 ${atk.name} 發動大絕！<br>`;
+            if ((attacker.name === "趙雲" && defender.name === "樊玥") || (attacker.name === "樊玥" && defender.name === "趙雲")) {
+                let loser = attacker.name === "趙雲" ? attacker : defender; loser.hp = 0; loser.isDead = true;
             } else {
-                let dmg = atk.name.includes("毛")?0:Math.max(3, atk.actualPower*0.12 - def.actualPower*0.04 + (Math.random()*12-4));
-                def.hp-=dmg; battleLog.innerHTML+=`⚔️ ${atk.name} 攻擊 ${def.name} 造成 ${Math.floor(dmg)} 傷害。<br>`;
+                let skill = ultimateSkills[attacker.name];
+                let atkPct = attacker.hp / attacker.maxHp * 100;
+                if (skill && atkPct <= 35 && !attacker.customUltUsed) {
+                    attacker.customUltUsed = true;
+                    defender.hp -= skill.dmg;
+                    battleLog.innerHTML += `<span style="color:${skill.color};">💥 【名將覺醒】${attacker.name} 發動【${skill.name}】！(-${skill.dmg})</span><br>`;
+                    triggerShake();
+                } else {
+                    let dmg = getAtkDmg(attacker.name, attacker.actualPower, defender.actualPower);
+                    if (Math.random() < 0.20) { /* Parry */ } 
+                    else {
+                        if(attacker.name !== "篡史魔仙・毛宗崗") defender.hp -= dmg;
+                    }
+                }
             }
+                
+            fighters.forEach(f => {
+                if(f.hp <= 0 && !f.isDead) { f.hp = 0; f.isDead = true; battleLog.innerHTML += `<span style="color:#ff3131;">🩸 [陣亡] ${f.name} 倒下了...</span><br>`; }
+            });
 
-            f.forEach(x => { if(x.hp<=0 && !x.isDead){ x.hp=0; x.isDead=true; battleLog.innerHTML+=`🩸 ${x.name} 陣亡。<br>`; }});
-            let bHp = f.filter(x=>x.team==='B').reduce((s,x)=>s+x.hp,0);
-            document.getElementById('p1HpBar').style.width = (f[0].hp/f[0].maxHp*100)+"%"; document.getElementById('p2HpBar').style.width = (bHp/totalHp*100)+"%";
-            hpChart.data.labels.push(round); hpChart.data.datasets[0].data.push(f[0].hp/f[0].maxHp*100); hpChart.data.datasets[1].data.push(bHp/totalHp*100); hpChart.update();
-            battleLog.scrollTop = battleLog.scrollHeight; round++;
-        }
-        document.querySelectorAll("button").forEach(b=>b.disabled=false);
-    }
-
-    // ==============================================================
-    // ▼▼▼ 6v6 車輪戰與大亂鬥 ▼▼▼
-    // ==============================================================
-    async function runTeamBattle() {
-        const tA = [0,1,2,3,4,5].map(i=>parseInt(document.getElementById('tA'+i).value)).filter(v=>v>=0);
-        const tB = [0,1,2,3,4,5].map(i=>parseInt(document.getElementById('tB'+i).value)).filter(v=>v>=0);
-        if(!tA.length || !tB.length) return alert("雙方至少需1人！");
-        document.querySelectorAll("button").forEach(b=>b.disabled=true);
-        battleLog.innerHTML = `<h2 style="color:#00ffff;">🛡️ 團隊車輪死鬥 🛡️</h2><hr>`;
-        let a=0, b=0, match=1;
-        while(a<tA.length && b<tB.length) {
-            p1Select.value = tA[a]; p2Select.value = tB[b];
-            let w = await startDuel(true, false);
-            if(w == tA[a]) b++; else a++; match++;
-        }
-        document.querySelectorAll("button").forEach(b=>b.disabled=false);
-    }
-
-    async function runGroupMeleeBattle() {
-        const tA = [0,1,2,3,4,5].map(i=>parseInt(document.getElementById('tA'+i).value)).filter(v=>v>=0);
-        const tB = [0,1,2,3,4,5].map(i=>parseInt(document.getElementById('tB'+i).value)).filter(v=>v>=0);
-        if(!tA.length || !tB.length) return alert("雙方至少需1人！");
-        document.querySelectorAll("button").forEach(b=>b.disabled=true);
-        battleLog.innerHTML = `<h2 style="color:#ff3131;">🔥 史詩大亂鬥 🔥</h2><hr>`;
-        
-        let f = []; let maxA=0, maxB=0;
-        tA.forEach((idx,i)=>{ let g=generals[idx]; let hp=g.name.includes("毛")?10000:100; maxA+=hp; f.push({team:'A',name:g.name,pow:g.name==="趙雲"?g.power+20:g.power,hp:hp,mHp:hp,isDead:false}); });
-        tB.forEach((idx,i)=>{ let g=generals[idx]; let hp=g.name.includes("毛")?10000:100; maxB+=hp; f.push({team:'B',name:g.name,pow:g.name==="趙雲"?g.power+20:g.power,hp:hp,mHp:hp,isDead:false}); });
-
-        let round=1; initChart();
-        while(f.filter(x=>x.team==='A'&&!x.isDead).length>0 && f.filter(x=>x.team==='B'&&!x.isDead).length>0 && round<800) {
-            await new Promise(r=>setTimeout(r,100));
-            let alive = f.filter(x=>!x.isDead); let atk = alive[Math.floor(Math.random()*alive.length)];
-            let tgts = alive.filter(x=>x.team!==atk.team); let def = tgts[Math.floor(Math.random()*tgts.length)];
+            update1vNBars();
+            hpChart.data.labels.push(round);
+            hpChart.data.datasets[0].data.push( fighters[0].hp / fighters[0].maxHp * 100 ); 
+            hpChart.data.datasets[1].data.push( fighters.filter(f=>f.team==='B').reduce((s,f)=>s+f.hp,0) / totalTigersHp * 100 );
+            hpChart.update();
             
-            if(atk.name==="造物主・什年") def.hp=0;
-            else def.hp -= atk.name.includes("毛")?0:Math.max(5, atk.pow*0.1 - def.pow*0.05);
-
-            f.forEach(x => { if(x.hp<=0 && !x.isDead) { x.hp=0; x.isDead=true; battleLog.innerHTML+=`🩸 ${x.name} 陣亡。<br>`; }});
-            let curA = f.filter(x=>x.team==='A').reduce((s,x)=>s+x.hp,0); let curB = f.filter(x=>x.team==='B').reduce((s,x)=>s+x.hp,0);
-            document.getElementById('p1HpBar').style.width = (curA/maxA*100)+"%"; document.getElementById('p2HpBar').style.width = (curB/maxB*100)+"%";
-            hpChart.data.labels.push(round); hpChart.data.datasets[0].data.push(curA/maxA*100); hpChart.data.datasets[1].data.push(curB/maxB*100); hpChart.update();
-            battleLog.scrollTop = battleLog.scrollHeight; round++;
+            if(round % 5 === 0) battleLog.scrollTop = battleLog.scrollHeight;
+            round++;
         }
-        document.querySelectorAll("button").forEach(b=>b.disabled=false);
+
+        if (!fighters[0].isDead) {
+            battleLog.innerHTML += `<br><h2 style="color:#ffd700;">【一龍破陣 霸業達成】</h2><br>`;
+            if (fighters[0].name === customAvatar.name) gainAvatarExp(200, 'oneVsN');
+        } else {
+            battleLog.innerHTML += `<br><h2 style="color:#ff3131;">【群虎噬龍 慘烈落幕】</h2><br>`;
+        }
+        
+        battleLog.scrollTop = battleLog.scrollHeight;
+        buttons.forEach(b => b.disabled = false);
     }
 
-    // ==============================================================
-    // ▼▼▼ 全軍大亂鬥 (光速海選 + 淘汰賽) ▼▼▼
-    // ==============================================================
-    async function runGlobalTournament() {
-        document.querySelectorAll("button").forEach(b=>b.disabled=true);
-        let roster = Array.from({length: generals.length}, (_, i) => i).sort(() => Math.random() - 0.5);
-        battleLog.innerHTML = `<h2 style="color:#ff3131;">🌍 全軍大亂鬥 海選啟動 🌍</h2><hr>`;
+    // ▼▼▼ 6v6 團隊死鬥 (擂台車輪戰) 推演模組 ▼▼▼
+    async function runTeamBattle() {
+        const teamA = [
+            parseInt(document.getElementById('tA0').value), parseInt(document.getElementById('tA1').value),
+            parseInt(document.getElementById('tA2').value), parseInt(document.getElementById('tA3').value),
+            parseInt(document.getElementById('tA4').value), parseInt(document.getElementById('tA5').value)
+        ].filter(val => !isNaN(val) && val >= 0);
         
-        while(roster.length > 8) {
-            await new Promise(r=>setTimeout(r,500));
-            let target = 8; while (target*2 < roster.length) target*=2;
-            let matches = roster.length - target; if(matches===0) matches = roster.length/2;
-            let nextRoster = [];
-            for(let i=0; i<matches*2; i+=2) {
-                let p1=generals[roster[i]], p2=generals[roster[i+1]];
-                let w = (p1.name==="造物主・什年"||p2.name.includes("毛")) ? roster[i] : (p2.name==="造物主・什年"||p1.name.includes("毛")) ? roster[i+1] : (Math.random()>0.5?roster[i]:roster[i+1]);
-                nextRoster.push(w);
-            }
-            for(let i=matches*2; i<roster.length; i++) nextRoster.push(roster[i]);
-            roster = nextRoster; battleLog.innerHTML += `淘汰一輪，剩餘 ${roster.length} 人...<br>`; battleLog.scrollTop = battleLog.scrollHeight;
+        const teamB = [
+            parseInt(document.getElementById('tB0').value), parseInt(document.getElementById('tB1').value),
+            parseInt(document.getElementById('tB2').value), parseInt(document.getElementById('tB3').value),
+            parseInt(document.getElementById('tB4').value), parseInt(document.getElementById('tB5').value)
+        ].filter(val => !isNaN(val) && val >= 0);
+
+        if (teamA.length === 0 || teamB.length === 0) { alert("主公，雙方陣營至少需指派 1 名將領參戰！"); return; }
+
+        const buttons = document.querySelectorAll("button");
+        buttons.forEach(b => b.disabled = true);
+
+        battleLog.innerHTML = `<h2 style="color:#00ffff; text-align:center;">🛡️ 巔峰團隊死鬥 🛡️</h2>`;
+        await new Promise(r => setTimeout(r, 1000));
+
+        let a_idx = 0; let b_idx = 0; let matchNum = 1;
+
+        while (a_idx < teamA.length && b_idx < teamB.length) {
+            let pA_idx = teamA[a_idx]; let pB_idx = teamB[b_idx];
+            battleLog.innerHTML += `<br><h3 style="color:#00ffff;">⚔️ 第 ${matchNum} 陣：${generals[pA_idx].name} VS ${generals[pB_idx].name}</h3>`;
+            battleLog.scrollTop = battleLog.scrollHeight;
+            
+            p1Select.value = pA_idx; p2Select.value = pB_idx;
+            let winnerIndex = await startDuel(true);
+
+            if (winnerIndex === pA_idx) { b_idx++; } else { a_idx++; }
+            matchNum++;
         }
 
-        battleLog.innerHTML += `<br><h2 style="color:#ffd700;">🎉 最強八人誕生！進入決賽圈！ 🎉</h2><hr>`;
-        await new Promise(r=>setTimeout(r,1500));
-        let q1 = await autoMatch(roster[0], roster[1], "八強賽 A組"); let q2 = await autoMatch(roster[2], roster[3], "八強賽 B組");
-        let q3 = await autoMatch(roster[4], roster[5], "八強賽 C組"); let q4 = await autoMatch(roster[6], roster[7], "八強賽 D組");
-        let s1 = await autoMatch(q1, q2, "四強 準決賽(上)"); let s2 = await autoMatch(q3, q4, "四強 準決賽(下)");
-        let champ = await autoMatch(s1, s2, "👑 總決賽 👑");
-        battleLog.innerHTML += `<h1 style="color:#ffd700;">🏆 總冠軍：${generals[champ].name} 🏆</h1>`;
-        document.querySelectorAll("button").forEach(b=>b.disabled=false);
+        if (a_idx < teamA.length) {
+            battleLog.innerHTML += `<br><h1 style="color:#00ff41;">【團隊死鬥 青龍獲勝】</h1><br>`;
+            let survivedA = teamA.slice(a_idx).map(idx => generals[idx].name);
+            if (survivedA.includes(customAvatar.name)) gainAvatarExp(150, 'arena');
+        } else {
+            battleLog.innerHTML += `<br><h1 style="color:#ff3131;">【團隊死鬥 赤虎獲勝】</h1><br>`;
+            let survivedB = teamB.slice(b_idx).map(idx => generals[idx].name);
+            if (survivedB.includes(customAvatar.name)) gainAvatarExp(150, 'arena');
+        }
+        
+        battleLog.scrollTop = battleLog.scrollHeight;
+        buttons.forEach(b => b.disabled = false);
+    }
+
+    // ▼▼▼ 6v6 同場大亂鬥 (混戰) 推演模組 ▼▼▼
+    async function runGroupMeleeBattle() {
+        const teamA_idxs = [
+            parseInt(document.getElementById('tA0').value), parseInt(document.getElementById('tA1').value),
+            parseInt(document.getElementById('tA2').value), parseInt(document.getElementById('tA3').value),
+            parseInt(document.getElementById('tA4').value), parseInt(document.getElementById('tA5').value)
+        ].filter(val => !isNaN(val) && val >= 0);
+        
+        const teamB_idxs = [
+            parseInt(document.getElementById('tB0').value), parseInt(document.getElementById('tB1').value),
+            parseInt(document.getElementById('tB2').value), parseInt(document.getElementById('tB3').value),
+            parseInt(document.getElementById('tB4').value), parseInt(document.getElementById('tB5').value)
+        ].filter(val => !isNaN(val) && val >= 0);
+
+        if (teamA_idxs.length === 0 || teamB_idxs.length === 0) { alert("主公，雙方陣營至少需指派 1 名參戰！"); return; }
+        const buttons = document.querySelectorAll("button"); buttons.forEach(b => b.disabled = true);
+
+        let fighters = [];
+        for(let i=0; i<teamA_idxs.length; i++) {
+            let g = generals[teamA_idxs[i]];
+            fighters.push({ id: 'A'+i, team: 'A', name: g.name, actualPower: g.name === "趙雲" ? g.power + 20 : g.power, hp: getMaxHp(g.name), maxHp: getMaxHp(g.name), isDead: false, color: '#00ff41' });
+        }
+        for(let i=0; i<teamB_idxs.length; i++) {
+            let g = generals[teamB_idxs[i]];
+            fighters.push({ id: 'B'+i, team: 'B', name: g.name, actualPower: g.name === "趙雲" ? g.power + 20 : g.power, hp: getMaxHp(g.name), maxHp: getMaxHp(g.name), isDead: false, color: '#ff3131' });
+        }
+        
+        const totalMaxHpA = fighters.filter(f=>f.team==='A').reduce((s,f)=>s+f.maxHp,0);
+        const totalMaxHpB = fighters.filter(f=>f.team==='B').reduce((s,f)=>s+f.maxHp,0);
+
+        function updateTeamBars() {
+            let aHp = fighters.filter(f=>f.team==='A').reduce((s,f)=>s+f.hp,0);
+            let bHp = fighters.filter(f=>f.team==='B').reduce((s,f)=>s+f.hp,0);
+            document.getElementById('p1HpBar').style.width = (aHp/totalMaxHpA*100) + "%";
+            document.getElementById('p2HpBar').style.width = (bHp/totalMaxHpB*100) + "%";
+            document.getElementById('p1HpText').innerText = Math.floor(aHp) + " / " + totalMaxHpA;
+            document.getElementById('p2HpText').innerText = Math.floor(bHp) + " / " + totalMaxHpB;
+        }
+
+        updateTeamBars();
+        battleLog.innerHTML = `<h2 style="color:#ff3131; text-align:center;">🔥 史詩大亂鬥 🔥</h2>`;
+        initChart();
+
+        let round = 1;
+        while(fighters.filter(f=>f.team==='A' && !f.isDead).length > 0 && fighters.filter(f=>f.team==='B' && !f.isDead).length > 0 && round < 800) {
+            await new Promise(r => setTimeout(r, 50)); 
+            
+            let alive = fighters.filter(f => !f.isDead);
+            let attacker = alive[Math.floor(Math.random() * alive.length)];
+            let targets = alive.filter(f => f.team !== attacker.team);
+            let defender = targets[Math.floor(Math.random() * targets.length)];
+
+            if ((attacker.name === "趙雲" && defender.name === "樊玥") || (attacker.name === "樊玥" && defender.name === "趙雲")) {
+                let loser = attacker.name === "趙雲" ? attacker : defender; loser.hp = 0; loser.isDead = true;
+            } else {
+                let dmg = getAtkDmg(attacker.name, attacker.actualPower, defender.actualPower);
+                if(attacker.name !== "篡史魔仙・毛宗崗") defender.hp -= dmg;
+            }
+                
+            fighters.forEach(f => {
+                if(f.hp <= 0 && !f.isDead) { f.hp = 0; f.isDead = true; battleLog.innerHTML += `<span style="color:#ff3131;">🩸 [陣亡] ${f.name} 倒下...</span><br>`; }
+            });
+
+            updateTeamBars();
+            hpChart.data.labels.push(round);
+            hpChart.data.datasets[0].data.push(fighters.filter(f=>f.team==='A').reduce((s,f)=>s+f.hp,0)/totalMaxHpA * 100); 
+            hpChart.data.datasets[1].data.push(fighters.filter(f=>f.team==='B').reduce((s,f)=>s+f.hp,0)/totalMaxHpB * 100);
+            hpChart.update();
+            
+            if(round%10===0) battleLog.scrollTop = battleLog.scrollHeight;
+            round++;
+        }
+
+        let aAlive = fighters.filter(f=>f.team==='A' && !f.isDead);
+        let bAlive = fighters.filter(f=>f.team==='B' && !f.isDead);
+
+        if (aAlive.length > 0) {
+            battleLog.innerHTML += `<br><h1 style="color:#00ff41;">【大亂鬥 青龍獲勝】</h1><br>`;
+            if (aAlive.find(f => f.name === customAvatar.name)) gainAvatarExp(150, 'melee');
+        } else if (bAlive.length > 0) {
+            battleLog.innerHTML += `<br><h1 style="color:#ff3131;">【大亂鬥 赤虎獲勝】</h1><br>`;
+            if (bAlive.find(f => f.name === customAvatar.name)) gainAvatarExp(150, 'melee');
+        } 
+        
+        battleLog.scrollTop = battleLog.scrollHeight;
+        buttons.forEach(b => b.disabled = false);
+    }
+
+    // ▼▼▼ 核心：全軍大逃殺 (光速海選 + 八強轉播) 推演模組 ▼▼▼
+   function quickSimulate(idx1, idx2) {
+        const p1 = generals[idx1];
+        const p2 = generals[idx2];
+        const p1ActualPower = p1.name === "趙雲" ? p1.power + 20 : p1.power;
+        const p2ActualPower = p2.name === "趙雲" ? p2.power + 20 : p2.power;
+
+        let h1 = getMaxHp(p1.name), h2 = getMaxHp(p2.name);
+        let round = 1;
+
+        while(h1 > 0 && h2 > 0 && round < 150) {
+            if ((p1.name === "趙雲" && p2.name === "樊玥") || (p1.name === "樊玥" && p2.name === "趙雲")) return p1.name === "樊玥" ? parseInt(idx1) : parseInt(idx2);
+
+            let dmg1 = getAtkDmg(p1.name, p1ActualPower, p2ActualPower);
+            let dmg2 = getAtkDmg(p2.name, p2ActualPower, p1ActualPower);
+
+            if (Math.random() > 0.5) h2 -= dmg1;
+            else h1 -= dmg2;
+
+            round++;
+        }
+        return h1 > h2 ? parseInt(idx1) : parseInt(idx2);
+    }
+
+    async function runGlobalTournament() {
+        const buttons = document.querySelectorAll("button"); buttons.forEach(b => b.disabled = true);
+
+        let activeRoster = Array.from({length: generals.length}, (_, i) => i);
+        activeRoster.sort(() => Math.random() - 0.5);
+
+        battleLog.innerHTML = `<h2 style="color:#ff3131; text-align:center;">🌍 天下第一・全軍大亂鬥 🌍</h2>`;
+        await new Promise(r => setTimeout(r, 1000));
+
+        let roundNum = 1;
+        while(activeRoster.length > 8) {
+            battleLog.innerHTML += `<h3 style="color:#a9a9a9; text-align:center;">--- ⚔️ 光速海選 第 ${roundNum} 輪 ⚔️ ---</h3>`;
+            let target = 8;
+            while (target * 2 < activeRoster.length) target *= 2;
+            let matchesToPlay = activeRoster.length - target;
+            if (matchesToPlay === 0) matchesToPlay = activeRoster.length / 2;
+
+            let nextRoster = []; let logs = "";
+            for(let i = 0; i < matchesToPlay * 2; i += 2) {
+                let w = quickSimulate(activeRoster[i], activeRoster[i+1]);
+                let loser = w == activeRoster[i] ? activeRoster[i+1] : activeRoster[i];
+                nextRoster.push(w);
+                logs += `<span style="color:#87ceeb;">[斬殺] ${generals[w].name} 淘汰 ${generals[loser].name}</span><br>`;
+            }
+            for(let i = matchesToPlay * 2; i < activeRoster.length; i++) nextRoster.push(activeRoster[i]);
+            
+            battleLog.innerHTML += `<div style="font-size:12px; column-count: 2;">${logs}</div><hr>`;
+            battleLog.scrollTop = battleLog.scrollHeight;
+            activeRoster = nextRoster; roundNum++;
+            await new Promise(r => setTimeout(r, 500));
+        }
+
+        battleLog.innerHTML += `<br><h2 style="color:#ffd700; text-align:center;">🎉 最強八人誕生！ 🎉</h2><hr>`;
+        await new Promise(r => setTimeout(r, 1500));
+
+        let q1_w = await autoMatch(activeRoster[0], activeRoster[1], "八強賽 A組");
+        let q2_w = await autoMatch(activeRoster[2], activeRoster[3], "八強賽 B組");
+        let q3_w = await autoMatch(activeRoster[4], activeRoster[5], "八強賽 C組");
+        let q4_w = await autoMatch(activeRoster[6], activeRoster[7], "八強賽 D組");
+
+        let semi1 = await autoMatch(q1_w, q2_w, "準決賽 上半區");
+        let semi2 = await autoMatch(q3_w, q4_w, "準決賽 下半區");
+
+        battleLog.innerHTML += `<h2 style="color:#ff3131; text-align:center;">👑 總決賽 👑</h2><hr>`;
+        let champion = await autoMatch(semi1, semi2, "🏆 紫禁之巔決戰 🏆");
+
+        battleLog.innerHTML += `<br><h1 style="color:#ffd700; text-align:center;">👑 ${generals[champion].name} 👑</h1>`;
+        if (generals[champion].name === customAvatar.name) gainAvatarExp(500, 'royale');
+        
+        battleLog.scrollTop = battleLog.scrollHeight;
+        buttons.forEach(b => b.disabled = false);
     }
 
     async function runTournament(isRandom) {
-        let idxs = isRandom ? Array.from({length: generals.length}, (_,i)=>i).sort(()=>Math.random()-0.5).slice(0,12) : [...tourneyRosterData];
-        if(idxs.length!==12) return alert("請選滿12人！");
-        document.querySelectorAll("button").forEach(b=>b.disabled=true);
-        idxs.sort(()=>Math.random()-0.5);
-        let s = idxs.slice(0,4), w = idxs.slice(4,12);
-        battleLog.innerHTML = `<h2 style="color:#8a2be2;">🏆 十二強大會 🏆</h2><hr>`;
-        let q1=await autoMatch(w[0],w[1],"入圍賽"); let q2=await autoMatch(w[2],w[3],"入圍賽"); let q3=await autoMatch(w[4],w[5],"入圍賽"); let q4=await autoMatch(w[6],w[7],"入圍賽");
-        let s1=await autoMatch(s[0],q1,"八強賽"); let s2=await autoMatch(s[1],q2,"八強賽"); let s3=await autoMatch(s[2],q3,"八強賽"); let s4=await autoMatch(s[3],q4,"八強賽");
-        let semi1=await autoMatch(s1,s2,"四強"); let semi2=await autoMatch(s3,s4,"四強");
-        let champ=await autoMatch(semi1,semi2,"總決賽");
-        battleLog.innerHTML += `<h1 style="color:#ffd700;">🏆 總冠軍：${generals[champ].name} 🏆</h1>`;
-        document.querySelectorAll("button").forEach(b=>b.disabled=false);
+        let indices = [];
+        if (isRandom) {
+            while(indices.length < 12) {
+                let r = Math.floor(Math.random() * generals.length);
+                if(!indices.includes(r)) indices.push(r);
+            }
+        } else {
+            if(tourneyRosterData.length !== 12) { alert("主公，請先選滿 12 名！"); return; }
+            indices = [...tourneyRosterData];
+        }
+
+        const buttons = document.querySelectorAll("button"); buttons.forEach(b => b.disabled = true);
+        indices.sort(() => Math.random() - 0.5);
+        let seeds = indices.slice(0, 4); let wildcards = indices.slice(4, 12);
+
+        battleLog.innerHTML = `<h2 style="color:#8a2be2; text-align:center;">🏆 十二強武道大會 🏆</h2>`;
+        await new Promise(r => setTimeout(r, 1500));
+
+        let q1_w = await autoMatch(wildcards[0], wildcards[1], "入圍賽 甲組");
+        let q2_w = await autoMatch(wildcards[2], wildcards[3], "入圍賽 乙組");
+        let q3_w = await autoMatch(wildcards[4], wildcards[5], "入圍賽 丙組");
+        let q4_w = await autoMatch(wildcards[6], wildcards[7], "入圍賽 丁組");
+
+        let s1_w = await autoMatch(seeds[0], q1_w, "八強賽 A組");
+        let s2_w = await autoMatch(seeds[1], q2_w, "八強賽 B組");
+        let s3_w = await autoMatch(seeds[2], q3_w, "八強賽 C組");
+        let s4_w = await autoMatch(seeds[3], q4_w, "八強賽 D組");
+
+        let semi1 = await autoMatch(s1_w, s2_w, "準決賽 上半區");
+        let semi2 = await autoMatch(s3_w, s4_w, "準決賽 下半區");
+
+        let champion = await autoMatch(semi1, semi2, "🏆 總決賽 🏆");
+
+        battleLog.innerHTML += `<br><h1 style="color:#ffd700; text-align:center;">👑 冠軍： ${generals[champion].name} 👑</h1>`;
+        if (generals[champion].name === customAvatar.name) gainAvatarExp(300, 'tourney');
+        
+        battleLog.scrollTop = battleLog.scrollHeight;
+        buttons.forEach(b => b.disabled = false);
     }
 
-    async function autoMatch(i1, i2, name) {
-        battleLog.innerHTML += `<h3 style="color:#ff8c00;">${name}: ${generals[i1].name} VS ${generals[i2].name}</h3>`;
-        p1Select.value = i1; p2Select.value = i2;
-        let w = await startDuel(true, true); // true, true 封印補血
-        battleLog.innerHTML += `<span style="color:#ffd700;">✨ 勝出：${generals[w].name}</span><hr>`;
-        return w;
+    async function autoMatch(idx1, idx2, matchName) {
+        battleLog.innerHTML += `<br><h3 style="color:var(--accent-orange);">--- ${matchName}：${generals[idx1].name} VS ${generals[idx2].name} ---</h3>`;
+        battleLog.scrollTop = battleLog.scrollHeight;
+        p1Select.value = parseInt(idx1); p2Select.value = parseInt(idx2);
+        let winnerIndex = await startDuel(true, true); 
+        return winnerIndex;
     }
-
-    window.onload = initAchievementsUI;
 </script>
 </body>
 </html>
