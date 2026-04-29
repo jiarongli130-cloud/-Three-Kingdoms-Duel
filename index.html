@@ -92,7 +92,7 @@
 
     <div class="controls" style="border: 2px dashed #ff00ff; padding: 15px; border-radius: 5px; background: rgba(255, 0, 255, 0.05); display: flex; flex-direction: column; gap: 10px;">
         <h3 style="color: #ff00ff; margin: 0; text-shadow: 0 0 5px #ff00ff;">🌌 異界武將降臨 (RPG 養成系統) 🌌</h3>
-        <p style="font-size: 12px; color: #aaa; margin-top: -5px; margin-bottom: 5px;">通過戰鬥獲取經驗升級，最高可達 LV.99999 並覺醒全畫面秒殺技！</p>
+        <p style="font-size: 12px; color: #aaa; margin-top: -5px; margin-bottom: 5px;">通過戰鬥獲取經驗升級，最高可達 LV.99999 並覺醒全畫面秒殺技！擊敗趙雲與神仙流將掉落絕世寶物！</p>
         <div style="display: flex; gap: 10px; width: 100%;">
             <input type="text" id="rpgName" placeholder="輸入自創武將姓名" style="flex: 1; border-color: #ff00ff;">
             <button onclick="rollRpgStats()" style="background: #4a004a; border-color: #ff00ff; color: #ff00ff; flex: 1;">🎲 天道重塑 (隨機屬性與技能)</button>
@@ -105,25 +105,33 @@
             <button onclick="confirmRpgGeneral()" style="margin-top: 10px; background: #008f11; border-color: #00ff41; color: #fff;">⚡ 確認命格，降臨沙盤 ⚡</button>
         </div>
 
-        <div id="rpgPanel" style="display: none; border: 1px solid #ffd700; padding: 10px; background: #222; margin-top: 10px; width: 100%; box-sizing: border-box;">
-            <h4 style="margin: 0 0 10px 0; color: #ffd700;">⚔️ 武神修練場 (當前選中之異界武將)</h4>
-            <div id="rpgStatsDisplay" style="font-size: 14px; margin-bottom: 10px; color: #ccc;"></div>
+        <div id="rpgPanel" style="display: none; border: 1px solid #ffd700; padding: 15px; background: rgba(20,20,20,0.95); margin-top: 10px; width: 100%; box-sizing: border-box; box-shadow: 0 0 15px rgba(255,215,0,0.3);">
+            <h4 style="margin: 0 0 10px 0; color: #ffd700; border-bottom: 1px solid #555; padding-bottom: 5px;">⚔️ 武神修練場與藏寶閣 ⚔️</h4>
+            
+            <div id="rpgStatsDisplay" style="font-size: 14px; margin-bottom: 15px; color: #ccc; line-height: 1.6;"></div>
             
             <div style="display: flex; gap: 5px; align-items: center; margin-bottom: 10px;">
                 <label style="color:#ff8c00; font-size:12px;">分配武力點：</label>
                 <input type="number" id="allocatePoints" min="0" value="0" style="width: 80px; padding: 5px; border: 1px solid #ff8c00; background: #000; color: #ff8c00;">
-                <button onclick="confirmStatAllocation()" style="border-color: #ff8c00; color: #ff8c00; font-size: 12px; flex: 1;">⚡ 灌注武力 (確認加點)</button>
+                <button onclick="confirmStatAllocation()" style="border-color: #ff8c00; color: #ff8c00; font-size: 12px; flex: 1;">⚡ 灌注武力</button>
+            </div>
+            <div style="display: flex; gap: 5px; margin-bottom: 15px;">
+                <button onclick="awakenSkill()" style="border-color: #00ffff; color: #00ffff; font-size: 12px; flex: 1;">覺醒新技能 (-3 點)</button>
+                <button onclick="cheatMaxLevel()" style="border-color: #ff3131; color: #ff3131; font-size: 12px; flex: 1;">🔥 瞬間滿級</button>
             </div>
 
-            <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-                <button onclick="awakenSkill()" style="border-color: #00ffff; color: #00ffff; font-size: 12px; flex: 1;">覺醒新技能 (-3 技能點)</button>
-                <button onclick="cheatMaxLevel()" style="border-color: #ff3131; color: #ff3131; font-size: 12px; flex: 1;">🔥 瞬間滿級 (LV.99999)</button>
+            <div style="background: #111; border: 1px dashed #ffd700; padding: 10px; margin-bottom: 15px;">
+                <div style="color: #ffd700; font-size: 13px; margin-bottom: 5px;">🎒 天道藏寶閣 (擊敗趙雲或神仙流機率掉落)</div>
+                <select id="rpgInventory" style="width: 100%; margin-bottom: 5px; font-size: 13px; background:#000; color:#fff; border: 1px solid #555;">
+                    <option value="-1">-- 尚未裝備任何寶物 --</option>
+                </select>
+                <button onclick="equipTreasure()" style="width: 100%; border-color: #ffd700; color: #ffd700; font-size: 12px;">裝備選定寶物</button>
             </div>
 
-            <div style="display: flex; gap: 5px; border-top: 1px dashed #555; padding-top: 10px;">
-                <button onclick="saveRpgGeneral()" style="border-color: #32cd32; color: #32cd32; font-size: 12px; flex: 1;">💾 保存武將</button>
-                <button onclick="loadRpgGenerals()" style="border-color: #1e90ff; color: #1e90ff; font-size: 12px; flex: 1;">📂 讀取武將</button>
-                <button onclick="deleteRpgGeneral()" style="border-color: #a52a2a; color: #ff3131; font-size: 12px; flex: 1;">🗑️ 徹底抹殺</button>
+            <div style="display: flex; gap: 5px; border-top: 1px solid #555; padding-top: 10px;">
+                <button onclick="saveRpgGeneral()" style="border-color: #32cd32; color: #32cd32; font-size: 12px; flex: 1; font-weight: bold;">💾 封存武將</button>
+                <button onclick="loadRpgGenerals()" style="border-color: #1e90ff; color: #1e90ff; font-size: 12px; flex: 1; font-weight: bold;">📂 喚醒武將</button>
+                <button onclick="deleteRpgGeneral()" style="border-color: #a52a2a; color: #ff3131; font-size: 12px; flex: 1; font-weight: bold;">🗑️ 徹底抹殺</button>
             </div>
         </div>
     </div>
@@ -773,6 +781,66 @@
         {"name": "管輅", "power": 850, "rank": "神仙流(T3)"}
     ];
 
+    // ==============================================================
+    // ▼▼▼ 天道寶具庫 (50種三國神物) ▼▼▼
+    // ==============================================================
+    const treasures = [
+        { id: 1, name: "青釭劍", powerBonus: 30, skill: "絕對破甲", desc: "曹操護身神劍，削鐵如泥。武力加成最高，攻擊時必定無視敵方格擋與減傷機制！" },
+        { id: 2, name: "倚天劍", powerBonus: 20, skill: "天子威儀", desc: "曹操佩劍，附帶15%全域傷害減免。" },
+        { id: 3, name: "方天畫戟", powerBonus: 18, skill: "鬼神之力", desc: "呂布專屬，暴擊率提升20%。" },
+        { id: 4, name: "青龍偃月刀", powerBonus: 17, skill: "武聖首擊", desc: "關羽專屬，第一回合傷害額外+30。" },
+        { id: 5, name: "丈八蛇矛", powerBonus: 17, skill: "狂暴流血", desc: "張飛專屬，每次攻擊附帶真實傷害。" },
+        { id: 6, name: "龍膽亮銀槍", powerBonus: 15, skill: "龍膽閃避", desc: "趙雲專屬，基礎閃避率+15%。" },
+        { id: 7, name: "雙鐵戟", powerBonus: 14, skill: "惡來死戰", desc: "典韋專屬，血量低於30%時武力再+10。" },
+        { id: 8, name: "古錠刀", powerBonus: 13, skill: "江東虎嘯", desc: "孫堅專屬，對付智力型/法術型敵人傷害加倍。" },
+        { id: 9, name: "鐵脊蛇矛", powerBonus: 12, skill: "老將無畏", desc: "程普兵器，免疫任何恐懼或降維打擊效果。" },
+        { id: 10, name: "養由基弓", powerBonus: 10, skill: "百步穿楊", desc: "黃忠神弓，每5回合必定觸發一次無法閃避的遠程狙擊。" },
+        // 坐騎類互換修正 (11-20)
+        { id: 11, name: "赤兔馬", powerBonus: 9, skill: "雪魂", desc: "天下第一駿馬，踏雪無痕，不受任何地型與天氣負面影響。" },
+        { id: 12, name: "的盧馬", powerBonus: 8, skill: "妨主反噬", desc: "閃避率+10%，但有1%機率開局自摔扣血。" },
+        { id: 13, name: "絕影", powerBonus: 7, skill: "無影", desc: "受到致命傷時，有20%機率強制保留1滴血。" },
+        { id: 14, name: "爪黃飛電", powerBonus: 7, skill: "雷霆", desc: "攻擊時有10%機率麻痺對手一回合。" },
+        { id: 15, name: "夜照玉獅子", powerBonus: 10, skill: "神速", desc: "趙雲專屬神駒，速度突破系統極限，開局必定先手攻擊！" },
+        { id: 16, name: "烏騅", powerBonus: 8, skill: "霸王", desc: "魏延坐騎，提升5%重擊機率。" },
+        { id: 17, name: "驚帆", powerBonus: 6, skill: "破浪", desc: "水戰或面對東吳武將時，傷害+10%。" },
+        { id: 18, name: "紫騂", powerBonus: 6, skill: "堅韌", desc: "每回合自動恢復 2 HP。" },
+        { id: 19, name: "大宛良馬", powerBonus: 4, skill: "衝鋒", desc: "第一回合傷害+10。" },
+        { id: 20, name: "汗血寶馬", powerBonus: 5, skill: "浴血", desc: "血量越低，閃避率越高。" },
+        // 兵書與奇門 (21-30)
+        { id: 21, name: "太平要術", powerBonus: 5, skill: "妖術", desc: "攻擊時附帶混亂代碼，降低敵方防禦。" },
+        { id: 22, name: "遁甲天書", powerBonus: 5, skill: "奇門", desc: "獲得額外 3 次極限閃避。" },
+        { id: 23, name: "孟德新書", powerBonus: 6, skill: "統帥", desc: "群毆戰/軍團戰時，全隊武力+2。" },
+        { id: 24, name: "孫子兵法", powerBonus: 7, skill: "兵聖", desc: "看破敵方大絕，敵方大絕命中率下降50%。" },
+        { id: 25, name: "兵法二十四篇", powerBonus: 6, skill: "八陣", desc: "開局布下八卦陣，前三回合受傷減半。" },
+        { id: 26, name: "青囊書", powerBonus: 0, skill: "神醫", desc: "華佗絕學，每回合恢復 10 HP。" },
+        { id: 27, name: "太平清領道", powerBonus: 2, skill: "淨化", desc: "免疫所有毒素與流血效果。" },
+        { id: 28, name: "鬼谷子", powerBonus: 8, skill: "縱橫", desc: "使敵方的增益Buff無效化。" },
+        { id: 29, name: "六韜", powerBonus: 4, skill: "太公", desc: "反彈10%敵方造成的傷害。" },
+        { id: 30, name: "三略", powerBonus: 4, skill: "黃石", desc: "防禦力提升15%。" },
+        // 防具類 (31-40)
+        { id: 31, name: "唐猊鎧", powerBonus: 5, skill: "堅鎧", desc: "受到物理攻擊時，減免8點傷害。" },
+        { id: 32, name: "鎖子黃金甲", powerBonus: 4, skill: "耀眼", desc: "開局閃瞎對手，敵方首回合必Miss。" },
+        { id: 33, name: "獸面吞頭鎧", powerBonus: 6, skill: "威嚇", desc: "敵方每次攻擊前有5%機率畏懼而取消行動。" },
+        { id: 34, name: "雁翎甲", powerBonus: 5, skill: "輕盈", desc: "被暴擊的機率降低20%。" },
+        { id: 35, name: "藤甲", powerBonus: 8, skill: "刀槍不入", desc: "物理減傷30%，但受到火屬性攻擊(如九陽之火)傷害翻倍。" },
+        { id: 36, name: "仁王盾", powerBonus: 4, skill: "仁道", desc: "完全格擋所有暗器與遠程傷害。" },
+        { id: 37, name: "白銀獅子盔", powerBonus: 3, skill: "清明", desc: "免疫爆頭必殺技。" },
+        { id: 38, name: "鑌鐵兜鍪", powerBonus: 2, skill: "鐵頭", desc: "HP上限+15。" },
+        { id: 39, name: "軟蝟甲", powerBonus: 4, skill: "反傷刺", desc: "近戰受擊時反彈 5 點傷害給攻擊者。" },
+        { id: 40, name: "犀皮鎧", powerBonus: 3, skill: "厚皮", desc: "所有傷害強制-3。" },
+        // 珍寶與暗器 (41-50)
+        { id: 41, name: "傳國玉璽", powerBonus: 15, skill: "真命天子", desc: "全屬性提升，死亡時有一次機率滿血復活(天命庇佑)。" },
+        { id: 42, name: "九錫", powerBonus: 10, skill: "篡逆", desc: "對漢朝忠臣(如劉關張)傷害+20%。" },
+        { id: 43, name: "銅雀", powerBonus: 2, skill: "迷魂", desc: "使敵方女將強制放棄戰鬥。" },
+        { id: 44, name: "和氏璧", powerBonus: 5, skill: "完美", desc: "每回合清除自身所有負面狀態。" },
+        { id: 45, name: "七星寶刀", powerBonus: 12, skill: "暗殺", desc: "首擊若命中，有10%機率直接秒殺非Boss敵將。" },
+        { id: 46, name: "祝融飛刀", powerBonus: 8, skill: "烈焰", desc: "每回合額外造成 5 點火焰傷害。" },
+        { id: 47, name: "流星錘", powerBonus: 9, skill: "碎骨", desc: "有15%機率打斷敵方正在詠唱的大絕招。" },
+        { id: 48, name: "鐵蒺藜骨朵", powerBonus: 11, skill: "蠻力", desc: "沙摩柯兵器，無視敵方10%護甲。" },
+        { id: 49, name: "太史慈短戟", powerBonus: 7, skill: "連擊", desc: "有20%機率在攻擊後追加一次普攻。" },
+        { id: 50, name: "護心鏡", powerBonus: 3, skill: "護心", desc: "抵擋一次致命傷害並恢復10 HP。" }
+    ];
+
     // 女性武將補血與狀態增益權重字典
     const femaleHealers = {
         "樊玥": { heal: 40, buff: 15 },
@@ -1181,7 +1249,9 @@
             statPoints: 0,
             skillPoints: 0,
             skills: initSkills,
-            isMaxAwakened: false
+            isMaxAwakened: false,
+            inventory: [],       // 新增：背包陣列
+            equippedTreasure: null // 新增：當前裝備
         };
 
         document.getElementById('prevName').innerText = currentRpgDraft.name;
@@ -1253,14 +1323,53 @@
     function renderRpgPanel(gen) {
         activeRpgGeneral = gen;
         document.getElementById('rpgPanel').style.display = "block";
+        
+        // 處理未初始化 inventory 的舊存檔
+        if (!gen.inventory) gen.inventory = [];
+
+        let equipStr = gen.equippedTreasure ? `<span style="color:#ffd700;">【${gen.equippedTreasure.name}】(+${gen.equippedTreasure.powerBonus}武力) - ${gen.equippedTreasure.skill}</span>` : `<span style="color:#777;">無裝備</span>`;
+        let totalPower = gen.equippedTreasure ? gen.power + gen.equippedTreasure.powerBonus : gen.power;
+
         document.getElementById('rpgStatsDisplay').innerHTML = `
             <strong>武將：</strong> <span style="color:#00ff41;">${gen.name}</span><br>
             <strong>等級：</strong> LV.${gen.level} <span style="color:#aaa;">(EXP: ${gen.exp}/${gen.expNext})</span><br>
-            <strong>武力：</strong> <span style="color:#ff8c00;">${gen.power}</span> <br>
-            <strong>剩餘武力點：</strong> <span style="color:#ff8c00;">${gen.statPoints}</span> | 
-            <strong>剩餘技能點：</strong> <span style="color:#00ffff;">${gen.skillPoints}</span><br>
-            <strong>已習得技能：</strong> <span style="color:#00ff41;">${gen.skills.join("、")}</span>
+            <strong>基礎武力：</strong> <span style="color:#ff8c00;">${gen.power}</span> ｜ <strong>實戰總武力：</strong> <span style="color:#ff3131; font-weight:bold;">${totalPower}</span><br>
+            <strong>點數：</strong> 武力點 <span style="color:#ff8c00;">${gen.statPoints}</span> | 技能點 <span style="color:#00ffff;">${gen.skillPoints}</span><br>
+            <strong>技能：</strong> <span style="color:#00ff41;">${gen.skills.join("、")}</span><br>
+            <strong>神裝：</strong> ${equipStr}
         `;
+
+        let invSelect = document.getElementById('rpgInventory');
+        invSelect.innerHTML = '<option value="-1">-- 取下裝備/無裝備 --</option>';
+        if (gen.inventory && gen.inventory.length > 0) {
+            gen.inventory.forEach(itemId => {
+                let t = treasures.find(x => x.id === itemId);
+                if(t) {
+                    let selected = (gen.equippedTreasure && gen.equippedTreasure.id === t.id) ? "selected" : "";
+                    invSelect.innerHTML += `<option value="${t.id}" ${selected}>${t.name} (武力+${t.powerBonus})</option>`;
+                }
+            });
+        }
+    }
+
+    function equipTreasure() {
+        if (!activeRpgGeneral) return;
+        let invSelect = document.getElementById('rpgInventory');
+        let selectedId = parseInt(invSelect.value);
+        
+        if (selectedId === -1) {
+            activeRpgGeneral.equippedTreasure = null;
+            battleLog.innerHTML += `<br><span style="color:#aaa;">🎒 ${activeRpgGeneral.name} 取下了裝備。</span><br>`;
+        } else {
+            let t = treasures.find(x => x.id === selectedId);
+            activeRpgGeneral.equippedTreasure = t;
+            battleLog.innerHTML += `<br><span style="color:#ffd700; font-weight:bold; font-size:16px;">✨ 【神物現世】${activeRpgGeneral.name} 裝備了【${t.name}】！<br>實戰武力飆升 ${t.powerBonus} 點，並獲得特性：${t.skill}！</span><br>`;
+            if (t.name === "青釭劍") {
+                battleLog.innerHTML += `<span style="color:#ff3131; font-weight:bold;">⚔️ 警告：青釭劍出鞘！此劍將無視一切格擋與減傷機制！</span><br>`;
+            }
+        }
+        battleLog.scrollTop = battleLog.scrollHeight;
+        renderRpgPanel(activeRpgGeneral);
     }
 
     // ---------------------------------------------------------
@@ -1287,19 +1396,8 @@
         renderRpgPanel(activeRpgGeneral);
         updateDropdowns(); // 刷新選單中的武力值顯示
         
-        battleLog.innerHTML += `<br><span style="color:#ff8c00; font-weight:bold;">✨ 【潛能激發】${activeRpgGeneral.name} 瞬間灌注 ${pts} 點武力，當前總武力達 ${activeRpgGeneral.power}！</span><br>`;
+        battleLog.innerHTML += `<br><span style="color:#ff8c00; font-weight:bold;">✨ 【潛能激發】${activeRpgGeneral.name} 瞬間灌注 ${pts} 點武力，基礎武力達 ${activeRpgGeneral.power}！</span><br>`;
         battleLog.scrollTop = battleLog.scrollHeight;
-    }
-
-    function addRpgPower() {
-        if (activeRpgGeneral && activeRpgGeneral.statPoints > 0) {
-            activeRpgGeneral.statPoints--;
-            activeRpgGeneral.power++;
-            renderRpgPanel(activeRpgGeneral);
-            updateDropdowns(); // 刷新選單文字
-        } else {
-            alert("屬性點不足！請透過戰鬥升級獲取！");
-        }
     }
 
     function awakenSkill() {
@@ -1448,10 +1546,16 @@
             }
         });
 
-        const sortedGenerals = [...generals].sort((a, b) => b.power - a.power);
+        const sortedGenerals = [...generals].sort((a, b) => {
+            let aPower = a.isRPG && a.equippedTreasure ? a.power + a.equippedTreasure.powerBonus : a.power;
+            let bPower = b.isRPG && b.equippedTreasure ? b.power + b.equippedTreasure.powerBonus : b.power;
+            return bPower - aPower;
+        });
+        
         sortedGenerals.forEach((g) => {
             let idx = generals.indexOf(g);
-            let optStr = `${g.name} (${g.power}) - ${g.rank}`;
+            let displayPower = g.isRPG && g.equippedTreasure ? g.power + g.equippedTreasure.powerBonus : g.power;
+            let optStr = `${g.name} (${displayPower}) - ${g.rank}`;
             
             p1Select.add(new Option(optStr, idx));
             p2Select.add(new Option(optStr, idx));
@@ -1562,6 +1666,10 @@
         
         let p1ActualPower = p1.name === "趙雲" ? p1.power + 20 : p1.power;
         let p2ActualPower = p2.name === "趙雲" ? p2.power + 20 : p2.power;
+        
+        // 加上寶物加成
+        if(p1.isRPG && p1.equippedTreasure) p1ActualPower += p1.equippedTreasure.powerBonus;
+        if(p2.isRPG && p2.equippedTreasure) p2ActualPower += p2.equippedTreasure.powerBonus;
 
         document.getElementById('p1Name').innerText = p1.name;
         document.getElementById('p1Rank').innerText = p1.rank;
@@ -1783,8 +1891,13 @@
                 let dmg2 = Math.max(3, (p2ActualPower * 0.12) - (p1ActualPower * 0.04) + (Math.random() * 12 - 4));
                 let eventRand = Math.random(); 
 
+                let p1HasQingGang = p1.isRPG && p1.equippedTreasure && p1.equippedTreasure.name === "青釭劍";
+                let p2HasQingGang = p2.isRPG && p2.equippedTreasure && p2.equippedTreasure.name === "青釭劍";
+
                 if (Math.random() > 0.5) {
-                    if (p2DodgeCount > 0) {
+                    if (p1HasQingGang) {
+                        applyDmg2(dmg1, `<span style="color:#ff3131; font-weight:bold;">[第${round}合] ⚔️ 削鐵如泥！${p1.name} 揮舞青釭劍，無視防禦，強行劈開 ${p2.name} 的代碼，造成 ${Math.floor(dmg1)} 點真實傷害！</span><br>`);
+                    } else if (p2DodgeCount > 0) {
                         p2DodgeCount--;
                         battleLog.innerHTML += `<span style="color:#aaaaaa;">[第${round}合] 💨 ${p2.name} 發動殘卒本能，極限閃避了 ${p1.name} 的攻擊！</span><br>`;
                     } else if (eventRand < 0.12) {
@@ -1799,7 +1912,9 @@
                         applyDmg2(dmg1, `<span style="color:var(--text-color)">[第${round}合]</span> ${p1.name} ${moves[Math.floor(Math.random()*moves.length)]} 造成 ${Math.floor(dmg1)} 點損傷。<br>`);
                     }
                 } else {
-                    if (p1DodgeCount > 0) {
+                    if (p2HasQingGang) {
+                        applyDmg1(dmg2, `<span style="color:#ff3131; font-weight:bold;">[第${round}合] ⚔️ 削鐵如泥！${p2.name} 揮舞青釭劍，無視防禦，強行劈開 ${p1.name} 的代碼，造成 ${Math.floor(dmg2)} 點真實傷害！</span><br>`);
+                    } else if (p1DodgeCount > 0) {
                         p1DodgeCount--;
                         battleLog.innerHTML += `<span style="color:#aaaaaa;">[第${round}合] 💨 ${p1.name} 發動殘卒本能，極限閃避了 ${p2.name} 的攻擊！</span><br>`;
                     } else if (eventRand < 0.12) {
@@ -1870,6 +1985,35 @@
             gainExp(p1.name, 50);
         }
         
+        // 弒神奪寶機制
+        function checkLootDrop(winnerGen, loserGen) {
+            if (winnerGen.isRPG && (loserGen.name === "趙雲" || loserGen.rank.includes("神仙流"))) {
+                // 必定掉落一件隨機寶物 (也可改機率)
+                let dropIndex = Math.floor(Math.random() * treasures.length);
+                let dropItem = treasures[dropIndex];
+                
+                if (!winnerGen.inventory) winnerGen.inventory = [];
+                // 避免重複獲得同ID寶物
+                if (!winnerGen.inventory.includes(dropItem.id)) {
+                    winnerGen.inventory.push(dropItem.id);
+                    battleLog.innerHTML += `<br><div style="border: 2px dashed #ffd700; padding: 10px; background: rgba(255,215,0,0.1); margin-top: 10px;">
+                        <span style="color:#ffd700; font-weight:bold; font-size:18px;">🎁 【弒神奪寶】奇蹟發生！</span><br>
+                        <span style="color:#fff;">${winnerGen.name} 擊敗了不可一世的 ${loserGen.name}，從其數據殘骸中提煉出了天道寶具：<br>
+                        <strong style="color:#ff3131; font-size:20px;">【${dropItem.name}】</strong>！</span><br>
+                        <span style="color:#ccc;">(寶物已放入藏寶閣，請於面板裝備)</span>
+                    </div><br>`;
+                    battleLog.scrollTop = battleLog.scrollHeight;
+                    // 更新UI
+                    if (activeRpgGeneral && activeRpgGeneral.name === winnerGen.name) {
+                        renderRpgPanel(activeRpgGeneral);
+                    }
+                }
+            }
+        }
+
+        if (h1 > h2) checkLootDrop(p1, p2);
+        else checkLootDrop(p2, p1);
+
         return h1 > h2 ? parseInt(p1Select.value) : parseInt(p2Select.value);
     }
 
@@ -1890,15 +2034,17 @@
         buttons.forEach(b => b.disabled = true);
 
         const dGen = generals[dIdx];
-        const dActualPower = dGen.name === "趙雲" ? dGen.power + 20 : dGen.power; 
+        let dActualPower = dGen.name === "趙雲" ? dGen.power + 20 : dGen.power; 
+        if(dGen.isRPG && dGen.equippedTreasure) dActualPower += dGen.equippedTreasure.powerBonus;
 
         let fighters = [];
-        fighters.push({ id: 'D', team: 'A', name: dGen.name, power: dGen.power, rank: dGen.rank, actualPower: dActualPower, hp: 100, maxHp: 100, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#00ff41' });
+        fighters.push({ id: 'D', team: 'A', genObj: dGen, name: dGen.name, power: dGen.power, rank: dGen.rank, actualPower: dActualPower, hp: 100, maxHp: 100, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#00ff41' });
         
         for(let i=0; i<tIdxs.length; i++) {
             let g = generals[tIdxs[i]];
             let p = g.name === "趙雲" ? g.power + 20 : g.power;
-            fighters.push({ id: 'T'+i, team: 'B', name: g.name, power: g.power, rank: g.rank, actualPower: p, hp: 100, maxHp: 100, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#ff3131' });
+            if(g.isRPG && g.equippedTreasure) p += g.equippedTreasure.powerBonus;
+            fighters.push({ id: 'T'+i, team: 'B', genObj: g, name: g.name, power: g.power, rank: g.rank, actualPower: p, hp: 100, maxHp: 100, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#ff3131' });
         }
 
         document.getElementById('p1Name').innerText = "狂龍: " + dGen.name;
@@ -2064,8 +2210,12 @@
                             let dodgeProb = isDragonZhaoYun ? 0.35 : 0.12; 
                             let parryProb = isDragonZhaoYun ? 0.60 : 0.20; 
                             let blockProb = isDragonZhaoYun ? 0.90 : 0.35; 
+                            
+                            let atkHasQingGang = attacker.genObj && attacker.genObj.isRPG && attacker.genObj.equippedTreasure && attacker.genObj.equippedTreasure.name === "青釭劍";
 
-                            if (defender.dodgeCount > 0) {
+                            if (atkHasQingGang) {
+                                 applyFighterDmg(defender, dmg, `<span style="color:#ff3131; font-weight:bold;">[圍剿] ⚔️ 削鐵如泥！<span style="color:${atkColor}">${attacker.name}</span> 揮舞青釭劍，無視防禦，造成 ${Math.floor(dmg)} 點真實傷害！</span><br>`);
+                            } else if (defender.dodgeCount > 0) {
                                 defender.dodgeCount--;
                                 battleLog.innerHTML += `<span style="color:#aaaaaa;">[圍剿] 💨 <span style="color:${defColor}">${defender.name}</span> 殘卒本能閃避了 <span style="color:${atkColor}">${attacker.name}</span> 的攻擊！</span><br>`;
                             } else if (eventRand < dodgeProb) {
@@ -2246,11 +2396,15 @@
         let fighters = [];
         for(let i=0; i<teamA_idxs.length; i++) {
             let g = generals[teamA_idxs[i]];
-            fighters.push({ id: 'A'+i, team: 'A', name: g.name, power: g.power, rank: g.rank, actualPower: g.name === "趙雲" ? g.power + 20 : g.power, hp: 100, maxHp: 100, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#00ff41' });
+            let p = g.name === "趙雲" ? g.power + 20 : g.power;
+            if(g.isRPG && g.equippedTreasure) p += g.equippedTreasure.powerBonus;
+            fighters.push({ id: 'A'+i, team: 'A', genObj: g, name: g.name, power: g.power, rank: g.rank, actualPower: p, hp: 100, maxHp: 100, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#00ff41' });
         }
         for(let i=0; i<teamB_idxs.length; i++) {
             let g = generals[teamB_idxs[i]];
-            fighters.push({ id: 'B'+i, team: 'B', name: g.name, power: g.power, rank: g.rank, actualPower: g.name === "趙雲" ? g.power + 20 : g.power, hp: 100, maxHp: 100, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#ff3131' });
+            let p = g.name === "趙雲" ? g.power + 20 : g.power;
+            if(g.isRPG && g.equippedTreasure) p += g.equippedTreasure.powerBonus;
+            fighters.push({ id: 'B'+i, team: 'B', genObj: g, name: g.name, power: g.power, rank: g.rank, actualPower: p, hp: 100, maxHp: 100, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#ff3131' });
         }
 
         document.getElementById('p1Name').innerText = "青龍陣營 (全軍)";
@@ -2345,7 +2499,7 @@
                         triggerShake();
                     } else {
                         // RPG 終極秒殺 (大亂鬥中)
-                        if (attacker.isRPG && attacker.level >= 99999 && Math.random() < 0.3) {
+                        if (attacker.genObj && attacker.genObj.isRPG && attacker.genObj.level >= 99999 && Math.random() < 0.3) {
                             defender.hp = 0; defender.isDead = true;
                             battleLog.innerHTML += `<br><span style="color:#ffffff; font-weight:bold; font-size:24px; text-shadow: 0 0 20px #ff00ff;">🌌 【天道崩壞】<span style="color:${atkColor}">${attacker.name}</span> 雙目微睜，發動【天道寂滅・萬物歸零】！<br>維度降維，<span style="color:${defColor}">${defender.name}</span> 的數據被徹底抹除！</span><br>`;
                             triggerShake(); setTimeout(triggerShake, 300);
@@ -2409,8 +2563,12 @@
                             let dodgeProb = isDragonZhaoYun ? 0.35 : 0.12; 
                             let parryProb = isDragonZhaoYun ? 0.60 : 0.20; 
                             let blockProb = isDragonZhaoYun ? 0.90 : 0.35; 
+                            
+                            let atkHasQingGang = attacker.genObj && attacker.genObj.isRPG && attacker.genObj.equippedTreasure && attacker.genObj.equippedTreasure.name === "青釭劍";
 
-                            if (defender.dodgeCount > 0) {
+                            if (atkHasQingGang) {
+                                 applyFighterDmg(defender, dmg, `<span style="color:#ff3131; font-weight:bold;">[大亂鬥] ⚔️ 削鐵如泥！<span style="color:${atkColor}">${attacker.name}</span> 揮舞青釭劍，無視防禦，造成 ${Math.floor(dmg)} 點真實傷害！</span><br>`);
+                            } else if (defender.dodgeCount > 0) {
                                 defender.dodgeCount--;
                                 battleLog.innerHTML += `<span style="color:#aaaaaa;">[大亂鬥] 💨 <span style="color:${defColor}">${defender.name}</span> 殘卒本能閃避了 <span style="color:${atkColor}">${attacker.name}</span> 的攻擊！</span><br>`;
                             } else if (eventRand < dodgeProb) {
@@ -2498,8 +2656,11 @@
         const p1 = generals[idx1];
         const p2 = generals[idx2];
 
-        const p1ActualPower = p1.name === "趙雲" ? p1.power + 20 : p1.power;
-        const p2ActualPower = p2.name === "趙雲" ? p2.power + 20 : p2.power;
+        let p1ActualPower = p1.name === "趙雲" ? p1.power + 20 : p1.power;
+        let p2ActualPower = p2.name === "趙雲" ? p2.power + 20 : p2.power;
+        
+        if(p1.isRPG && p1.equippedTreasure) p1ActualPower += p1.equippedTreasure.powerBonus;
+        if(p2.isRPG && p2.equippedTreasure) p2ActualPower += p2.equippedTreasure.powerBonus;
 
         let h1 = 100, h2 = 100;
         let round = 1;
@@ -2558,20 +2719,25 @@
                 let dmg1 = Math.max(3, (p1ActualPower*0.12) - (p2ActualPower*0.04) + (Math.random()*12-4));
                 let dmg2 = Math.max(3, (p2ActualPower*0.12) - (p1ActualPower*0.04) + (Math.random()*12-4));
                 let eventRand = Math.random();
+                
+                let p1HasQingGang = p1.isRPG && p1.equippedTreasure && p1.equippedTreasure.name === "青釭劍";
+                let p2HasQingGang = p2.isRPG && p2.equippedTreasure && p2.equippedTreasure.name === "青釭劍";
 
                 if (Math.random() > 0.5) { 
-                    if (p2DodgeCount > 0) { p2DodgeCount--; } 
+                    if (p1HasQingGang) { qApplyDmg2(dmg1); }
+                    else if (p2DodgeCount > 0) { p2DodgeCount--; } 
                     else if (eventRand < 0.20) { }
                     else if (eventRand < 0.35) { qApplyDmg2(dmg1 * 0.4); } 
                     else { qApplyDmg2(dmg1); }
                 } 
                 else { 
-                    if (p1DodgeCount > 0) { p1DodgeCount--; } 
+                    if (p2HasQingGang) { qApplyDmg1(dmg2); }
+                    else if (p1DodgeCount > 0) { p1DodgeCount--; } 
                     else if (eventRand < 0.20) { }
                     else if (eventRand < 0.35) { qApplyDmg1(dmg2 * 0.4); } 
                     else { qApplyDmg1(dmg2); }
                 }
-                } // 結束 if (h1 > 0 && h2 > 0) 的區塊
+            } // 結束 if (h1 > 0 && h2 > 0) 的區塊
 
             h1 = Math.max(0, h1); h2 = Math.max(0, h2);
 
