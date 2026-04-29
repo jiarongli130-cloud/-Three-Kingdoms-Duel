@@ -37,6 +37,50 @@
             100% { transform: translate(1px, -2px) rotate(-1deg); }
         }
         .shaking { animation: shake 0.3s; }
+        
+        /* 隱藏數據預覽 (Tooltip) 核心樣式 - 賽博龐克風格 */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+            border-bottom: 1px dashed var(--accent-orange);
+            margin-right: 5px;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 260px;
+            background-color: rgba(10, 10, 10, 0.95);
+            color: #fff;
+            text-align: left;
+            border: 1px solid var(--text-color);
+            padding: 10px;
+            border-radius: 4px;
+            position: absolute;
+            z-index: 999;
+            bottom: 130%;
+            left: 50%;
+            margin-left: -130px;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            transform: translateY(10px);
+            font-size: 13px;
+            line-height: 1.5;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .tooltiptext span.title {
+            color: var(--accent-orange);
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 3px;
+        }
+
         .container {
             max-width: 900px;
             margin: 0 auto;
@@ -92,16 +136,25 @@
 
     <div class="controls" style="border: 2px dashed #ff00ff; padding: 15px; border-radius: 5px; background: rgba(255, 0, 255, 0.05); display: flex; flex-direction: column; gap: 10px;">
         <h3 style="color: #ff00ff; margin: 0; text-shadow: 0 0 5px #ff00ff;">🌌 綜合創角與天道命盤管理 🌌</h3>
-        <p style="font-size: 12px; color: #aaa; margin-top: -5px; margin-bottom: 5px;">異界修羅可無限升級；歷史遺珠(凡人)武力上限100。皆具備50格神兵行囊。</p>
+        <p style="font-size: 12px; color: #aaa; margin-top: -5px; margin-bottom: 5px;">異界修羅可無限升級；歷史遺珠(凡人)武力由主公手動鎖定。皆具備50格神兵行囊。</p>
         
-        <div style="display: flex; gap: 10px; width: 100%;">
+        <div style="display: flex; gap: 10px; width: 100%; align-items: center;">
             <input type="text" id="rpgName" placeholder="輸入自創武將姓名" style="flex: 2; border-color: #ff00ff;">
-            <select id="genTypeSelect" style="flex: 1; border-color: #ff00ff; color:#ff00ff; background:#000;">
-                <option value="rpg">異界修羅 (無上限)</option>
-                <option value="normal">歷史遺珠 (武力極限100)</option>
+            <select id="genTypeSelect" style="flex: 1.5; border-color: #ff00ff; color:#ff00ff; background:#000;" onchange="toggleManualPower()">
+                <option value="rpg">異界修羅 (無限成長)</option>
+                <option value="normal">歷史遺珠 (手動鎖定武力)</option>
             </select>
+            <input type="number" id="manualPowerInput" placeholder="武力(1-100)" min="1" max="100" style="display: none; flex: 1; border-color: #ff8c00; background:#000; color:#ff8c00;">
             <button onclick="rollRpgStats()" style="background: #4a004a; border-color: #ff00ff; color: #ff00ff; flex: 1.5;">🎲 命格重塑</button>
         </div>
+        
+        <script>
+        function toggleManualPower() {
+            const type = document.getElementById('genTypeSelect').value;
+            const manualInput = document.getElementById('manualPowerInput');
+            manualInput.style.display = (type === 'normal') ? 'block' : 'none';
+        }
+        </script>
         
         <div id="rpgPreview" style="display: none; border: 1px solid #aaa; padding: 10px; background: #111; color: #ddd; font-size: 14px; width: 100%; box-sizing: border-box;">
             <div><strong>姓名：</strong><span id="prevName" style="color:#00ff41;"></span></div>
@@ -226,7 +279,7 @@
     <div class="footer">什年工作室《三國演義武力超百科》授權終端 // 支援軍團自選與神蹟系統 // 內建暗黑RPG養成與行囊管理</div>
 </div>
 
-<script>
+    <script>
     // ==============================================================
     // ▼▼▼ 全局數據與核心陣列 (Global Scope) ▼▼▼
     // ==============================================================
@@ -876,7 +929,7 @@
         "秦慶童": { name: "家奴反噬・暗箭難防", dmg: 23, color: "#2f4f4f", desc: "在系統的陰暗角落裡放冷箭，造成意想不到的嚴重破壞！" }
     };
 
-    const moves = [
+        const moves = [
         "使出一招【龍吟突刺】，虛空震顫！",
         "化作一道殘影，發動【量子閃擊】！",
         "槍尖迸發出數據火花，刺出【百鳥朝鳳】！",
@@ -1170,20 +1223,99 @@
     // ▼▼▼ 異界武將 RPG 系統模組 (包含雙軌與行囊) ▼▼▼
     // ==============================================================
     let currentRpgDraft = null;
-    const skillPool = [
-        "嗜血狂擊", "銅牆鐵壁", "破甲尖錐", "幻影步", "九幽毒刃", "霸體反傷", "雷霆連斬", "風捲殘雲",
-        "修羅浴血", "乾坤挪移", "極刃星閃", "萬劍歸宗", "天罡戰氣", "地煞魔魂", "龍魂附體", "八門遁甲",
-        "虛空碎裂", "涅槃業火", "神威天罰", "時空鎖定"
+
+    // 【技能解析典】
+    const skillDict = {
+        "嗜血狂擊": "【被動】攻擊附帶吸血邏輯，轉化敵方代碼為自身HP。",
+        "銅牆鐵壁": "【被動】物理碰撞箱硬化，有機率無視低於20點的傷害。",
+        "破甲尖錐": "【被動】無視敵方護甲圖層，造成真實的底層破壞。",
+        "幻影步": "【被動】迴避率提升，殘影干擾敵方鎖定系統。",
+        "九幽毒刃": "【被動】植入壞死代碼，令對手持續流失生命值。",
+        "霸體反傷": "【被動】受擊時產生反作用力場，彈回部分傷害。",
+        "雷霆連斬": "【主動】無視冷卻時間，瞬間發動兩次高頻斬擊。",
+        "風捲殘雲": "【主動】範圍打擊，對圍毆模式（群虎）具備毀滅性。",
+        "修羅浴血": "【被動】HP越低，運算效能越高，武力動態增幅。",
+        "乾坤挪移": "【被動】有機率將敵方致命的「大絕招」數據導入虛空。",
+        "極刃星閃": "【主動】突破幀數極限的拔刀術，無法被常規閃避。",
+        "萬劍歸宗": "【主動】召喚漫天數據劍雨，進行無差別飽和攻擊。",
+        "天罡戰氣": "【被動】開局自帶緩衝區，抵消前三次物理衝擊。",
+        "地煞魔魂": "【被動】陣亡時有機率重啟進程，以魔魂姿態再戰一回合。",
+        "龍魂附體": "【被動】免疫降維打擊，全屬性獲得隱藏倍率加成。",
+        "八門遁甲": "【主動】強行超頻，短暫獲得極限武力，隨後進入虛弱。",
+        "虛空碎裂": "【主動】斬碎空間代碼，造成無法格擋的粉碎傷害。",
+        "涅槃業火": "【被動】瀕死時有機率觸發代碼重組，恢復微量生命。",
+        "神威天罰": "【主動】召喚系統天雷，精準狙擊敵方武力最高者。",
+        "時空鎖定": "【主動】釋放停滯矩陣，強制凍結對手一個回合。"
+    };
+    const skillPool = Object.keys(skillDict);
+
+    // 【50件武神兵器譜】 - 以青釭劍、照夜玉獅子為尊
+    const itemDatabase = [
+        // T0 - 創世級神器 (2件)
+        { name: "青釭劍", power: 25, desc: "【劍中帝王】曹操恩賜。削鐵如泥的究極破甲兵器，有機率斬斷敵刃。" },
+        { name: "照夜玉獅子", power: 25, desc: "【絕世神駒】趙雲坐騎。純白如玉的量子靈獸，自帶極高絕對閃避率。" },
+        // T1 - 傳說級神兵/名駒 (8件)
+        { name: "方天畫戟", power: 20, desc: "【鬼神之器】呂布專屬。增加範圍掃蕩與破防機率。" },
+        { name: "青龍偃月刀", power: 19, desc: "【武聖之刃】關羽專屬。前三回合爆發力極高，有機率觸發秒殺。" },
+        { name: "丈八蛇矛", power: 19, desc: "【萬人敵】張飛專屬。矛尖如毒蛇吐信，攻擊附帶深層撕裂與流血。" },
+        { name: "赤兔馬", power: 19, desc: "【神駒】人中呂布，馬中赤兔。保證戰鬥絕對先手權。" },
+        { name: "倚天劍", power: 18, desc: "【霸道之劍】曹操佩劍。自帶威懾光環，降低敵方整體防禦數值。" },
+        { name: "雌雄雙股劍", power: 17, desc: "【仁道之兵】劉備雙劍。雙持武器，增加攻擊頻率與格擋反擊機率。" },
+        { name: "烏騅馬", power: 17, desc: "【霸王坐騎】楚霸王遺種。衝鋒時附帶強大的物理撞擊傷害。" },
+        { name: "的盧馬", power: 17, desc: "【妨主卻救主】躍馬檀溪的神駒。瀕死時必定觸發絕對閃避。" },
+        // T2 - 史詩兵器/寶物 (20件)
+        { name: "古錠刀", power: 15, desc: "江東猛虎孫堅信物，刀身流轉著赤紅色的戰意，提升暴擊率。" },
+        { name: "雙鐵戟", power: 15, desc: "典韋專屬重兵器，大幅提升近戰格擋成功率。" },
+        { name: "鐵脊蛇矛", power: 14, desc: "程普兵器，穩紮穩打，攻擊勢大力沉且不易被彈開。" },
+        { name: "開山大斧", power: 14, desc: "徐晃兵器，大開大合，對重甲單位有額外的破壞判定。" },
+        { name: "三尖兩刃刀", power: 14, desc: "紀靈兵器，結合刀與矛的特性，極具攻擊距離優勢。" },
+        { name: "養由基弓", power: 14, desc: "黃忠愛用神弓，可於戰鬥初始發動先制狙擊。" },
+        { name: "絕影", power: 15, desc: "曹操名駒，快得連影子都追不上，提升迴避與撤退成功率。" },
+        { name: "爪黃飛電", power: 14, desc: "曹操名駒，登場時附帶耀目光芒，有機率致盲敵手。" },
+        { name: "驚帆", power: 13, desc: "孫權名駒，疾風過水而不沉，提升水戰適應力。" },
+        { name: "燎原火", power: 13, desc: "黃忠名駒，性如烈火，衝刺時周身環繞灼熱數據流。" },
+        { name: "藤甲", power: 15, desc: "【防具】刀槍不入，免疫一般物理穿刺，但極度畏懼火焰。" },
+        { name: "唐猊鎧", power: 14, desc: "【防具】呂布寶甲，能吸收並抵消大量物理衝擊力。" },
+        { name: "鎖子黃金甲", power: 13, desc: "【防具】精工打造，防護周全，提升全方位防禦係數。" },
+        { name: "太古護心鏡", power: 12, desc: "【防具】護住核心代碼，每場戰鬥必定抵擋一次致命穿刺。" },
+        { name: "流星錘", power: 12, desc: "王雙暗器，可無視距離從死角發動沉重突襲。" },
+        { name: "鐵蒺藜骨朵", power: 12, desc: "沙摩柯重兵器，擊中敵方頭部時必定附帶嚴重眩暈。" },
+        { name: "七星寶刀", power: 13, desc: "鑲嵌七寶，首次攻擊附帶極高破防加成。" },
+        { name: "諸葛連弩", power: 14, desc: "發射十矢，造成密集的多段打擊，極難完全閃避。" },
+        { name: "南蠻毒矢", power: 12, desc: "見血封喉的毒物，一旦擦傷便會不斷腐蝕敵方HP。" },
+        { name: "大宛良馬", power: 10, desc: "西域產名馬，耐力十足，提升持久戰的體力恢復。" },
+        // T3 - 戰略異物與賽博道具 (20件)
+        { name: "遁甲天書殘卷", power: 5, desc: "記載奇門遁甲，能干擾敵方技能鎖定，提升法術抗性。" },
+        { name: "太平要術", power: 5, desc: "張角遺物，可發動精神干擾，令對手產生幻覺。" },
+        { name: "孟德新書", power: 5, desc: "看穿敵方兵法運作邏輯，大幅增加看破與反擊機率。" },
+        { name: "兵法二十四篇", power: 5, desc: "諸葛亮畢生心血，能免疫敵方的『詐敗』與『暗器』偷襲。" },
+        { name: "傳國玉璽", power: 8, desc: "【天命詛咒】提升威嚴，但會吸引全場仇恨，被圍攻機率大增。" },
+        { name: "華佗麻沸散", power: 0, desc: "【消耗品】受到致命傷時自動使用，瞬間恢復50%HP。" },
+        { name: "青囊書", power: 4, desc: "華佗醫書，回合結束時自動執行代碼修復，微量回血。" },
+        { name: "西蜀地形圖", power: 4, desc: "掌握地利優勢，在任何戰場皆能提升閃避與命中率。" },
+        { name: "銅雀", power: 3, desc: "激發戰意，免疫恐懼與威懾狀態，至死方休。" },
+        { name: "木牛流馬驅動核", power: 2, desc: "提供額外能源，解除部分裝備重量限制。" },
+        { name: "高頻震盪短刃", power: 10, desc: "【異界科技】能從分子層面切割數據代碼，無視常規護甲。" },
+        { name: "光學迷彩披風", power: 8, desc: "【異界科技】抹除自身渲染，進入兩回合的隱身無敵狀態。" },
+        { name: "賽博義體手臂", power: 12, desc: "【異界科技】替換原生軀體，大幅強化基礎力量與握力。" },
+        { name: "納米修復神經", power: 7, desc: "【異界科技】受傷時自動分泌納米蟲，免疫關節鎖定等控制技。" },
+        { name: "黑客數據庫", power: 6, desc: "【異界科技】動態分析對手出招規律，越戰越勇。" },
+        { name: "EMP電磁手雷", power: 0, desc: "【異界科技/消耗品】開局投擲，一次性癱瘓敵方所有防禦裝備一回合。" },
+        { name: "反重力推進靴", power: 9, desc: "【異界科技】無視物理地形，可進行浮空連擊。" },
+        { name: "量子護盾發生器", power: 10, desc: "【異界科技】吸收並存儲傷害，達到閾值後爆發反彈。" },
+        { name: "嗜血納米蟲群", power: 8, desc: "【異界科技】釋放蟲群吞噬敵方數據，並轉化為自身體力。" },
+        { name: "墨軍師的錦囊", power: 30, desc: "【終極彩蛋】內含作者『什年』的憤怒與『墨軍師』的算計，賦予絕對神權。" }
     ];
 
-    const itemPool = [
-        "上古青銅劍", "修羅玄鐵鎧", "赤兔血脈殘篇", "九幽黃泉披風", "太古龍骨護心鏡",
-        "玄冰護符", "隕鐵長槍", "百戰獅王印", "逆鱗刺", "神仙護體符"
-    ];
+    function getRandomItemObj() {
+        return itemDatabase[Math.floor(Math.random() * itemDatabase.length)];
+    }
 
+    // 重塑命格與手動賦值邏輯 (上策：強制鎖死歷史武將能力)
     function rollRpgStats() {
         const nameInput = document.getElementById('rpgName').value.trim();
         const type = document.getElementById('genTypeSelect').value;
+        
         if (!nameInput) { alert("主公，請先賜予武將姓名！"); return; }
 
         if (type === 'rpg') {
@@ -1195,13 +1327,24 @@
                 skills: initSkills, inventory: [], isMaxAwakened: false
             };
             document.getElementById('prevSkillsContainer').style.display = "block";
-            document.getElementById('prevSkills').innerText = initSkills.join("、");
+            
+            // 渲染技能預覽 (掛載 Tooltip)
+            let skillsHtml = initSkills.map(s => 
+                `<span class="tooltip">${s}<span class="tooltiptext"><span class="title">${s}</span>${skillDict[s]}</span></span>`
+            ).join("、");
+            document.getElementById('prevSkills').innerHTML = skillsHtml;
+            
         } else {
-            // 歷史遺珠 (武力隨機 70~100)
-            let initPower = Math.floor(Math.random() * 31) + 70;
+            // 歷史遺珠：手動精準賦值
+            let manualInputNode = document.getElementById('manualPowerInput');
+            let manualPower = parseInt(manualInputNode.value);
+            if (isNaN(manualPower) || manualPower < 1 || manualPower > 100) {
+                alert("主公，既是歷史遺珠，請依據史實手動鎖定 1~100 之間的精準武力！");
+                return;
+            }
             currentRpgDraft = {
-                name: nameInput, power: initPower, rank: "自創在野猛將",
-                isRPG: false, inventory: []
+                name: nameInput, power: manualPower, rank: "自創在野猛將",
+                isRPG: false, inventory: [] // 賦予空陣列以防報錯，但會被 UI 擋下
             };
             document.getElementById('prevSkillsContainer').style.display = "none";
         }
@@ -1249,7 +1392,7 @@
         if (gen.level >= 99999 && !gen.isMaxAwakened) {
             gen.isMaxAwakened = true;
             gen.rank = "異界真神 (LV.99999)";
-            gen.skills.push("【天道寂滅・萬物歸零】");
+            gen.skills.push("時空鎖定");
             if (!silent) battleLog.innerHTML += `<br><span style="color:#ffffff; font-weight:bold; font-size:24px; text-shadow: 0 0 20px #ff00ff;">👑 【宇宙異象】${gen.name} 打破位面極限，達到 LV.99999！領悟終極秒殺技【天道寂滅・萬物歸零】！</span><br><br>`;
         } else if (leveledUp && !silent) {
             gen.rank = `異界修羅 (LV.${gen.level})`;
@@ -1262,13 +1405,13 @@
         if(!p1SelectNode || p1SelectNode.selectedIndex === -1) return;
         let p1 = generals[p1SelectNode.value];
         
-        // 凡人與RPG皆可開啟面板，只是凡人隱藏升級按鈕
-        if (p1 && (p1.isRPG || p1.inventory)) {
+        // 凡人與RPG皆可開啟面板，由 renderRpgPanel 決定顯示內容
+        if (p1 && (p1.isRPG || p1.inventory !== undefined)) {
             renderRpgPanel(p1);
         } else {
             let p2SelectNode = document.getElementById('p2Select');
             let p2 = p2SelectNode && p2SelectNode.selectedIndex !== -1 ? generals[p2SelectNode.value] : null;
-            if (p2 && (p2.isRPG || p2.inventory)) {
+            if (p2 && (p2.isRPG || p2.inventory !== undefined)) {
                 renderRpgPanel(p2);
             } else {
                 document.getElementById('rpgPanel').style.display = "none";
@@ -1277,31 +1420,48 @@
         }
     }
 
-    let activeRpgGeneral = null;
+    // 渲染面板：懸停顯示特效與權限隔離 (上策精華)
     function renderRpgPanel(gen) {
         activeRpgGeneral = gen;
         document.getElementById('rpgPanel').style.display = "block";
         
-        let invStr = gen.inventory && gen.inventory.length > 0 ? gen.inventory.join("、") : "無";
-        
         if (gen.isRPG) {
             document.getElementById('rpgActionButtons').style.display = "flex";
+            
+            // 解析行囊 (掛載 Tooltip)
+            let invHtml = "無";
+            if (gen.inventory && gen.inventory.length > 0) {
+                invHtml = gen.inventory.map(item => {
+                    if(typeof item === 'string') return item; // 兼容舊存檔
+                    return `<span class="tooltip" style="color:#ffd700;">${item.name}<span class="tooltiptext"><span class="title">${item.name} (武力+${item.power})</span>${item.desc}</span></span>`;
+                }).join("、");
+            }
+
+            // 解析技能 (掛載 Tooltip)
+            let skillsHtml = gen.skills.map(s => 
+                `<span class="tooltip" style="color:#00ffff;">${s}<span class="tooltiptext"><span class="title">${s}</span>${skillDict[s]}</span></span>`
+            ).join("、");
+
             document.getElementById('rpgStatsDisplay').innerHTML = `
-                <strong>武將：</strong> <span style="color:#00ff41;">${gen.name}</span> (RPG)<br>
+                <strong>武將：</strong> <span style="color:#00ff41;">${gen.name}</span> (異界修羅)<br>
                 <strong>等級：</strong> LV.${gen.level} <span style="color:#aaa;">(EXP: ${gen.exp}/${gen.expNext})</span><br>
-                <strong>武力：</strong> <span style="color:#ff8c00;">${gen.power}</span> <br>
+                <strong>總和武力：</strong> <span style="color:#ff8c00;">${gen.power}</span> <br>
                 <strong>剩餘武力點：</strong> <span style="color:#ff8c00;">${gen.statPoints}</span> | 
                 <strong>剩餘技能點：</strong> <span style="color:#00ffff;">${gen.skillPoints}</span><br>
-                <strong>已習得技能：</strong> <span style="color:#00ff41;">${gen.skills.join("、")}</span><br>
-                <strong>五十格行囊 (${gen.inventory.length}/50)：</strong> <span style="color:#ffd700;">${invStr}</span>
+                <strong>已習得技能：</strong> ${skillsHtml}<br>
+                <strong style="color:#ffd700;">五十格行囊 (${gen.inventory.length}/50)：</strong><br> ${invHtml}
             `;
+            // 顯示神兵抽取按鈕
+            document.getElementById('rpgActionButtons').nextElementSibling.style.display = "flex";
         } else {
             document.getElementById('rpgActionButtons').style.display = "none";
             document.getElementById('rpgStatsDisplay').innerHTML = `
-                <strong>武將：</strong> <span style="color:#00ff41;">${gen.name}</span> (歷史凡人)<br>
-                <strong>武力：</strong> <span style="color:#ff8c00;">${gen.power}</span> (極限)<br>
-                <strong>五十格行囊 (${gen.inventory.length}/50)：</strong> <span style="color:#ffd700;">${invStr}</span>
+                <strong>武將：</strong> <span style="color:#ff3131;">${gen.name}</span> (歷史遺珠)<br>
+                <strong>鎖定武力：</strong> <span style="color:#ff8c00;">${gen.power}</span><br>
+                <strong style="color:#aaa;">【階級壁壘】：凡人之軀，不具備異界行囊，無法裝備神兵與技能。</strong>
             `;
+            // 徹底隱藏神兵抽取按鈕
+            document.getElementById('rpgActionButtons').nextElementSibling.style.display = "none";
         }
     }
 
@@ -1349,8 +1509,8 @@
             activeRpgGeneral.isMaxAwakened = true;
             activeRpgGeneral.rank = "異界真神 (LV.99999)";
             
-            if (!activeRpgGeneral.skills.includes("【天道寂滅・萬物歸零】")) {
-                activeRpgGeneral.skills.push("【天道寂滅・萬物歸零】");
+            if (!activeRpgGeneral.skills.includes("時空鎖定")) {
+                activeRpgGeneral.skills.push("時空鎖定");
             }
             renderRpgPanel(activeRpgGeneral); updateDropdowns();
             
@@ -1359,11 +1519,12 @@
         }
     }
 
-    // ---------------------------------------------------------
-    // 五十格神兵系統測試按鈕
-    // ---------------------------------------------------------
+    // 獲取神兵：數值直接掛鉤與防呆 (上策精華)
     function giveRandomItem() {
-        if (!activeRpgGeneral) return;
+        if (!activeRpgGeneral || !activeRpgGeneral.isRPG) {
+            alert("主公！此將乃凡人之軀，無法承受神兵的代碼重量！");
+            return;
+        }
         if (!activeRpgGeneral.inventory) activeRpgGeneral.inventory = [];
         
         if (activeRpgGeneral.inventory.length >= 50) {
@@ -1372,17 +1533,28 @@
             return;
         }
         
-        let newItem = itemPool[Math.floor(Math.random() * itemPool.length)] + " (Lv." + (Math.floor(Math.random()*10)+1) + ")";
-        activeRpgGeneral.inventory.push(newItem);
-        renderRpgPanel(activeRpgGeneral);
+        let newItemObj = getRandomItemObj();
         
-        battleLog.innerHTML += `<br><span style="color:#ffd700;">✨ 【獲取神兵】${activeRpgGeneral.name} 獲得了『${newItem}』！ (行囊 ${activeRpgGeneral.inventory.length}/50)</span><br>`;
+        // 檢查是否已擁有該唯一神器
+        let alreadyHas = activeRpgGeneral.inventory.find(i => i.name === newItemObj.name);
+        if(alreadyHas) {
+            battleLog.innerHTML += `<br><span style="color:#aaa;">[尋寶] ${activeRpgGeneral.name} 尋得了『${newItemObj.name}』，但因已擁有而捨棄。</span><br>`;
+            battleLog.scrollTop = battleLog.scrollHeight;
+            return;
+        }
+
+        activeRpgGeneral.inventory.push(newItemObj);
+        // 核心：直接將神兵武力疊加至武將總武力
+        activeRpgGeneral.power += newItemObj.power; 
+        
+        renderRpgPanel(activeRpgGeneral);
+        updateDropdowns(); // 實時更新下拉選單中的武力值
+        
+        let logColor = newItemObj.power >= 20 ? "#ff00ff" : "#ffd700";
+        battleLog.innerHTML += `<br><span style="color:${logColor}; font-weight:bold; font-size:16px; text-shadow: 0 0 5px ${logColor};">✨ 【神兵認主】${activeRpgGeneral.name} 拔出了『${newItemObj.name}』！武力暴增 ${newItemObj.power} 點！</span><br>`;
         battleLog.scrollTop = battleLog.scrollHeight;
     }
 
-    // ---------------------------------------------------------
-    // 天道命盤管理 (下拉選單防呆版)
-    // ---------------------------------------------------------
     function populateSavedGenerals() {
         let savedData = JSON.parse(localStorage.getItem('rpgGenerals')) || {};
         let select = document.getElementById('savedGenSelect');
@@ -1452,10 +1624,6 @@
         document.getElementById('rpgPanel').style.display = "none";
         activeRpgGeneral = null;
     }
-
-    // ==============================================================
-    // ▼▼▼ 核心 UI 與事件模組 ▼▼▼
-    // ==============================================================
 
     function updateDropdowns() {
         p1Select.innerHTML = '';
@@ -1597,7 +1765,7 @@
         setTimeout(() => warroom.classList.remove('shaking'), 300);
     }
 
-    // ==============================================================
+        // ==============================================================
     // ▼▼▼ 戰鬥推演演算法 ▼▼▼
     // ==============================================================
 
@@ -2408,9 +2576,7 @@
                         }
                         else if (attacker.name === "趙雲" && atkPct <= 36 && !attacker.ult30Used) {
                             attacker.ult30Used = true;
-                            battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:18px; text-shadow: 0 0 10px #00ffff;">🐉 【武神覺醒】<span style="color:${atkColor}">${attacker.name}</span> 強制發動【九天龍吟驚寰宇】！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:16px;">🔥 龍嘯九天，無數槍影化作狂風暴雨，無差別席捲全場敵軍！</span><br>`;
-                            
-                            let totalDmg = 0;
+                            battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:18px; text-shadow: 0 0 10px #00ffff;">🐉 【武神覺醒】<span style="color:${atkColor}">${attacker.name}</span> 強制發動【九天龍吟驚寰宇】！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:16px;">🔥 龍嘯九天，無數槍影化作狂風暴雨，無差別席捲全場敵軍！</span><br>`;let totalDmg = 0;
                             let hitLog = "";
 
                             targets.forEach(t => {
@@ -2431,7 +2597,7 @@
                             });
 
                             battleLog.innerHTML += `<div style="padding-left: 15px; margin-top: 5px; margin-bottom: 5px; border-left: 2px solid #ffcc00; line-height: 1.5;">${hitLog}</div>`;
-                            battleLog.innerHTML += `<span style="color:#ff8c00; font-weight:bold; font-size:15px;">✨ 這一擊共對敵軍造成了高達 ${totalDmg} 點的總傷害！</span><br><br>`;
+                            battleLog.innerHTML += `<span style="color:#ff8c00; font-weight:bold; font-size:15px;">✨ 這一擊共對敵群造成了高達 ${totalDmg} 點的總傷害！</span><br><br>`;
                             triggerShake(); setTimeout(triggerShake, 150); setTimeout(triggerShake, 300);
                         }
                         else if (ultimateSkills[attacker.name] && atkPct <= 35 && !attacker.customUltUsed) {
@@ -2616,7 +2782,7 @@
                     else if (eventRand < 0.35) { qApplyDmg1(dmg2 * 0.4); } 
                     else { qApplyDmg1(dmg2); }
                 }
-                } // 結束 if (h1 > 0 && h2 > 0) 的區塊
+            } 
 
             h1 = Math.max(0, h1); h2 = Math.max(0, h2);
 
@@ -2628,7 +2794,7 @@
         }
         
         let winnerIdx = h1 > h2 ? parseInt(idx1) : parseInt(idx2);
-        gainExp(generals[winnerIdx].name, 20, true); // 海選獲勝微薄經驗(不印出)
+        gainExp(generals[winnerIdx].name, 20, true); 
         return winnerIdx;
     }
 
