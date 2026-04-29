@@ -839,7 +839,7 @@
         {"name": "管輅", "power": 850, "rank": "神仙流(T3)"}
     ];
 
-    // 女性武將補血與狀態增益權重字典
+        // 女性武將補血與狀態增益權重字典
     const femaleHealers = {
         "樊玥": { heal: 40, buff: 15 },
         "貂蟬": { heal: 35, buff: 0 },
@@ -855,7 +855,149 @@
         "甘氏": { heal: 4, buff: 0 }
     };
 
-    // 72位名將大絕招與詠唱詞資料庫
+    // ==========================================
+    // ▼▼▼ 核心改造：標籤化技能與裝備系統 ▼▼▼
+    // ==========================================
+
+    // 【技能解析典】加入真實戰鬥標籤
+    const skillDict = {
+        "嗜血狂擊": "【被動】攻擊附帶 20% 吸血邏輯，轉化敵方代碼為自身HP。",
+        "銅牆鐵壁": "【被動】物理碰撞箱硬化，增加 15% 絕對格擋率。",
+        "破甲尖錐": "【被動】無視敵方 25% 護甲圖層，造成真實的底層破壞。",
+        "幻影步": "【被動】迴避率提升 15%，殘影干擾敵方鎖定系統。",
+        "九幽毒刃": "【被動】植入壞死代碼，攻擊附帶微量吸血(10%)與破甲(10%)。",
+        "霸體反傷": "【被動】受擊時產生反作用力場，格擋率提升 10%。",
+        "雷霆連斬": "【主動】無視冷卻時間，突破幀數極限 (破甲 15%)。",
+        "風捲殘雲": "【主動】範圍打擊，對圍毆模式（群虎）具備毀滅性 (破甲 20%)。",
+        "修羅浴血": "【被動】HP越低，運算效能越高，自帶 15% 吸血。",
+        "乾坤挪移": "【被動】高機率將敵方攻擊導入虛空，提升 10% 閃避與 10% 格擋。",
+        "極刃星閃": "【主動】突破幀數極限的拔刀術，無法被常規防禦 (破甲 30%)。",
+        "萬劍歸宗": "【主動】召喚漫天數據劍雨，進行無差別飽和攻擊 (破甲 10%)。",
+        "天罡戰氣": "【被動】開局自帶緩衝區，提升 20% 格擋率。",
+        "地煞魔魂": "【被動】陣亡時重啟進程，以魔魂姿態再戰一回合 (復活恢復 30 HP)。",
+        "龍魂附體": "【被動】免疫降維打擊，閃避 10%，格擋 10%，吸血 10%。",
+        "八門遁甲": "【主動】強行超頻，短暫獲得極限武力 (破甲 25%)。",
+        "虛空碎裂": "【主動】斬碎空間代碼，造成粉碎傷害 (破甲 35%)。",
+        "涅槃業火": "【被動】瀕死時觸發代碼重組 (復活恢復 15 HP)。",
+        "神威天罰": "【主動】召喚系統天雷，精準狙擊敵方 (破甲 20%)。",
+        "時空鎖定": "【主動】釋放停滯矩陣，強制凍結對手 (閃避提升 25%)。"
+    };
+
+    const skillEffects = {
+        "嗜血狂擊": { lifesteal: 0.2 },
+        "銅牆鐵壁": { blockChance: 0.15 },
+        "破甲尖錐": { armorPen: 0.25 },
+        "幻影步": { dodgeBonus: 0.15 },
+        "九幽毒刃": { lifesteal: 0.1, armorPen: 0.1 },
+        "霸體反傷": { blockChance: 0.1 },
+        "雷霆連斬": { armorPen: 0.15 },
+        "風捲殘雲": { armorPen: 0.2 },
+        "修羅浴血": { lifesteal: 0.15 },
+        "乾坤挪移": { dodgeBonus: 0.1, blockChance: 0.1 },
+        "極刃星閃": { armorPen: 0.3 },
+        "萬劍歸宗": { armorPen: 0.1 },
+        "天罡戰氣": { blockChance: 0.2 },
+        "地煞魔魂": { revive: true, reviveHp: 30, isConsumable: false },
+        "龍魂附體": { dodgeBonus: 0.1, blockChance: 0.1, lifesteal: 0.1 },
+        "八門遁甲": { armorPen: 0.25 },
+        "虛空碎裂": { armorPen: 0.35 },
+        "涅槃業火": { revive: true, reviveHp: 15, isConsumable: false },
+        "神威天罰": { armorPen: 0.2 },
+        "時空鎖定": { dodgeBonus: 0.25 }
+    };
+
+    const skillPool = Object.keys(skillDict);
+
+    // 【50件武神兵器譜】 植入底層標籤
+    const itemDatabase = [
+        // T0
+        { name: "青釭劍", power: 25, armorPen: 0.3, desc: "【劍中帝王】曹操恩賜。削鐵如泥，無視敵方30%防禦代碼。" },
+        { name: "照夜玉獅子", power: 25, dodgeBonus: 0.15, desc: "【絕世神駒】趙雲坐騎。純白如玉，自帶 15% 絕對閃避率。" },
+        // T1
+        { name: "方天畫戟", power: 20, armorPen: 0.15, desc: "【鬼神之器】呂布專屬。增加範圍掃蕩與 15% 破甲機率。" },
+        { name: "青龍偃月刀", power: 19, armorPen: 0.1, desc: "【武聖之刃】關羽專屬。爆發力極高，自帶 10% 破甲。" },
+        { name: "丈八蛇矛", power: 19, lifesteal: 0.1, armorPen: 0.05, desc: "【萬人敵】張飛專屬。攻擊附帶深層撕裂與 10% 吸血。" },
+        { name: "赤兔馬", power: 19, dodgeBonus: 0.1, desc: "【神駒】人中呂布，馬中赤兔。保證先手與 10% 迴避。" },
+        { name: "倚天劍", power: 18, armorPen: 0.2, desc: "【霸道之劍】曹操佩劍。自帶威懾光環，無視敵方 20% 防禦。" },
+        { name: "雌雄雙股劍", power: 17, blockChance: 0.15, desc: "【仁道之兵】劉備雙劍。雙持武器，增加 15% 格擋反擊機率。" },
+        { name: "烏騅馬", power: 17, armorPen: 0.1, desc: "【霸王坐騎】楚霸王遺種。衝鋒時附帶 10% 破甲撞擊傷害。" },
+        { name: "的盧馬", power: 17, dodgeBonus: 0.12, desc: "【妨主卻救主】躍馬檀溪的神駒。自帶 12% 閃避機率。" },
+        // T2
+        { name: "古錠刀", power: 15, armorPen: 0.1, desc: "江東猛虎孫堅信物，刀身流轉戰意，提升 10% 破甲。" },
+        { name: "雙鐵戟", power: 15, blockChance: 0.2, desc: "典韋專屬重兵器，大幅提升 20% 近戰格擋成功率。" },
+        { name: "鐵脊蛇矛", power: 14, armorPen: 0.05, desc: "程普兵器，穩紮穩打，攻擊勢大力沉且自帶 5% 破甲。" },
+        { name: "開山大斧", power: 14, armorPen: 0.15, desc: "徐晃兵器，大開大合，對重甲單位有 15% 額外破壞判定。" },
+        { name: "三尖兩刃刀", power: 14, armorPen: 0.05, desc: "紀靈兵器，結合刀與矛的特性，極具攻擊距離優勢。" },
+        { name: "養由基弓", power: 14, dodgeBonus: 0.05, desc: "黃忠愛用神弓，可於戰鬥初始發動先制狙擊。" },
+        { name: "絕影", power: 15, dodgeBonus: 0.1, desc: "曹操名駒，快得連影子都追不上，提升 10% 迴避率。" },
+        { name: "爪黃飛電", power: 14, dodgeBonus: 0.1, desc: "曹操名駒，登場時附帶耀目光芒，提升 10% 閃避。" },
+        { name: "驚帆", power: 13, dodgeBonus: 0.08, desc: "孫權名駒，疾風過水而不沉，提升水戰與 8% 閃避適應力。" },
+        { name: "燎原火", power: 13, dodgeBonus: 0.08, desc: "黃忠名駒，性如烈火，衝刺時周身環繞灼熱數據流。" },
+        { name: "藤甲", power: 15, blockChance: 0.25, desc: "【防具】刀槍不入，免疫一般穿刺，增加 25% 絕對格擋。" },
+        { name: "唐猊鎧", power: 14, blockChance: 0.2, desc: "【防具】呂布寶甲，能吸收並抵消大量物理衝擊力 (20% 格擋)。" },
+        { name: "鎖子黃金甲", power: 13, blockChance: 0.15, desc: "【防具】精工打造，防護周全，提升 15% 全方位防禦。" },
+        { name: "太古護心鏡", power: 12, blockChance: 0.1, desc: "【防具】護住核心代碼，增加 10% 格擋並抵擋致命穿刺。" },
+        { name: "流星錘", power: 12, armorPen: 0.1, desc: "王雙暗器，可無視距離從死角發動沉重突襲 (10% 破甲)。" },
+        { name: "鐵蒺藜骨朵", power: 12, armorPen: 0.1, desc: "沙摩柯重兵器，擊中敵方頭部時必定附帶嚴重震盪 (10% 破甲)。" },
+        { name: "七星寶刀", power: 13, armorPen: 0.15, desc: "鑲嵌七寶，攻擊附帶 15% 極高破防加成。" },
+        { name: "諸葛連弩", power: 14, armorPen: 0.05, desc: "發射十矢，造成密集的多段打擊，極難完全閃避。" },
+        { name: "南蠻毒矢", power: 12, lifesteal: 0.05, desc: "見血封喉的毒物，一旦擦傷便會不斷腐蝕敵方HP並微量吸血。" },
+        { name: "大宛良馬", power: 10, dodgeBonus: 0.05, desc: "西域產名馬，耐力十足，提升持久戰的體力恢復與閃避。" },
+        // T3
+        { name: "遁甲天書殘卷", power: 5, dodgeBonus: 0.1, desc: "記載奇門遁甲，能干擾敵方技能鎖定，提升 10% 閃避。" },
+        { name: "太平要術", power: 5, dodgeBonus: 0.1, desc: "張角遺物，可發動精神干擾，令對手產生幻覺。" },
+        { name: "孟德新書", power: 5, blockChance: 0.1, desc: "看穿敵方兵法運作邏輯，增加 10% 看破與反擊機率。" },
+        { name: "兵法二十四篇", power: 5, blockChance: 0.1, desc: "諸葛亮畢生心血，能免疫敵方的『詐敗』偷襲 (10% 格擋)。" },
+        { name: "傳國玉璽", power: 8, armorPen: 0.1, desc: "【天命詛咒】提升威嚴，增加 10% 破防，但會吸引全場仇恨。" },
+        { name: "華佗麻沸散", power: 0, revive: true, reviveHp: 50, isConsumable: true, desc: "【消耗品】受到致命傷時自動使用，瞬間恢復 50 HP。" },
+        { name: "青囊書", power: 4, lifesteal: 0.15, desc: "華佗醫書，回合結束時自動執行代碼修復，獲得 15% 吸血。" },
+        { name: "西蜀地形圖", power: 4, dodgeBonus: 0.1, desc: "掌握地利優勢，在任何戰場皆能提升 10% 閃避率。" },
+        { name: "銅雀", power: 3, blockChance: 0.05, desc: "激發戰意，免疫恐懼與威懾狀態，至死方休。" },
+        { name: "木牛流馬驅動核", power: 2, blockChance: 0.05, desc: "提供額外能源，解除部分裝備重量限制。" },
+        { name: "高頻震盪短刃", power: 10, armorPen: 0.25, desc: "【異界科技】能從分子層面切割數據代碼，無視 25% 護甲。" },
+        { name: "光學迷彩披風", power: 8, dodgeBonus: 0.2, desc: "【異界科技】抹除自身渲染，獲得高達 20% 的隱身迴避。" },
+        { name: "賽博義體手臂", power: 12, armorPen: 0.1, blockChance: 0.1, desc: "【異界科技】大幅強化基礎力量，附帶 10% 破甲與格擋。" },
+        { name: "納米修復神經", power: 7, lifesteal: 0.1, desc: "【異界科技】受傷時自動分泌納米蟲，獲得 10% 吸血恢復。" },
+        { name: "黑客數據庫", power: 6, dodgeBonus: 0.05, armorPen: 0.05, desc: "【異界科技】動態分析對手出招規律，越戰越勇。" },
+        { name: "EMP電磁手雷", power: 0, armorPen: 0.15, isConsumable: true, desc: "【消耗品】開局投擲，一次性癱瘓防禦，獲得 15% 破甲。" },
+        { name: "反重力推進靴", power: 9, dodgeBonus: 0.15, desc: "【異界科技】無視物理地形，可進行浮空連擊 (15% 閃避)。" },
+        { name: "量子護盾發生器", power: 10, blockChance: 0.3, desc: "【異界科技】吸收並存儲傷害，提供驚人的 30% 格擋率。" },
+        { name: "嗜血納米蟲群", power: 8, lifesteal: 0.25, desc: "【異界科技】釋放蟲群吞噬敵方數據，獲得 25% 強大吸血。" },
+        { name: "墨軍師的錦囊", power: 30, armorPen: 0.2, dodgeBonus: 0.2, blockChance: 0.2, lifesteal: 0.2, revive: true, reviveHp: 100, isConsumable: false, desc: "【終極彩蛋】內含作者『什年』的憤怒與『墨軍師』的算計，全屬性提升，並自帶一次滿血復活神蹟。" }
+    ];
+
+    function getRandomItemObj() {
+        return itemDatabase[Math.floor(Math.random() * itemDatabase.length)];
+    }
+
+    // 將武將的神兵與技能轉換為動態戰鬥變數
+    function parseCombatStats(gen) {
+        let stats = { armorPen: 0, dodgeBonus: 0, lifesteal: 0, blockChance: 0, revives: [] };
+        if (gen.isRPG && gen.skills) {
+            gen.skills.forEach(skill => {
+                let effect = skillEffects[skill];
+                if (effect) {
+                    if (effect.lifesteal) stats.lifesteal += effect.lifesteal;
+                    if (effect.dodgeBonus) stats.dodgeBonus += effect.dodgeBonus;
+                    if (effect.armorPen) stats.armorPen += effect.armorPen;
+                    if (effect.blockChance) stats.blockChance += effect.blockChance;
+                    if (effect.revive) stats.revives.push({ type: "skill", hp: effect.reviveHp, name: skill, isConsumable: effect.isConsumable });
+                }
+            });
+        }
+        if (gen.inventory) {
+            gen.inventory.forEach(item => {
+                if (item.lifesteal) stats.lifesteal += item.lifesteal;
+                if (item.dodgeBonus) stats.dodgeBonus += item.dodgeBonus;
+                if (item.armorPen) stats.armorPen += item.armorPen;
+                if (item.blockChance) stats.blockChance += item.blockChance;
+                if (item.revive) stats.revives.push({ type: "item", hp: item.reviveHp, name: item.name, isConsumable: item.isConsumable });
+            });
+        }
+        return stats;
+    }
+
+    // 名將大絕招與詠唱詞資料庫
     const ultimateSkills = {
         "關羽": { name: "威震華夏・武聖偃月劈", dmg: 48, color: "#00ff41", desc: "青龍偃月刀劃破虛空，爆發出武聖的傲氣與無盡殺意！" },
         "張飛": { name: "燕人咆哮・萬人敵碎擊", dmg: 47, color: "#ff3131", desc: "丈八蛇矛化作狂暴黑龍，伴隨雷霆怒吼撕裂敵方防線！" },
@@ -929,7 +1071,7 @@
         "秦慶童": { name: "家奴反噬・暗箭難防", dmg: 23, color: "#2f4f4f", desc: "在系統的陰暗角落裡放冷箭，造成意想不到的嚴重破壞！" }
     };
 
-        const moves = [
+    const moves = [
         "使出一招【龍吟突刺】，虛空震顫！",
         "化作一道殘影，發動【量子閃擊】！",
         "槍尖迸發出數據火花，刺出【百鳥朝鳳】！",
@@ -1219,99 +1361,11 @@
     let hpChart;
     let tourneyRosterData = []; 
 
-    // ==============================================================
-    // ▼▼▼ 異界武將 RPG 系統模組 (包含雙軌與行囊) ▼▼▼
-    // ==============================================================
+    // RPG 草稿與變數
     let currentRpgDraft = null;
+    let activeRpgGeneral = null;
 
-    // 【技能解析典】
-    const skillDict = {
-        "嗜血狂擊": "【被動】攻擊附帶吸血邏輯，轉化敵方代碼為自身HP。",
-        "銅牆鐵壁": "【被動】物理碰撞箱硬化，有機率無視低於20點的傷害。",
-        "破甲尖錐": "【被動】無視敵方護甲圖層，造成真實的底層破壞。",
-        "幻影步": "【被動】迴避率提升，殘影干擾敵方鎖定系統。",
-        "九幽毒刃": "【被動】植入壞死代碼，令對手持續流失生命值。",
-        "霸體反傷": "【被動】受擊時產生反作用力場，彈回部分傷害。",
-        "雷霆連斬": "【主動】無視冷卻時間，瞬間發動兩次高頻斬擊。",
-        "風捲殘雲": "【主動】範圍打擊，對圍毆模式（群虎）具備毀滅性。",
-        "修羅浴血": "【被動】HP越低，運算效能越高，武力動態增幅。",
-        "乾坤挪移": "【被動】有機率將敵方致命的「大絕招」數據導入虛空。",
-        "極刃星閃": "【主動】突破幀數極限的拔刀術，無法被常規閃避。",
-        "萬劍歸宗": "【主動】召喚漫天數據劍雨，進行無差別飽和攻擊。",
-        "天罡戰氣": "【被動】開局自帶緩衝區，抵消前三次物理衝擊。",
-        "地煞魔魂": "【被動】陣亡時有機率重啟進程，以魔魂姿態再戰一回合。",
-        "龍魂附體": "【被動】免疫降維打擊，全屬性獲得隱藏倍率加成。",
-        "八門遁甲": "【主動】強行超頻，短暫獲得極限武力，隨後進入虛弱。",
-        "虛空碎裂": "【主動】斬碎空間代碼，造成無法格擋的粉碎傷害。",
-        "涅槃業火": "【被動】瀕死時有機率觸發代碼重組，恢復微量生命。",
-        "神威天罰": "【主動】召喚系統天雷，精準狙擊敵方武力最高者。",
-        "時空鎖定": "【主動】釋放停滯矩陣，強制凍結對手一個回合。"
-    };
-    const skillPool = Object.keys(skillDict);
-
-    // 【50件武神兵器譜】 - 以青釭劍、照夜玉獅子為尊
-    const itemDatabase = [
-        // T0 - 創世級神器 (2件)
-        { name: "青釭劍", power: 25, desc: "【劍中帝王】曹操恩賜。削鐵如泥的究極破甲兵器，有機率斬斷敵刃。" },
-        { name: "照夜玉獅子", power: 25, desc: "【絕世神駒】趙雲坐騎。純白如玉的量子靈獸，自帶極高絕對閃避率。" },
-        // T1 - 傳說級神兵/名駒 (8件)
-        { name: "方天畫戟", power: 20, desc: "【鬼神之器】呂布專屬。增加範圍掃蕩與破防機率。" },
-        { name: "青龍偃月刀", power: 19, desc: "【武聖之刃】關羽專屬。前三回合爆發力極高，有機率觸發秒殺。" },
-        { name: "丈八蛇矛", power: 19, desc: "【萬人敵】張飛專屬。矛尖如毒蛇吐信，攻擊附帶深層撕裂與流血。" },
-        { name: "赤兔馬", power: 19, desc: "【神駒】人中呂布，馬中赤兔。保證戰鬥絕對先手權。" },
-        { name: "倚天劍", power: 18, desc: "【霸道之劍】曹操佩劍。自帶威懾光環，降低敵方整體防禦數值。" },
-        { name: "雌雄雙股劍", power: 17, desc: "【仁道之兵】劉備雙劍。雙持武器，增加攻擊頻率與格擋反擊機率。" },
-        { name: "烏騅馬", power: 17, desc: "【霸王坐騎】楚霸王遺種。衝鋒時附帶強大的物理撞擊傷害。" },
-        { name: "的盧馬", power: 17, desc: "【妨主卻救主】躍馬檀溪的神駒。瀕死時必定觸發絕對閃避。" },
-        // T2 - 史詩兵器/寶物 (20件)
-        { name: "古錠刀", power: 15, desc: "江東猛虎孫堅信物，刀身流轉著赤紅色的戰意，提升暴擊率。" },
-        { name: "雙鐵戟", power: 15, desc: "典韋專屬重兵器，大幅提升近戰格擋成功率。" },
-        { name: "鐵脊蛇矛", power: 14, desc: "程普兵器，穩紮穩打，攻擊勢大力沉且不易被彈開。" },
-        { name: "開山大斧", power: 14, desc: "徐晃兵器，大開大合，對重甲單位有額外的破壞判定。" },
-        { name: "三尖兩刃刀", power: 14, desc: "紀靈兵器，結合刀與矛的特性，極具攻擊距離優勢。" },
-        { name: "養由基弓", power: 14, desc: "黃忠愛用神弓，可於戰鬥初始發動先制狙擊。" },
-        { name: "絕影", power: 15, desc: "曹操名駒，快得連影子都追不上，提升迴避與撤退成功率。" },
-        { name: "爪黃飛電", power: 14, desc: "曹操名駒，登場時附帶耀目光芒，有機率致盲敵手。" },
-        { name: "驚帆", power: 13, desc: "孫權名駒，疾風過水而不沉，提升水戰適應力。" },
-        { name: "燎原火", power: 13, desc: "黃忠名駒，性如烈火，衝刺時周身環繞灼熱數據流。" },
-        { name: "藤甲", power: 15, desc: "【防具】刀槍不入，免疫一般物理穿刺，但極度畏懼火焰。" },
-        { name: "唐猊鎧", power: 14, desc: "【防具】呂布寶甲，能吸收並抵消大量物理衝擊力。" },
-        { name: "鎖子黃金甲", power: 13, desc: "【防具】精工打造，防護周全，提升全方位防禦係數。" },
-        { name: "太古護心鏡", power: 12, desc: "【防具】護住核心代碼，每場戰鬥必定抵擋一次致命穿刺。" },
-        { name: "流星錘", power: 12, desc: "王雙暗器，可無視距離從死角發動沉重突襲。" },
-        { name: "鐵蒺藜骨朵", power: 12, desc: "沙摩柯重兵器，擊中敵方頭部時必定附帶嚴重眩暈。" },
-        { name: "七星寶刀", power: 13, desc: "鑲嵌七寶，首次攻擊附帶極高破防加成。" },
-        { name: "諸葛連弩", power: 14, desc: "發射十矢，造成密集的多段打擊，極難完全閃避。" },
-        { name: "南蠻毒矢", power: 12, desc: "見血封喉的毒物，一旦擦傷便會不斷腐蝕敵方HP。" },
-        { name: "大宛良馬", power: 10, desc: "西域產名馬，耐力十足，提升持久戰的體力恢復。" },
-        // T3 - 戰略異物與賽博道具 (20件)
-        { name: "遁甲天書殘卷", power: 5, desc: "記載奇門遁甲，能干擾敵方技能鎖定，提升法術抗性。" },
-        { name: "太平要術", power: 5, desc: "張角遺物，可發動精神干擾，令對手產生幻覺。" },
-        { name: "孟德新書", power: 5, desc: "看穿敵方兵法運作邏輯，大幅增加看破與反擊機率。" },
-        { name: "兵法二十四篇", power: 5, desc: "諸葛亮畢生心血，能免疫敵方的『詐敗』與『暗器』偷襲。" },
-        { name: "傳國玉璽", power: 8, desc: "【天命詛咒】提升威嚴，但會吸引全場仇恨，被圍攻機率大增。" },
-        { name: "華佗麻沸散", power: 0, desc: "【消耗品】受到致命傷時自動使用，瞬間恢復50%HP。" },
-        { name: "青囊書", power: 4, desc: "華佗醫書，回合結束時自動執行代碼修復，微量回血。" },
-        { name: "西蜀地形圖", power: 4, desc: "掌握地利優勢，在任何戰場皆能提升閃避與命中率。" },
-        { name: "銅雀", power: 3, desc: "激發戰意，免疫恐懼與威懾狀態，至死方休。" },
-        { name: "木牛流馬驅動核", power: 2, desc: "提供額外能源，解除部分裝備重量限制。" },
-        { name: "高頻震盪短刃", power: 10, desc: "【異界科技】能從分子層面切割數據代碼，無視常規護甲。" },
-        { name: "光學迷彩披風", power: 8, desc: "【異界科技】抹除自身渲染，進入兩回合的隱身無敵狀態。" },
-        { name: "賽博義體手臂", power: 12, desc: "【異界科技】替換原生軀體，大幅強化基礎力量與握力。" },
-        { name: "納米修復神經", power: 7, desc: "【異界科技】受傷時自動分泌納米蟲，免疫關節鎖定等控制技。" },
-        { name: "黑客數據庫", power: 6, desc: "【異界科技】動態分析對手出招規律，越戰越勇。" },
-        { name: "EMP電磁手雷", power: 0, desc: "【異界科技/消耗品】開局投擲，一次性癱瘓敵方所有防禦裝備一回合。" },
-        { name: "反重力推進靴", power: 9, desc: "【異界科技】無視物理地形，可進行浮空連擊。" },
-        { name: "量子護盾發生器", power: 10, desc: "【異界科技】吸收並存儲傷害，達到閾值後爆發反彈。" },
-        { name: "嗜血納米蟲群", power: 8, desc: "【異界科技】釋放蟲群吞噬敵方數據，並轉化為自身體力。" },
-        { name: "墨軍師的錦囊", power: 30, desc: "【終極彩蛋】內含作者『什年』的憤怒與『墨軍師』的算計，賦予絕對神權。" }
-    ];
-
-    function getRandomItemObj() {
-        return itemDatabase[Math.floor(Math.random() * itemDatabase.length)];
-    }
-
-    // 重塑命格與手動賦值邏輯 (上策：強制鎖死歷史武將能力)
+    // 重塑命格與手動賦值邏輯
     function rollRpgStats() {
         const nameInput = document.getElementById('rpgName').value.trim();
         const type = document.getElementById('genTypeSelect').value;
@@ -1319,7 +1373,7 @@
         if (!nameInput) { alert("主公，請先賜予武將姓名！"); return; }
 
         if (type === 'rpg') {
-            let initPower = Math.floor(Math.random() * 41) + 40; // 40~80
+            let initPower = Math.floor(Math.random() * 41) + 40; 
             let initSkills = [...skillPool].sort(() => 0.5 - Math.random()).slice(0, 3);
             currentRpgDraft = {
                 name: nameInput, power: initPower, rank: "異界凡人 (LV.1)",
@@ -1328,14 +1382,12 @@
             };
             document.getElementById('prevSkillsContainer').style.display = "block";
             
-            // 渲染技能預覽 (掛載 Tooltip)
             let skillsHtml = initSkills.map(s => 
                 `<span class="tooltip">${s}<span class="tooltiptext"><span class="title">${s}</span>${skillDict[s]}</span></span>`
             ).join("、");
             document.getElementById('prevSkills').innerHTML = skillsHtml;
             
         } else {
-            // 歷史遺珠：手動精準賦值
             let manualInputNode = document.getElementById('manualPowerInput');
             let manualPower = parseInt(manualInputNode.value);
             if (isNaN(manualPower) || manualPower < 1 || manualPower > 100) {
@@ -1344,7 +1396,7 @@
             }
             currentRpgDraft = {
                 name: nameInput, power: manualPower, rank: "自創在野猛將",
-                isRPG: false, inventory: [] // 賦予空陣列以防報錯，但會被 UI 擋下
+                isRPG: false, inventory: [] 
             };
             document.getElementById('prevSkillsContainer').style.display = "none";
         }
@@ -1405,7 +1457,6 @@
         if(!p1SelectNode || p1SelectNode.selectedIndex === -1) return;
         let p1 = generals[p1SelectNode.value];
         
-        // 凡人與RPG皆可開啟面板，由 renderRpgPanel 決定顯示內容
         if (p1 && (p1.isRPG || p1.inventory !== undefined)) {
             renderRpgPanel(p1);
         } else {
@@ -1420,7 +1471,6 @@
         }
     }
 
-    // 渲染面板：懸停顯示特效與權限隔離 (上策精華)
     function renderRpgPanel(gen) {
         activeRpgGeneral = gen;
         document.getElementById('rpgPanel').style.display = "block";
@@ -1428,16 +1478,14 @@
         if (gen.isRPG) {
             document.getElementById('rpgActionButtons').style.display = "flex";
             
-            // 解析行囊 (掛載 Tooltip)
             let invHtml = "無";
             if (gen.inventory && gen.inventory.length > 0) {
                 invHtml = gen.inventory.map(item => {
-                    if(typeof item === 'string') return item; // 兼容舊存檔
+                    if(typeof item === 'string') return item; 
                     return `<span class="tooltip" style="color:#ffd700;">${item.name}<span class="tooltiptext"><span class="title">${item.name} (武力+${item.power})</span>${item.desc}</span></span>`;
                 }).join("、");
             }
 
-            // 解析技能 (掛載 Tooltip)
             let skillsHtml = gen.skills.map(s => 
                 `<span class="tooltip" style="color:#00ffff;">${s}<span class="tooltiptext"><span class="title">${s}</span>${skillDict[s]}</span></span>`
             ).join("、");
@@ -1451,7 +1499,6 @@
                 <strong>已習得技能：</strong> ${skillsHtml}<br>
                 <strong style="color:#ffd700;">五十格行囊 (${gen.inventory.length}/50)：</strong><br> ${invHtml}
             `;
-            // 顯示神兵抽取按鈕
             document.getElementById('rpgActionButtons').nextElementSibling.style.display = "flex";
         } else {
             document.getElementById('rpgActionButtons').style.display = "none";
@@ -1460,7 +1507,6 @@
                 <strong>鎖定武力：</strong> <span style="color:#ff8c00;">${gen.power}</span><br>
                 <strong style="color:#aaa;">【階級壁壘】：凡人之軀，不具備異界行囊，無法裝備神兵與技能。</strong>
             `;
-            // 徹底隱藏神兵抽取按鈕
             document.getElementById('rpgActionButtons').nextElementSibling.style.display = "none";
         }
     }
@@ -1519,7 +1565,6 @@
         }
     }
 
-    // 獲取神兵：數值直接掛鉤與防呆 (上策精華)
     function giveRandomItem() {
         if (!activeRpgGeneral || !activeRpgGeneral.isRPG) {
             alert("主公！此將乃凡人之軀，無法承受神兵的代碼重量！");
@@ -1534,8 +1579,6 @@
         }
         
         let newItemObj = getRandomItemObj();
-        
-        // 檢查是否已擁有該唯一神器
         let alreadyHas = activeRpgGeneral.inventory.find(i => i.name === newItemObj.name);
         if(alreadyHas) {
             battleLog.innerHTML += `<br><span style="color:#aaa;">[尋寶] ${activeRpgGeneral.name} 尋得了『${newItemObj.name}』，但因已擁有而捨棄。</span><br>`;
@@ -1544,11 +1587,10 @@
         }
 
         activeRpgGeneral.inventory.push(newItemObj);
-        // 核心：直接將神兵武力疊加至武將總武力
         activeRpgGeneral.power += newItemObj.power; 
         
         renderRpgPanel(activeRpgGeneral);
-        updateDropdowns(); // 實時更新下拉選單中的武力值
+        updateDropdowns(); 
         
         let logColor = newItemObj.power >= 20 ? "#ff00ff" : "#ffd700";
         battleLog.innerHTML += `<br><span style="color:${logColor}; font-weight:bold; font-size:16px; text-shadow: 0 0 5px ${logColor};">✨ 【神兵認主】${activeRpgGeneral.name} 拔出了『${newItemObj.name}』！武力暴增 ${newItemObj.power} 點！</span><br>`;
@@ -1682,7 +1724,7 @@
     }
     
     updateDropdowns();
-    populateSavedGenerals(); // 初始化下拉選單
+    populateSavedGenerals();
 
     function randomize() {
         p1Select.selectedIndex = Math.floor(Math.random() * generals.length);
@@ -1766,7 +1808,7 @@
     }
 
         // ==============================================================
-    // ▼▼▼ 戰鬥推演演算法 ▼▼▼
+    // ▼▼▼ 核心演算法：掛載標籤系統的終極戰鬥推演 ▼▼▼
     // ==============================================================
 
     async function startDuel(isTournamentMode = false) {
@@ -1776,13 +1818,20 @@
         let p1ActualPower = p1.name === "趙雲" ? p1.power + 20 : p1.power;
         let p2ActualPower = p2.name === "趙雲" ? p2.power + 20 : p2.power;
 
+        // 【植入標籤系統】解析雙方神兵與技能的真實戰鬥屬性
+        let p1Stats = parseCombatStats(p1);
+        let p2Stats = parseCombatStats(p2);
+
+        // 破甲影響最終有效武力判定
+        let effP1Power = p1ActualPower * (1 - p2Stats.armorPen);
+        let effP2Power = p2ActualPower * (1 - p1Stats.armorPen);
+
         document.getElementById('p1Name').innerText = p1.name;
         document.getElementById('p1Rank').innerText = p1.rank;
         document.getElementById('p2Name').innerText = p2.name;
         document.getElementById('p2Rank').innerText = p2.rank;
 
         let h1 = 100, h2 = 100;
-        
         document.getElementById('p1HpBar').style.width = "100%";
         document.getElementById('p2HpBar').style.width = "100%";
         document.getElementById('p1HpText').innerText = "100/100";
@@ -1827,13 +1876,13 @@
         while (h1 > 0 && h2 > 0 && round < 80) {
             await new Promise(r => setTimeout(r, isTournamentMode ? 200 : 450));
 
+            // 彩蛋：樊玥強制落敗
             if ((p1.name === "趙雲" && p2.name === "樊玥") || (p1.name === "樊玥" && p2.name === "趙雲")) {
                 if (p1.name === "樊玥") { h2 = 0; } else { h1 = 0; }
                 battleLog.innerHTML += `<br><span style="color:#ffffff; font-weight:bold; font-size:20px; text-shadow: 0 0 10px #ffffff, 0 0 20px #ffffff;">🌸 【宿命羈絆】樊玥溫柔注視，強制發動專屬招式【雲玥同心】！</span><br><span style="color:#dddddd; font-size:16px; font-style:italic;">「天下第一」的趙雲放下了手中的龍膽亮銀槍，撤除所有防禦。武神甘願在此刻溫柔落敗...</span><br><br>`;
                 triggerShake(); setTimeout(triggerShake, 400);
                 break;
             }
-
             if ((p1.name === "殘卒" && p2.name === "樊玥") || (p1.name === "樊玥" && p2.name === "殘卒")) {
                 if (p1.name === "樊玥") { h2 = 0; } else { h1 = 0; }
                 battleLog.innerHTML += `<br><span style="color:#ffffff; font-weight:bold; font-size:20px; text-shadow: 0 0 10px #ffffff, 0 0 20px #ffffff;">🌸 【神明垂憐】樊玥輕嘆一聲，不忍兵刃相見...</span><br><span style="color:#dddddd; font-size:16px; font-style:italic;">本就命若游絲的殘卒，在神明的溫柔注視下放下了殘破的兵器，甘願認輸...</span><br><br>`;
@@ -1972,7 +2021,7 @@
                     h1 = Math.min(100, h1 + hData.heal);
                     let logMsg = `<span style="color:#ff69b4; font-weight:bold;">[第${round}合] 💖 【紅顏祈禱】<span style="color:var(--text-color)">${p1.name}</span> 施展醫術，恢復自身 ${hData.heal} 點生命！</span><br>`;
                     if (hData.buff > 0) {
-                        p1ActualPower += hData.buff;
+                        effP1Power += hData.buff; // 修改實時破壞力
                         logMsg += `<span style="color:#ffd700; font-weight:bold;">✨ 【神蹟加護】<span style="color:var(--text-color)">${p1.name}</span> 獲得加持！武力暴增！</span><br>`;
                     }
                     battleLog.innerHTML += logMsg;
@@ -1983,7 +2032,7 @@
                     h2 = Math.min(100, h2 + hData.heal);
                     let logMsg = `<span style="color:#ff69b4; font-weight:bold;">[第${round}合] 💖 【紅顏祈禱】<span style="color:var(--accent-red)">${p2.name}</span> 施展醫術，恢復自身 ${hData.heal} 點生命！</span><br>`;
                     if (hData.buff > 0) {
-                        p2ActualPower += hData.buff;
+                        effP2Power += hData.buff;
                         logMsg += `<span style="color:#ffd700; font-weight:bold;">✨ 【神蹟加護】<span style="color:var(--accent-red)">${p2.name}</span> 獲得加持！武力暴增！</span><br>`;
                     }
                     battleLog.innerHTML += logMsg;
@@ -1992,41 +2041,84 @@
             }
 
             if (h1 > 0 && h2 > 0) {
-                let dmg1 = Math.max(3, (p1ActualPower * 0.12) - (p2ActualPower * 0.04) + (Math.random() * 12 - 4));
-                let dmg2 = Math.max(3, (p2ActualPower * 0.12) - (p1ActualPower * 0.04) + (Math.random() * 12 - 4));
+                // 【屬性接管】基礎傷害加入雙方的「破甲衰減」效應
+                let dmg1 = Math.max(3, (effP1Power * 0.12) - (effP2Power * 0.04) + (Math.random() * 12 - 4));
+                let dmg2 = Math.max(3, (effP2Power * 0.12) - (effP1Power * 0.04) + (Math.random() * 12 - 4));
                 let eventRand = Math.random(); 
+
+                let p1DodgeProb = (p1.name === "趙雲" ? 0.12 : 0) + p1Stats.dodgeBonus;
+                let p2DodgeProb = (p2.name === "趙雲" ? 0.12 : 0) + p2Stats.dodgeBonus;
+                
+                let p1ParryProb = p1DodgeProb + 0.08;
+                let p2ParryProb = p2DodgeProb + 0.08;
+
+                let p1BlockProb = p1ParryProb + (p1.name === "趙雲" ? 0.15 : 0.15) + p1Stats.blockChance;
+                let p2BlockProb = p2ParryProb + (p2.name === "趙雲" ? 0.15 : 0.15) + p2Stats.blockChance;
 
                 if (Math.random() > 0.5) {
                     if (p2DodgeCount > 0) {
                         p2DodgeCount--;
                         battleLog.innerHTML += `<span style="color:#aaaaaa;">[第${round}合] 💨 ${p2.name} 發動殘卒本能，極限閃避了 ${p1.name} 的攻擊！</span><br>`;
-                    } else if (eventRand < 0.12) {
-                        battleLog.innerHTML += `<span style="color:#aaaaaa;">[第${round}合] 💨 敏捷如風！${p2.name} 完美閃躲了 ${p1.name} 的致命一擊！</span><br>`;
-                    } else if (eventRand < 0.20) {
+                    } else if (eventRand < p2DodgeProb) {
+                        battleLog.innerHTML += `<span style="color:#aaaaaa;">[第${round}合] 💨 敏捷如風！裝備加持下，${p2.name} 完美閃躲了 ${p1.name} 的致命一擊！</span><br>`;
+                    } else if (eventRand < p2ParryProb) {
                         battleLog.innerHTML += `<span style="color:#ffd700;">[第${round}合] 🛡️ 完美彈反！${p2.name} 【無傷】化解了 ${p1.name} 的狂暴攻勢！</span><br>`;
                         triggerShake();
-                    } else if (eventRand < 0.35) {
+                    } else if (eventRand < p2BlockProb) {
                         dmg1 = Math.floor(dmg1 * 0.4);
                         applyDmg2(dmg1, `<span style="color:#b0c4de;">[第${round}合] 🛡️ 鏗鏘巨響！${p2.name} 成功格擋 ${p1.name}，僅承受 ${Math.floor(dmg1)} 點震傷。</span><br>`);
                     } else {
                         applyDmg2(dmg1, `<span style="color:var(--text-color)">[第${round}合]</span> ${p1.name} ${moves[Math.floor(Math.random()*moves.length)]} 造成 ${Math.floor(dmg1)} 點損傷。<br>`);
+                        if (p1Stats.lifesteal > 0 && h1 < 100) {
+                            let heal = dmg1 * p1Stats.lifesteal;
+                            h1 = Math.min(100, h1 + heal);
+                            battleLog.innerHTML += `<span style="color:#ff3131;">🩸 【嗜血生效】${p1.name} 從敵方數據中汲取了 ${Math.floor(heal)} 點生命值！</span><br>`;
+                        }
                     }
                 } else {
                     if (p1DodgeCount > 0) {
                         p1DodgeCount--;
                         battleLog.innerHTML += `<span style="color:#aaaaaa;">[第${round}合] 💨 ${p1.name} 發動殘卒本能，極限閃避了 ${p2.name} 的攻擊！</span><br>`;
-                    } else if (eventRand < 0.12) {
-                        battleLog.innerHTML += `<span style="color:#aaaaaa;">[第${round}合] 💨 敏捷如風！${p1.name} 完美閃躲了 ${p2.name} 的致命一擊！</span><br>`;
-                    } else if (eventRand < 0.20) {
+                    } else if (eventRand < p1DodgeProb) {
+                        battleLog.innerHTML += `<span style="color:#aaaaaa;">[第${round}合] 💨 敏捷如風！裝備加持下，${p1.name} 完美閃躲了 ${p2.name} 的致命一擊！</span><br>`;
+                    } else if (eventRand < p1ParryProb) {
                         battleLog.innerHTML += `<span style="color:#ffd700;">[第${round}合] 🛡️ 完美彈反！${p1.name} 【無傷】化解了 ${p2.name} 的狂暴攻勢！</span><br>`;
                         triggerShake();
-                    } else if (eventRand < 0.35) {
+                    } else if (eventRand < p1BlockProb) {
                         dmg2 = Math.floor(dmg2 * 0.4);
                         applyDmg1(dmg2, `<span style="color:#b0c4de;">[第${round}合] 🛡️ 鏗鏘巨響！${p1.name} 成功格擋 ${p2.name}，僅承受 ${Math.floor(dmg2)} 點震傷。</span><br>`);
                     } else {
                         applyDmg1(dmg2, `<span style="color:var(--accent-red)">[第${round}合]</span> ${p2.name} ${moves[Math.floor(Math.random()*moves.length)]} ${p1.name} 承受 ${Math.floor(dmg2)} 點破壞。<br>`);
+                        // 3. 吸血判定介入
+                        if (p2Stats.lifesteal > 0 && h2 < 100) {
+                            let healAmount = dmg2 * p2Stats.lifesteal;
+                            h2 = Math.min(100, h2 + healAmount);
+                            battleLog.innerHTML += `<span style="color:#ff3131;">🩸 【嗜血生效】${p2.name} 汲取了 ${Math.floor(healAmount)} 點生命值！</span><br>`;
+                        }
                     }
                 }
+            }
+
+            // 4. 復活判定介入 (死亡結算)
+            if (h1 <= 0 && p1Stats.revives.length > 0) {
+                let reviveEffect = p1Stats.revives.pop();
+                h1 = reviveEffect.hp;
+                battleLog.innerHTML += `<span style="color:#ffd700; font-size:18px; font-weight:bold;">✨ 【逆轉生死】觸發 ${reviveEffect.name}！${p1.name} 殘血重組，恢復至 ${h1} HP 繼續死戰！</span><br>`;
+                if (reviveEffect.isConsumable && p1.inventory) {
+                    let itemIdx = p1.inventory.findIndex(i => i.name === reviveEffect.name);
+                    if (itemIdx > -1) p1.inventory.splice(itemIdx, 1);
+                }
+                triggerShake();
+            }
+            if (h2 <= 0 && p2Stats.revives.length > 0) {
+                let reviveEffect = p2Stats.revives.pop();
+                h2 = reviveEffect.hp;
+                battleLog.innerHTML += `<span style="color:#ffd700; font-size:18px; font-weight:bold;">✨ 【逆轉生死】觸發 ${reviveEffect.name}！${p2.name} 殘血重組，恢復至 ${h2} HP 繼續死戰！</span><br>`;
+                if (reviveEffect.isConsumable && p2.inventory) {
+                    let itemIdx = p2.inventory.findIndex(i => i.name === reviveEffect.name);
+                    if (itemIdx > -1) p2.inventory.splice(itemIdx, 1);
+                }
+                triggerShake();
             }
 
             h1 = Math.max(0, h1); h2 = Math.max(0, h2);
@@ -2086,6 +2178,9 @@
         return h1 > h2 ? parseInt(p1Select.value) : parseInt(p2Select.value);
     }
 
+    // -------------------------------------------------------------
+    // 【一龍鬥群虎】模組
+    // -------------------------------------------------------------
     async function runOneVsN() {
         const dIdx = parseInt(document.getElementById('dragonSelect').value);
         const tIdxs = [];
@@ -2104,18 +2199,20 @@
 
         const dGen = generals[dIdx];
         const dActualPower = dGen.name === "趙雲" ? dGen.power + 20 : dGen.power; 
+        const dStats = parseCombatStats(dGen); // 掛載標籤
 
         let fighters = [];
-        fighters.push({ id: 'D', team: 'A', name: dGen.name, power: dGen.power, rank: dGen.rank, actualPower: dActualPower, hp: 100, maxHp: 100, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#00ff41' });
+        fighters.push({ id: 'D', team: 'A', name: dGen.name, power: dGen.power, rank: dGen.rank, actualPower: dActualPower, stats: dStats, hp: 100, maxHp: 100, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#00ff41' });
         
         for(let i=0; i<tIdxs.length; i++) {
             let g = generals[tIdxs[i]];
             let p = g.name === "趙雲" ? g.power + 20 : g.power;
-            fighters.push({ id: 'T'+i, team: 'B', name: g.name, power: g.power, rank: g.rank, actualPower: p, hp: 100, maxHp: 100, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#ff3131' });
+            let st = parseCombatStats(g); // 掛載標籤
+            fighters.push({ id: 'T'+i, team: 'B', name: g.name, power: g.power, rank: g.rank, actualPower: p, stats: st, hp: 100, maxHp: 100, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#ff3131' });
         }
 
         document.getElementById('p1Name').innerText = "狂龍: " + dGen.name;
-        document.getElementById('p1Rank').innerText = `無視加成・凡人之軀`;
+        document.getElementById('p1Rank').innerText = `極限挑戰・RPG標籤生效`;
         document.getElementById('p2Name').innerText = `群虎陣營 (${tIdxs.length}人)`;
         document.getElementById('p2Rank').innerText = "無差別圍剿戰術";
         
@@ -2218,6 +2315,9 @@
                         battleLog.innerHTML += `<br><span style="color:#ff3131; font-weight:bold;">⚡ 【絕對武力碾壓】<span style="color:${atkColor}">${attacker.name}</span> 身形如鬼魅，【瞬獄秒殺】將 <span style="color:${defColor}">${defender.name}</span> 斬落馬下！當場陣亡！</span><br>`;
                         triggerShake();
                     } else {
+                        // 標籤結算前置
+                        let effDefPower = defender.actualPower * (1 - attacker.stats.armorPen);
+
                         if (attacker.name === "趙雲" && atkPct <= 10 && attacker.ult10Count < 10) {
                             attacker.ult10Count++; 
                             if (defender.name === "趙雲" && !defender.nineSunsUsed) {
@@ -2270,13 +2370,13 @@
                             }
                         }
                         else {
-                            let dmg = Math.max(3, (attacker.actualPower * 0.12) - (defender.actualPower * 0.04) + (Math.random() * 12 - 4));
+                            let dmg = Math.max(3, (attacker.actualPower * 0.12) - (effDefPower * 0.04) + (Math.random() * 12 - 4));
                             let eventRand = Math.random();
                             
                             let isDragonZhaoYun = (defender.name === "趙雲" && defender.id === 'D');
-                            let dodgeProb = isDragonZhaoYun ? 0.35 : 0.12; 
-                            let parryProb = isDragonZhaoYun ? 0.60 : 0.20; 
-                            let blockProb = isDragonZhaoYun ? 0.90 : 0.35; 
+                            let dodgeProb = (isDragonZhaoYun ? 0.35 : 0.12) + defender.stats.dodgeBonus; 
+                            let parryProb = dodgeProb + 0.08; 
+                            let blockProb = parryProb + (isDragonZhaoYun ? 0.30 : 0.15) + defender.stats.blockChance; 
 
                             if (defender.dodgeCount > 0) {
                                 defender.dodgeCount--;
@@ -2291,6 +2391,11 @@
                                 applyFighterDmg(defender, dmg, `<span style="color:#b0c4de;">[圍剿] 🛡️ 鏗鏘巨響！<span style="color:${defColor}">${defender.name}</span> 成功格擋 <span style="color:${atkColor}">${attacker.name}</span>，承受 ${Math.floor(dmg)} 點震傷。</span><br>`);
                             } else {
                                 applyFighterDmg(defender, dmg, `<span style="color:${atkColor}">[圍剿]</span> <span style="color:${atkColor}">${attacker.name}</span> 對 <span style="color:${defColor}">${defender.name}</span> ${moves[Math.floor(Math.random()*moves.length)]} 造成 ${Math.floor(dmg)} 點損傷。<br>`);
+                                if (attacker.stats.lifesteal > 0 && attacker.hp < attacker.maxHp) {
+                                    let heal = dmg * attacker.stats.lifesteal;
+                                    attacker.hp = Math.min(attacker.maxHp, attacker.hp + heal);
+                                    battleLog.innerHTML += `<span style="color:#ff3131;">🩸 【嗜血生效】<span style="color:${atkColor}">${attacker.name}</span> 汲取了 ${Math.floor(heal)} 點生命值！</span><br>`;
+                                }
                             }
                         }
                     }
@@ -2300,6 +2405,14 @@
             fighters.forEach(f => {
                 if(f.isDead) return;
                 let pct = (f.hp / f.maxHp) * 100;
+
+                // 標籤復活判定
+                if (f.hp <= 0 && f.stats.revives.length > 0) {
+                    let r = f.stats.revives.pop();
+                    f.hp = r.hp;
+                    battleLog.innerHTML += `<span style="color:#ffd700; font-weight:bold;">✨ 【逆轉生死】觸發 ${r.name}！<span style="color:${f.color}">${f.name}</span> 恢復至 ${f.hp} HP 繼續死戰！</span><br>`;
+                }
+
                 if (f.name === "殘卒" && pct <= 20 && f.hp > 0 && !f.remnantDodgeUsed) {
                     f.remnantDodgeUsed = true; f.dodgeCount += 10;
                     battleLog.innerHTML += `<span style="color:#cccccc; font-weight:bold;">💨 【螻蟻貪生】<span style="color:${f.color}">${f.name}</span> 發動苟延殘喘，獲得 10 次絕對閃避！</span><br>`;
@@ -2312,6 +2425,7 @@
                     f.fanYueHealUsed = true; f.hp = f.maxHp;
                     battleLog.innerHTML += `<span style="color:#ff69b4; font-weight:bold;">💋 【樊玥之吻】<span style="color:${f.color}">${f.name}</span> 瞬間滿血復活！</span><br>`;
                 }
+
                 if (f.hp <= 0) {
                     f.hp = 0; f.isDead = true;
                     battleLog.innerHTML += `<span style="color:#ff3131; font-weight:bold; border-bottom: 1px solid #555; display:block; padding-bottom:5px; margin-bottom:5px;">🩸 [陣亡] <span style="color:${f.color}">${f.name}</span> 倒在了血泊中...</span>`;
@@ -2355,6 +2469,9 @@
         hpChart.data.datasets[1].label = '群虎總 HP (%)';
     }
 
+    // -------------------------------------------------------------
+    // 【擂台車輪戰】模組 (沿用 startDuel，已繼承標籤系統)
+    // -------------------------------------------------------------
     async function runTeamBattle() {
         const teamA = [
             parseInt(document.getElementById('tA0').value), parseInt(document.getElementById('tA1').value),
@@ -2435,6 +2552,9 @@
         buttons.forEach(b => b.disabled = false);
     }
 
+    // -------------------------------------------------------------
+    // 【同場大亂鬥】模組
+    // -------------------------------------------------------------
     async function runGroupMeleeBattle() {
         const teamA_idxs = [
             parseInt(document.getElementById('tA0').value), parseInt(document.getElementById('tA1').value),
@@ -2459,11 +2579,13 @@
         let fighters = [];
         for(let i=0; i<teamA_idxs.length; i++) {
             let g = generals[teamA_idxs[i]];
-            fighters.push({ id: 'A'+i, team: 'A', name: g.name, power: g.power, rank: g.rank, actualPower: g.name === "趙雲" ? g.power + 20 : g.power, hp: 100, maxHp: 100, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#00ff41' });
+            let st = parseCombatStats(g);
+            fighters.push({ id: 'A'+i, team: 'A', name: g.name, power: g.power, rank: g.rank, actualPower: g.name === "趙雲" ? g.power + 20 : g.power, stats: st, hp: 100, maxHp: 100, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#00ff41' });
         }
         for(let i=0; i<teamB_idxs.length; i++) {
             let g = generals[teamB_idxs[i]];
-            fighters.push({ id: 'B'+i, team: 'B', name: g.name, power: g.power, rank: g.rank, actualPower: g.name === "趙雲" ? g.power + 20 : g.power, hp: 100, maxHp: 100, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#ff3131' });
+            let st = parseCombatStats(g);
+            fighters.push({ id: 'B'+i, team: 'B', name: g.name, power: g.power, rank: g.rank, actualPower: g.name === "趙雲" ? g.power + 20 : g.power, stats: st, hp: 100, maxHp: 100, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#ff3131' });
         }
 
         document.getElementById('p1Name').innerText = "青龍陣營 (全軍)";
@@ -2557,7 +2679,8 @@
                         battleLog.innerHTML += `<br><span style="color:#ff3131; font-weight:bold;">⚡ 【絕對武力碾壓】<span style="color:${atkColor}">${attacker.name}</span> 身形如鬼魅，【瞬獄秒殺】將 <span style="color:${defColor}">${defender.name}</span> 斬落馬下！當場陣亡！</span><br>`;
                         triggerShake();
                     } else {
-                        // RPG 終極秒殺 (大亂鬥中)
+                        let effDefPower = defender.actualPower * (1 - attacker.stats.armorPen); // 破甲衰減
+
                         if (attacker.isRPG && attacker.level >= 99999 && Math.random() < 0.3) {
                             defender.hp = 0; defender.isDead = true;
                             battleLog.innerHTML += `<br><span style="color:#ffffff; font-weight:bold; font-size:24px; text-shadow: 0 0 20px #ff00ff;">🌌 【天道崩壞】<span style="color:${atkColor}">${attacker.name}</span> 雙目微睜，發動【天道寂滅・萬物歸零】！<br>維度降維，<span style="color:${defColor}">${defender.name}</span> 的數據被徹底抹除！</span><br>`;
@@ -2576,7 +2699,8 @@
                         }
                         else if (attacker.name === "趙雲" && atkPct <= 36 && !attacker.ult30Used) {
                             attacker.ult30Used = true;
-                            battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:18px; text-shadow: 0 0 10px #00ffff;">🐉 【武神覺醒】<span style="color:${atkColor}">${attacker.name}</span> 強制發動【九天龍吟驚寰宇】！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:16px;">🔥 龍嘯九天，無數槍影化作狂風暴雨，無差別席捲全場敵軍！</span><br>`;let totalDmg = 0;
+                            battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:18px; text-shadow: 0 0 10px #00ffff;">🐉 【武神覺醒】<span style="color:${atkColor}">${attacker.name}</span> 強制發動【九天龍吟驚寰宇】！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:16px;">🔥 龍嘯九天，無數槍影化作狂風暴雨，無差別席捲全場敵軍！</span><br>`;
+                            let totalDmg = 0;
                             let hitLog = "";
 
                             targets.forEach(t => {
@@ -2613,13 +2737,13 @@
                             }
                         }
                         else {
-                            let dmg = Math.max(3, (attacker.actualPower * 0.12) - (defender.actualPower * 0.04) + (Math.random() * 12 - 4));
+                            let dmg = Math.max(3, (attacker.actualPower * 0.12) - (effDefPower * 0.04) + (Math.random() * 12 - 4));
                             let eventRand = Math.random();
                             
-                            let isDragonZhaoYun = (defender.name === "趙雲" && defender.id === 'D');
-                            let dodgeProb = isDragonZhaoYun ? 0.35 : 0.12; 
-                            let parryProb = isDragonZhaoYun ? 0.60 : 0.20; 
-                            let blockProb = isDragonZhaoYun ? 0.90 : 0.35; 
+                            let isDragonZhaoYun = (defender.name === "趙雲");
+                            let dodgeProb = (isDragonZhaoYun ? 0.20 : 0.10) + defender.stats.dodgeBonus; 
+                            let parryProb = dodgeProb + 0.08; 
+                            let blockProb = parryProb + (isDragonZhaoYun ? 0.30 : 0.15) + defender.stats.blockChance; 
 
                             if (defender.dodgeCount > 0) {
                                 defender.dodgeCount--;
@@ -2634,6 +2758,11 @@
                                 applyFighterDmg(defender, dmg, `<span style="color:#b0c4de;">[大亂鬥] 🛡️ 鏗鏘巨響！<span style="color:${defColor}">${defender.name}</span> 成功格擋 <span style="color:${atkColor}">${attacker.name}</span>，承受 ${Math.floor(dmg)} 點震傷。</span><br>`);
                             } else {
                                 applyFighterDmg(defender, dmg, `<span style="color:${atkColor}">[大亂鬥]</span> <span style="color:${atkColor}">${attacker.name}</span> 對 <span style="color:${defColor}">${defender.name}</span> ${moves[Math.floor(Math.random()*moves.length)]} 造成 ${Math.floor(dmg)} 點損傷。<br>`);
+                                if (attacker.stats.lifesteal > 0 && attacker.hp < attacker.maxHp) {
+                                    let heal = dmg * attacker.stats.lifesteal;
+                                    attacker.hp = Math.min(attacker.maxHp, attacker.hp + heal);
+                                    battleLog.innerHTML += `<span style="color:#ff3131;">🩸 【嗜血生效】<span style="color:${atkColor}">${attacker.name}</span> 汲取了 ${Math.floor(heal)} 點生命值！</span><br>`;
+                                }
                             }
                         }
                     }
@@ -2643,6 +2772,14 @@
             fighters.forEach(f => {
                 if(f.isDead) return;
                 let pct = (f.hp / f.maxHp) * 100;
+
+                // 標籤復活
+                if (f.hp <= 0 && f.stats.revives.length > 0) {
+                    let r = f.stats.revives.pop();
+                    f.hp = r.hp;
+                    battleLog.innerHTML += `<span style="color:#ffd700; font-weight:bold;">✨ 【逆轉生死】觸發 ${r.name}！<span style="color:${f.color}">${f.name}</span> 恢復至 ${f.hp} HP 繼續死戰！</span><br>`;
+                }
+
                 if (f.name === "殘卒" && pct <= 20 && f.hp > 0 && !f.remnantDodgeUsed) {
                     f.remnantDodgeUsed = true; f.dodgeCount += 10;
                     battleLog.innerHTML += `<span style="color:#cccccc; font-weight:bold;">💨 【螻蟻貪生】<span style="color:${f.color}">${f.name}</span> 發動苟延殘喘，獲得 10 次絕對閃避！</span><br>`;
@@ -2701,16 +2838,21 @@
         buttons.forEach(b => b.disabled = false);
     }
 
-    // ==============================================================
-    // ▼▼▼ 核心：全軍大逃殺 (光速海選 + 八強轉播) 推演模組 ▼▼▼
-    // ==============================================================
-
-   function quickSimulate(idx1, idx2) {
+    // -------------------------------------------------------------
+    // 【全軍大逃殺 - 光速海選演算法】掛載標籤
+    // -------------------------------------------------------------
+    function quickSimulate(idx1, idx2) {
         const p1 = generals[idx1];
         const p2 = generals[idx2];
 
         const p1ActualPower = p1.name === "趙雲" ? p1.power + 20 : p1.power;
         const p2ActualPower = p2.name === "趙雲" ? p2.power + 20 : p2.power;
+
+        let p1Stats = parseCombatStats(p1);
+        let p2Stats = parseCombatStats(p2);
+
+        let effP1Power = p1ActualPower * (1 - p2Stats.armorPen);
+        let effP2Power = p2ActualPower * (1 - p1Stats.armorPen);
 
         let h1 = 100, h2 = 100;
         let round = 1;
@@ -2766,23 +2908,38 @@
             if (p2.name === "殘卒" && h2 <= 20 && h2 > 0 && !p2RemnantDodgeUsed) { p2RemnantDodgeUsed = true; p2DodgeCount = 10; }
 
             if (h1 > 0 && h2 > 0) {
-                let dmg1 = Math.max(3, (p1ActualPower*0.12) - (p2ActualPower*0.04) + (Math.random()*12-4));
-                let dmg2 = Math.max(3, (p2ActualPower*0.12) - (p1ActualPower*0.04) + (Math.random()*12-4));
+                let dmg1 = Math.max(3, (effP1Power*0.12) - (effP2Power*0.04) + (Math.random()*12-4));
+                let dmg2 = Math.max(3, (effP2Power*0.12) - (effP1Power*0.04) + (Math.random()*12-4));
                 let eventRand = Math.random();
+
+                let p1DodgeProb = (p1.name === "趙雲" ? 0.12 : 0) + p1Stats.dodgeBonus;
+                let p2DodgeProb = (p2.name === "趙雲" ? 0.12 : 0) + p2Stats.dodgeBonus;
 
                 if (Math.random() > 0.5) { 
                     if (p2DodgeCount > 0) { p2DodgeCount--; } 
-                    else if (eventRand < 0.20) { }
-                    else if (eventRand < 0.35) { qApplyDmg2(dmg1 * 0.4); } 
-                    else { qApplyDmg2(dmg1); }
+                    else if (eventRand < p2DodgeProb) { }
+                    else if (eventRand < p2DodgeProb + 0.08) { } 
+                    else if (eventRand < p2DodgeProb + 0.08 + p2Stats.blockChance) { qApplyDmg2(dmg1 * 0.4); } 
+                    else { 
+                        qApplyDmg2(dmg1); 
+                        if (p1Stats.lifesteal > 0 && h1 < 100) h1 = Math.min(100, h1 + dmg1 * p1Stats.lifesteal);
+                    }
                 } 
                 else { 
                     if (p1DodgeCount > 0) { p1DodgeCount--; } 
-                    else if (eventRand < 0.20) { }
-                    else if (eventRand < 0.35) { qApplyDmg1(dmg2 * 0.4); } 
-                    else { qApplyDmg1(dmg2); }
+                    else if (eventRand < p1DodgeProb) { }
+                    else if (eventRand < p1DodgeProb + 0.08) { } 
+                    else if (eventRand < p1DodgeProb + 0.08 + p1Stats.blockChance) { qApplyDmg1(dmg2 * 0.4); } 
+                    else { 
+                        qApplyDmg1(dmg2); 
+                        if (p2Stats.lifesteal > 0 && h2 < 100) h2 = Math.min(100, h2 + dmg2 * p2Stats.lifesteal);
+                    }
                 }
             } 
+
+            // 光速復活判定
+            if (h1 <= 0 && p1Stats.revives.length > 0) { h1 = p1Stats.revives.pop().hp; }
+            if (h2 <= 0 && p2Stats.revives.length > 0) { h2 = p2Stats.revives.pop().hp; }
 
             h1 = Math.max(0, h1); h2 = Math.max(0, h2);
 
