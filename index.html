@@ -108,10 +108,22 @@
         <div id="rpgPanel" style="display: none; border: 1px solid #ffd700; padding: 10px; background: #222; margin-top: 10px; width: 100%; box-sizing: border-box;">
             <h4 style="margin: 0 0 10px 0; color: #ffd700;">⚔️ 武神修練場 (當前選中之異界武將)</h4>
             <div id="rpgStatsDisplay" style="font-size: 14px; margin-bottom: 10px; color: #ccc;"></div>
-            <div style="display: flex; gap: 5px;">
-                <button onclick="addRpgPower()" style="border-color: #ff8c00; color: #ff8c00; font-size: 12px; flex: 1;">加點武力 (-1 屬性點)</button>
+            
+            <div style="display: flex; gap: 5px; align-items: center; margin-bottom: 10px;">
+                <label style="color:#ff8c00; font-size:12px;">分配武力點：</label>
+                <input type="number" id="allocatePoints" min="0" value="0" style="width: 80px; padding: 5px; border: 1px solid #ff8c00; background: #000; color: #ff8c00;">
+                <button onclick="confirmStatAllocation()" style="border-color: #ff8c00; color: #ff8c00; font-size: 12px; flex: 1;">⚡ 灌注武力 (確認加點)</button>
+            </div>
+
+            <div style="display: flex; gap: 5px; margin-bottom: 10px;">
                 <button onclick="awakenSkill()" style="border-color: #00ffff; color: #00ffff; font-size: 12px; flex: 1;">覺醒新技能 (-3 技能點)</button>
-                <button onclick="cheatMaxLevel()" style="border-color: #ff3131; color: #ff3131; font-size: 12px; flex: 1;">(測試) 瞬間滿級</button>
+                <button onclick="cheatMaxLevel()" style="border-color: #ff3131; color: #ff3131; font-size: 12px; flex: 1;">🔥 瞬間滿級 (LV.99999)</button>
+            </div>
+
+            <div style="display: flex; gap: 5px; border-top: 1px dashed #555; padding-top: 10px;">
+                <button onclick="saveRpgGeneral()" style="border-color: #32cd32; color: #32cd32; font-size: 12px; flex: 1;">💾 保存武將</button>
+                <button onclick="loadRpgGenerals()" style="border-color: #1e90ff; color: #1e90ff; font-size: 12px; flex: 1;">📂 讀取武將</button>
+                <button onclick="deleteRpgGeneral()" style="border-color: #a52a2a; color: #ff3131; font-size: 12px; flex: 1;">🗑️ 徹底抹殺</button>
             </div>
         </div>
     </div>
@@ -205,7 +217,7 @@
     // ==============================================================
     // ▼▼▼ 全局數據與核心陣列 (Global Scope) ▼▼▼
     // ==============================================================
-    const generals = [
+    let generals = [
         {"name": "趙雲", "power": 100, "rank": "天下第一"},
         {"name": "關羽", "power": 99, "rank": "超一流"},
         {"name": "張飛", "power": 99, "rank": "超一流"},
@@ -1144,7 +1156,11 @@
     // ▼▼▼ 異界武將 RPG 系統模組 ▼▼▼
     // ==============================================================
     let currentRpgDraft = null;
-    const skillPool = ["嗜血狂擊", "銅牆鐵壁", "破甲尖錐", "幻影步", "九幽毒刃", "霸體反傷", "雷霆連斬", "風捲殘雲"];
+    const skillPool = [
+        "嗜血狂擊", "銅牆鐵壁", "破甲尖錐", "幻影步", "九幽毒刃", "霸體反傷", "雷霆連斬", "風捲殘雲",
+        "修羅浴血", "乾坤挪移", "極刃星閃", "萬劍歸宗", "天罡戰氣", "地煞魔魂", "龍魂附體", "八門遁甲",
+        "虛空碎裂", "涅槃業火", "神威天罰", "時空鎖定"
+    ];
 
     function rollRpgStats() {
         const nameInput = document.getElementById('rpgName').value.trim();
@@ -1247,6 +1263,34 @@
         `;
     }
 
+    // ---------------------------------------------------------
+    // 批量分配武力點系統
+    // ---------------------------------------------------------
+    function confirmStatAllocation() {
+        if (!activeRpgGeneral) return;
+        let inputNode = document.getElementById('allocatePoints');
+        let pts = parseInt(inputNode.value);
+        
+        if (isNaN(pts) || pts <= 0) {
+            alert("主公，請輸入有效的加點數值！");
+            return;
+        }
+        if (pts > activeRpgGeneral.statPoints) {
+            alert(`主公，剩餘武力點不足！當前僅有 ${activeRpgGeneral.statPoints} 點。`);
+            return;
+        }
+        
+        activeRpgGeneral.statPoints -= pts;
+        activeRpgGeneral.power += pts;
+        inputNode.value = 0; // 重置輸入框
+        
+        renderRpgPanel(activeRpgGeneral);
+        updateDropdowns(); // 刷新選單中的武力值顯示
+        
+        battleLog.innerHTML += `<br><span style="color:#ff8c00; font-weight:bold;">✨ 【潛能激發】${activeRpgGeneral.name} 瞬間灌注 ${pts} 點武力，當前總武力達 ${activeRpgGeneral.power}！</span><br>`;
+        battleLog.scrollTop = battleLog.scrollHeight;
+    }
+
     function addRpgPower() {
         if (activeRpgGeneral && activeRpgGeneral.statPoints > 0) {
             activeRpgGeneral.statPoints--;
@@ -1274,12 +1318,95 @@
         }
     }
 
+    // ---------------------------------------------------------
+    // 無延遲瞬間滿級 (破格直達 LV.99999)
+    // ---------------------------------------------------------
     function cheatMaxLevel() {
         if (activeRpgGeneral) {
-            gainExp(activeRpgGeneral.name, 999999999);
+            if(activeRpgGeneral.level >= 99999) {
+                alert("主公，此將已達巔峰，無須再升！"); return;
+            }
+            let levelsGained = 99999 - activeRpgGeneral.level;
+            activeRpgGeneral.level = 99999;
+            activeRpgGeneral.statPoints += levelsGained * 2;
+            activeRpgGeneral.skillPoints += levelsGained * 1;
+            activeRpgGeneral.exp = 0;
+            activeRpgGeneral.expNext = "MAX"; 
+            activeRpgGeneral.isMaxAwakened = true;
+            activeRpgGeneral.rank = "異界真神 (LV.99999)";
+            
+            if (!activeRpgGeneral.skills.includes("【天道寂滅・萬物歸零】")) {
+                activeRpgGeneral.skills.push("【天道寂滅・萬物歸零】");
+            }
+            
             renderRpgPanel(activeRpgGeneral);
             updateDropdowns();
+            
+            battleLog.innerHTML += `<br><span style="color:#ffffff; font-weight:bold; font-size:24px; text-shadow: 0 0 20px #ff00ff;">👑 【宇宙異象】${activeRpgGeneral.name} 瞬間打破位面極限，達到 LV.99999！<br>領悟終極秒殺技【天道寂滅・萬物歸零】！獲得 ${levelsGained * 2} 點武力點與 ${levelsGained} 點技能點！</span><br><br>`;
+            battleLog.scrollTop = battleLog.scrollHeight;
         }
+    }
+
+    // ---------------------------------------------------------
+    // 天道命盤 (LocalStorage) 保存 / 讀取 / 刪除系統
+    // ---------------------------------------------------------
+    function saveRpgGeneral() {
+        if (!activeRpgGeneral) { alert("主公，請先在單挑選單中選定欲保存的自創武將！"); return; }
+        
+        let savedData = JSON.parse(localStorage.getItem('rpgGenerals')) || {};
+        savedData[activeRpgGeneral.name] = activeRpgGeneral;
+        localStorage.setItem('rpgGenerals', JSON.stringify(savedData));
+        
+        alert(`主公，異界武將【${activeRpgGeneral.name}】之靈魂數據已封存於天道命盤 (LocalStorage)。`);
+        battleLog.innerHTML += `<br><span style="color:#32cd32; font-weight:bold;">💾 【數據封存】武將 ${activeRpgGeneral.name} 已安全保存！</span><br>`;
+        battleLog.scrollTop = battleLog.scrollHeight;
+    }
+
+    function loadRpgGenerals() {
+        let savedData = JSON.parse(localStorage.getItem('rpgGenerals'));
+        if (!savedData || Object.keys(savedData).length === 0) {
+            alert("主公，天道命盤中尚無封存之武將數據！"); return;
+        }
+        
+        let loadedCount = 0;
+        for (let key in savedData) {
+            let gen = savedData[key];
+            let existingIdx = generals.findIndex(g => g.name === gen.name && g.isRPG);
+            if (existingIdx !== -1) {
+                generals[existingIdx] = gen; 
+            } else {
+                generals.push(gen); 
+            }
+            loadedCount++;
+        }
+        
+        updateDropdowns();
+        alert(`已成功從天道命盤喚醒 ${loadedCount} 名異界武將！請在選單中查看。`);
+        battleLog.innerHTML += `<br><span style="color:#1e90ff; font-weight:bold;">📂 【時空召喚】成功讀取 ${loadedCount} 名自創武將降臨沙盤！</span><br>`;
+        battleLog.scrollTop = battleLog.scrollHeight;
+    }
+
+    function deleteRpgGeneral() {
+        if (!activeRpgGeneral) { alert("主公，請先選定欲抹殺的自創武將！"); return; }
+        
+        let confirmDelete = confirm(`警告：是否徹底抹殺武將【${activeRpgGeneral.name}】？此操作將從命盤中永久刪除其存在！`);
+        if (!confirmDelete) return;
+
+        let savedData = JSON.parse(localStorage.getItem('rpgGenerals')) || {};
+        if (savedData[activeRpgGeneral.name]) {
+            delete savedData[activeRpgGeneral.name];
+            localStorage.setItem('rpgGenerals', JSON.stringify(savedData));
+        }
+        
+        let targetName = activeRpgGeneral.name;
+        generals = generals.filter(g => !(g.name === targetName && g.isRPG));
+        
+        battleLog.innerHTML += `<br><span style="color:#ff3131; font-weight:bold; font-size:18px;">🗑️ 【天道抹殺】異界武將 ${targetName} 的代碼已被系統徹底銷毀！</span><br>`;
+        battleLog.scrollTop = battleLog.scrollHeight;
+        
+        activeRpgGeneral = null;
+        document.getElementById('rpgPanel').style.display = "none";
+        updateDropdowns();
     }
 
     // ==============================================================
@@ -2444,7 +2571,7 @@
                     else if (eventRand < 0.35) { qApplyDmg1(dmg2 * 0.4); } 
                     else { qApplyDmg1(dmg2); }
                 }
-            }
+                } // 結束 if (h1 > 0 && h2 > 0) 的區塊
 
             h1 = Math.max(0, h1); h2 = Math.max(0, h2);
 
