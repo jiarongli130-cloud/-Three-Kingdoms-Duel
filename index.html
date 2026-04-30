@@ -189,8 +189,9 @@
             </div>
             
             <div style="display: flex; gap: 5px; border-top: 1px dashed #555; padding-top: 10px; margin-top: 10px;">
-                <button onclick="giveRandomItem()" style="border-color: #ffd700; color: #ffd700; font-size: 12px; flex: 1;">🎁 隨機獲取神兵 (測試行囊)</button>
-            </div>
+                <button onclick="giveRandomItem()" style="border-color: #ffd700; color: #ffd700; font-size: 12px; flex: 1;">🎁 隨機獲取神兵 (測試行囊)</button>
+                <button onclick="giveAllItems()" style="border-color: #ff00ff; background: #2a002a; color: #ff00ff; font-size: 12px; flex: 1;">🌟 一鍵神兵全滿 (測試)</button>
+            </div>
         </div>
     </div>
 
@@ -1596,7 +1597,48 @@
         battleLog.innerHTML += `<br><span style="color:${logColor}; font-weight:bold; font-size:16px; text-shadow: 0 0 5px ${logColor};">✨ 【神兵認主】${activeRpgGeneral.name} 拔出了『${newItemObj.name}』！武力暴增 ${newItemObj.power} 點！</span><br>`;
         battleLog.scrollTop = battleLog.scrollHeight;
     }
+// ==========================================
+    // 天道後門：一鍵賦予所有神兵 (測試用)
+    // ==========================================
+    function giveAllItems() {
+        if (!activeRpgGeneral || !activeRpgGeneral.isRPG) {
+            alert("主公！此將乃凡人之軀，無法承受神兵的代碼重量！");
+            return;
+        }
+        if (!activeRpgGeneral.inventory) activeRpgGeneral.inventory = [];
 
+        let addedCount = 0;
+        let totalPowerGained = 0;
+
+        // 遍歷整個神兵庫
+        itemDatabase.forEach(itemObj => {
+            // 檢查行囊是否已達 50 格極限
+            if (activeRpgGeneral.inventory.length >= 50) return;
+            
+            // 檢查是否已擁有該神兵 (防止重複領取)
+            let alreadyHas = activeRpgGeneral.inventory.find(i => i.name === itemObj.name);
+            
+            if (!alreadyHas) {
+                activeRpgGeneral.inventory.push(itemObj);
+                activeRpgGeneral.power += itemObj.power; // 累加神兵武力
+                totalPowerGained += itemObj.power;
+                addedCount++;
+            }
+        });
+
+        if (addedCount > 0) {
+            // 重新渲染面板與下拉選單
+            renderRpgPanel(activeRpgGeneral);
+            updateDropdowns();
+            
+            battleLog.innerHTML += `<br><span style="color:#ff00ff; font-weight:bold; font-size:16px; text-shadow: 0 0 10px #ff00ff;">🌟 【天道寶庫全開】主公降下神蹟！${activeRpgGeneral.name} 瞬間獲得 ${addedCount} 件絕世神兵，武力狂飆 ${totalPowerGained} 點！</span><br>`;
+            triggerShake(); // 觸發沙盤震動特效
+        } else {
+            battleLog.innerHTML += `<br><span style="color:#aaa;">[提示] ${activeRpgGeneral.name} 已擁有所有神兵，或五十格行囊已滿，無法再容納！</span><br>`;
+        }
+        
+        battleLog.scrollTop = battleLog.scrollHeight;
+    }
     function populateSavedGenerals() {
         let savedData = JSON.parse(localStorage.getItem('rpgGenerals')) || {};
         let select = document.getElementById('savedGenSelect');
