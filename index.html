@@ -1436,7 +1436,7 @@
         while (gen.exp >= gen.expNext && gen.level < 99999) {
             gen.exp -= gen.expNext;
             gen.level++;
-            gen.statPoints += 1;
+            gen.statPoints += 2;
             gen.skillPoints += 1;
             gen.expNext = Math.floor(gen.expNext * 1.05) + 50;
             leveledUp = true;
@@ -1550,7 +1550,7 @@
             if(activeRpgGeneral.level >= 99999) { alert("主公，此將已達巔峰，無須再升！"); return; }
             let levelsGained = 99999 - activeRpgGeneral.level;
             activeRpgGeneral.level = 99999;
-            activeRpgGeneral.statPoints += levelsGained * 1;
+            activeRpgGeneral.statPoints += levelsGained * 2;
             activeRpgGeneral.skillPoints += levelsGained * 1;
             activeRpgGeneral.exp = 0; activeRpgGeneral.expNext = "MAX"; 
             activeRpgGeneral.isMaxAwakened = true;
