@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三國武神演武沙盤 7.0 - 狂龍極限無雙 (完全體 + RPG養成系統)</title>
+    <title>三國武神演武沙盤 7.0 - 狂龍極限無雙 (完全體 + RPG養成 + 銅雀紅顏系統)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -11,6 +11,7 @@
             --text-color: #00ff41;
             --accent-orange: #ff8c00;
             --accent-red: #ff3131;
+            --accent-pink: #ff69b4;
             --panel-bg: rgba(20, 20, 20, 0.9);
         }
         body {
@@ -134,6 +135,38 @@
         <button class="btn-random" onclick="randomize()" style="flex: 1;">天道隨機點將</button>
     </div>
 
+    <!-- 銅雀臺・紅顏招親系統 UI -->
+    <div class="controls" style="border: 2px dashed var(--accent-pink); padding: 15px; border-radius: 5px; background: rgba(255, 105, 180, 0.05); display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+        <h3 style="color: var(--accent-pink); margin: 0; text-shadow: 0 0 5px var(--accent-pink);">🌸 銅雀臺・比武招親大會 🌸</h3>
+        <p style="font-size: 12px; color: #aaa; margin-top: -5px; margin-bottom: 5px;">異界修羅專屬福利！戰勝紅顏（或其守護者），將其收入行囊。提升 HP 上限與每回合治癒！</p>
+        
+        <div style="display: flex; gap: 10px; width: 100%; align-items: center; flex-wrap: wrap;">
+            <select id="suitorSelect" style="flex: 1; min-width: 150px; border-color: #00ff41; color:#00ff41; background:#000;">
+                <option value="-1">-- 選擇您的自創武將 --</option>
+            </select>
+            <span style="color: #fff;">挑戰</span>
+            <select id="beautySelect" style="flex: 1; min-width: 150px; border-color: var(--accent-pink); color:var(--accent-pink); background:#000;">
+                <option value="樊玥">樊玥 (HP上限+25, 回復+5, 免疫致死)</option>
+                <option value="孫仁（孫尚香）">孫仁（孫尚香） (HP上限+15, 回復+1)</option>
+                <option value="馬雲騄">馬雲騄 (HP上限+15, 回復+1)</option>
+                <option value="祝融">祝融 (HP上限+15, 回復+1)</option>
+                <option value="貂蟬">貂蟬 (HP上限+5, 回復+3)</option>
+                <option value="大喬">大喬 (HP上限+5, 回復+3)</option>
+                <option value="小喬">小喬 (HP上限+5, 回復+3)</option>
+                <option value="甄氏">甄氏 (HP上限+5, 回復+3)</option>
+                <option value="黃氏（黃月英）">黃氏（黃月英） (HP上限+5, 回復+3)</option>
+                <option value="鄒氏">鄒氏 (HP上限+5, 回復+3)</option>
+                <option value="嚴氏">嚴氏 (HP上限+5, 回復+3)</option>
+                <option value="徐氏">徐氏 (HP上限+5, 回復+3)</option>
+                <option value="郭氏">郭氏 (HP上限+5, 回復+3)</option>
+                <option value="糜氏">糜氏 (HP上限+5, 回復+3)</option>
+                <option value="甘氏">甘氏 (HP上限+5, 回復+3)</option>
+            </select>
+            <button onclick="runMarriageTournament()" style="background: #4a001a; border-color: var(--accent-pink); color: var(--accent-pink); flex: 1;">💍 發起搶親挑戰！</button>
+        </div>
+    </div>
+
+    <!-- RPG 面板 -->
     <div class="controls" style="border: 2px dashed #ff00ff; padding: 15px; border-radius: 5px; background: rgba(255, 0, 255, 0.05); display: flex; flex-direction: column; gap: 10px;">
         <h3 style="color: #ff00ff; margin: 0; text-shadow: 0 0 5px #ff00ff;">🌌 綜合創角與天道命盤管理 🌌</h3>
         <p style="font-size: 12px; color: #aaa; margin-top: -5px; margin-bottom: 5px;">異界修羅可無限升級；歷史遺珠(凡人)武力由主公手動鎖定。皆具備50格神兵行囊。</p>
@@ -189,12 +222,13 @@
             </div>
             
             <div style="display: flex; gap: 5px; border-top: 1px dashed #555; padding-top: 10px; margin-top: 10px;">
-                <button onclick="giveRandomItem()" style="border-color: #ffd700; color: #ffd700; font-size: 12px; flex: 1;">🎁 隨機獲取神兵 (測試行囊)</button>
-                <button onclick="giveAllItems()" style="border-color: #ff00ff; background: #2a002a; color: #ff00ff; font-size: 12px; flex: 1;">🌟 一鍵神兵全滿 (測試)</button>
-            </div>
+                <button onclick="giveRandomItem()" style="border-color: #ffd700; color: #ffd700; font-size: 12px; flex: 1;">🎁 隨機獲取神兵</button>
+                <button onclick="giveAllItems()" style="border-color: #ff00ff; background: #2a002a; color: #ff00ff; font-size: 12px; flex: 1;">🌟 一鍵神兵全滿</button>
+            </div>
         </div>
     </div>
 
+    <!-- 一龍鬥群虎 -->
     <div class="controls" style="border: 1px solid #ffd700; padding: 15px; border-radius: 5px; background: rgba(255, 215, 0, 0.05); display: block; margin-bottom: 20px;">
         <h3 style="color: #ffd700; margin-top: 0; margin-bottom: 10px; text-shadow: 0 0 5px #ffd700;">🐉 一龍鬥群虎 (無加成極限挑戰) 🐅</h3>
         <p style="font-size: 12px; color: #aaa; margin-top: -5px; margin-bottom: 15px;">狂龍以 100 HP 單挑全場群虎！趙雲遭群毆時將觸發【高機率閃避格擋】與【10次玥之極】。瀕死附帶被動【九陽之火】！</p>
@@ -220,6 +254,7 @@
         </div>
     </div>
 
+    <!-- 軍團死鬥 -->
     <div class="controls" style="border: 1px solid #00ffff; padding: 15px; border-radius: 5px; background: rgba(0, 255, 255, 0.05); display: block;">
         <h3 style="color: #00ffff; margin-top: 0; margin-bottom: 10px; text-shadow: 0 0 5px #00ffff;">🛡️ 軍團死鬥 (最多 6 VS 6) 🛡️</h3>
         <p style="font-size: 12px; color: #aaa; margin-top: -5px; margin-bottom: 15px;">支援人數不對等戰鬥，請將空缺位設為「不參戰」。女將於此模式具備補血與神蹟加護！趙雲瀕死觸發【九陽之火】！</p>
@@ -242,6 +277,7 @@
         </div>
     </div>
 
+    <!-- 終極武道大會 -->
     <div class="controls" style="border: 1px solid #8a2be2; padding: 15px; border-radius: 5px; background: rgba(138, 43, 226, 0.1); display: block;">
         <h3 style="color: #8a2be2; margin-top: 0; margin-bottom: 10px; text-shadow: 0 0 5px #8a2be2;">🏆 終極武道大會 🏆</h3>
         <div style="display: flex; gap: 10px; margin-bottom: 10px;">
@@ -257,6 +293,7 @@
         <button class="btn-tournament" onclick="runGlobalTournament()" style="width: 100%; background: #4b0082; border-color: #8a2be2;">🌍 舉辦全軍大亂鬥 (全庫將領大逃殺)</button>
     </div>
 
+    <!-- 戰鬥畫面與圖表 -->
     <div class="battle-view">
         <div class="fighter" style="border: 1px solid var(--text-color); box-shadow: 0 0 10px rgba(0, 255, 65, 0.1);">
             <h2 id="p1Name" style="color: var(--text-color); text-shadow: 0 0 5px var(--text-color);">---</h2>
@@ -277,7 +314,7 @@
 
     <div id="battleLog">系統待命中...請選擇將領並按下發動，或舉辦賽事。</div>
     <div class="chart-container"><canvas id="hpChart"></canvas></div>
-    <div class="footer">什年工作室《三國演義武力超百科》授權終端 // 支援軍團自選與神蹟系統 // 內建暗黑RPG養成與行囊管理</div>
+    <div class="footer">什年工作室《三國演義武力超百科》授權終端 // 支援軍團自選與神蹟系統 // 內建暗黑RPG養成與行囊管理 // 銅雀春深紅顏招親大會</div>
 </div>
 
     <script>
@@ -909,12 +946,28 @@
 
     const skillPool = Object.keys(skillDict);
 
-    // 【50件武神兵器譜】 植入底層標籤
+    // 【50件武神兵器譜 + 15件紅顏伴侶】 植入底層標籤
     const itemDatabase = [
-        // T0
+        // 🌸 銅雀春深：紅顏伴侶 (新增 15 位)
+        { name: "樊玥", power: 0, maxHpBonus: 25, hpRegen: 5, revive: true, reviveHp: 1, isConsumable: true, desc: "【紅顏伴侶】神明級彩蛋。提升 25 點HP上限，每回合自動治癒 5 點，並可抵擋一次致命傷！" },
+        { name: "孫仁（孫尚香）", power: 5, maxHpBonus: 15, hpRegen: 1, desc: "【紅顏伴侶】弓腰姬。提升 15 點HP上限，每回合治癒 1 點，並自帶微量武力加成。" },
+        { name: "馬雲騄", power: 5, maxHpBonus: 15, hpRegen: 1, desc: "【紅顏伴侶】西涼女將。提升 15 點HP上限，每回合治癒 1 點，並自帶微量武力加成。" },
+        { name: "祝融", power: 5, maxHpBonus: 15, hpRegen: 1, desc: "【紅顏伴侶】火神之裔。提升 15 點HP上限，每回合治癒 1 點，並自帶微量武力加成。" },
+        { name: "貂蟬", power: 0, maxHpBonus: 5, hpRegen: 3, desc: "【紅顏伴侶】閉月之顏。提升 5 點HP上限，溫柔撫慰每回合自動治癒 3 點。" },
+        { name: "大喬", power: 0, maxHpBonus: 5, hpRegen: 3, desc: "【紅顏伴侶】江東二喬。提升 5 點HP上限，溫柔撫慰每回合自動治癒 3 點。" },
+        { name: "小喬", power: 0, maxHpBonus: 5, hpRegen: 3, desc: "【紅顏伴侶】江東二喬。提升 5 點HP上限，溫柔撫慰每回合自動治癒 3 點。" },
+        { name: "甄氏", power: 0, maxHpBonus: 5, hpRegen: 3, desc: "【紅顏伴侶】洛神賦。提升 5 點HP上限，溫柔撫慰每回合自動治癒 3 點。" },
+        { name: "黃氏（黃月英）", power: 0, maxHpBonus: 5, hpRegen: 3, desc: "【紅顏伴侶】機關巧匠。提升 5 點HP上限，利用修復代碼每回合治癒 3 點。" },
+        { name: "鄒氏", power: 0, maxHpBonus: 5, hpRegen: 3, desc: "【紅顏伴侶】溫柔鄉。提升 5 點HP上限，溫柔撫慰每回合自動治癒 3 點。" },
+        { name: "嚴氏", power: 0, maxHpBonus: 5, hpRegen: 3, desc: "【紅顏伴侶】溫柔鄉。提升 5 點HP上限，溫柔撫慰每回合自動治癒 3 點。" },
+        { name: "徐氏", power: 0, maxHpBonus: 5, hpRegen: 3, desc: "【紅顏伴侶】溫柔鄉。提升 5 點HP上限，溫柔撫慰每回合自動治癒 3 點。" },
+        { name: "郭氏", power: 0, maxHpBonus: 5, hpRegen: 3, desc: "【紅顏伴侶】溫柔鄉。提升 5 點HP上限，溫柔撫慰每回合自動治癒 3 點。" },
+        { name: "糜氏", power: 0, maxHpBonus: 5, hpRegen: 3, desc: "【紅顏伴侶】溫柔鄉。提升 5 點HP上限，溫柔撫慰每回合自動治癒 3 點。" },
+        { name: "甘氏", power: 0, maxHpBonus: 5, hpRegen: 3, desc: "【紅顏伴侶】溫柔鄉。提升 5 點HP上限，溫柔撫慰每回合自動治癒 3 點。" },
+
+        // ⚔️ 原有神兵 (T0 - T3)
         { name: "青釭劍", power: 25, armorPen: 0.1, lifesteal: 0.05, desc: "【劍中帝王】曹操恩賜。削鐵如泥，無視敵方10%防禦代碼與 5% 吸血。" },
         { name: "照夜玉獅子", power: 0, dodgeBonus: 0.1, desc: "【絕世神駒】趙雲坐騎。純白如玉，自帶 10% 絕對閃避率。" },
-        // T1
         { name: "方天畫戟", power: 15, armorPen: 0.02, desc: "【鬼神之器】呂布專屬。增加範圍掃蕩與 2% 破甲機率。" },
         { name: "青龍偃月刀", power: 19, armorPen: 0.02, desc: "【武聖之刃】關羽專屬。爆發力極高，自帶 2% 破甲。" },
         { name: "丈八蛇矛", power: 19, armorPen: 0.02, desc: "【萬人敵】張飛專屬。攻擊附帶深層撕裂。" },
@@ -923,7 +976,6 @@
         { name: "雌雄雙股劍", power: 17, blockChance: 0.05, desc: "【仁道之兵】劉備雙劍。雙持武器，增加 5% 格擋反擊機率。" },
         { name: "烏騅馬", power: 0, armorPen: 0.04, desc: "【霸王坐騎】楚霸王遺種。衝鋒時附帶 4% 破甲撞擊傷害。" },
         { name: "的盧馬", power: 0, dodgeBonus: 0.02, desc: "【妨主卻救主】躍馬檀溪的神駒。自帶 2% 閃避機率。" },
-        // T2
         { name: "古錠刀", power: 15, armorPen: 0.02, desc: "江東猛虎孫堅信物，刀身流轉戰意，提升 2% 破甲。" },
         { name: "雙鐵戟", power: 15, blockChance: 0.02, desc: "典韋專屬重兵器，大幅提升 2% 近戰格擋成功率。" },
         { name: "鐵脊蛇矛", power: 14, armorPen: 0.02, desc: "程普兵器，穩紮穩打，攻擊勢大力沉且自帶 2% 破甲。" },
@@ -944,7 +996,6 @@
         { name: "諸葛連弩", power: 14, armorPen: 0.05, desc: "發射十矢，造成密集的多段打擊，極難完全閃避。" },
         { name: "南蠻毒矢", power: 12, lifesteal: 0.02, desc: "見血封喉的毒物，一旦擦傷便會不斷腐蝕敵方HP並微量吸血。" },
         { name: "大宛良馬", power: 0, dodgeBonus: 0.02, desc: "西域產名馬，耐力十足，提升持久戰的體力恢復與閃避。" },
-        // T3
         { name: "遁甲天書殘卷", power: 0, dodgeBonus: 0.02, desc: "記載奇門遁甲，能干擾敵方技能鎖定，提升 2% 閃避。" },
         { name: "太平要術", power: 0, dodgeBonus: 0.01, desc: "張角遺物，可發動精神干擾，令對手產生幻覺。" },
         { name: "孟德新書", power: 0, blockChance: 0.02, desc: "看穿敵方兵法運作邏輯，增加 2% 看破與反擊機率。" },
@@ -967,13 +1018,17 @@
         { name: "墨軍師的錦囊", power: 30, armorPen: 0.1, dodgeBonus: 0.1, blockChance: 0.1, lifesteal: 0.1, revive: true, reviveHp: 100, isConsumable: false, desc: "【終極彩蛋】內含作者『什年』的憤怒與『墨軍師』的算計，全屬性提升，並自帶一次滿血復活神蹟。" }
     ];
 
+    // 隨機獲取只給裝備，不給紅顏
     function getRandomItemObj() {
-        return itemDatabase[Math.floor(Math.random() * itemDatabase.length)];
+        let equipmentOnly = itemDatabase.filter(i => !i.desc.includes("【紅顏伴侶】"));
+        return equipmentOnly[Math.floor(Math.random() * equipmentOnly.length)];
     }
 
-    // 將武將的神兵與技能轉換為動態戰鬥變數
+    // 將武將的神兵、技能、紅顏伴侶轉換為動態戰鬥變數
     function parseCombatStats(gen) {
-        let stats = { armorPen: 0, dodgeBonus: 0, lifesteal: 0, blockChance: 0, revives: [] };
+        // 新增 maxHpBonus 與 hpRegen
+        let stats = { armorPen: 0, dodgeBonus: 0, lifesteal: 0, blockChance: 0, maxHpBonus: 0, hpRegen: 0, revives: [] };
+        
         if (gen.isRPG && gen.skills) {
             gen.skills.forEach(skill => {
                 let effect = skillEffects[skill];
@@ -986,6 +1041,7 @@
                 }
             });
         }
+        
         if (gen.inventory) {
             gen.inventory.forEach(item => {
                 if (item.lifesteal) stats.lifesteal += item.lifesteal;
@@ -993,12 +1049,15 @@
                 if (item.armorPen) stats.armorPen += item.armorPen;
                 if (item.blockChance) stats.blockChance += item.blockChance;
                 if (item.revive) stats.revives.push({ type: "item", hp: item.reviveHp, name: item.name, isConsumable: item.isConsumable });
+                // 讀取紅顏數值
+                if (item.maxHpBonus) stats.maxHpBonus += item.maxHpBonus;
+                if (item.hpRegen) stats.hpRegen += item.hpRegen;
             });
         }
         return stats;
     }
 
-    // 名將大絕招與詠唱詞資料庫
+        // 名將大絕招與詠唱詞資料庫
     const ultimateSkills = {
         "關羽": { name: "威震華夏・武聖偃月劈", dmg: 48, color: "#00ff41", desc: "青龍偃月刀劃破虛空，爆發出武聖的傲氣與無盡殺意！" },
         "張飛": { name: "燕人咆哮・萬人敵碎擊", dmg: 47, color: "#ff3131", desc: "丈八蛇矛化作狂暴黑龍，伴隨雷霆怒吼撕裂敵方防線！" },
@@ -1476,6 +1535,8 @@
         activeRpgGeneral = gen;
         document.getElementById('rpgPanel').style.display = "block";
         
+        let statsObj = parseCombatStats(gen);
+
         if (gen.isRPG) {
             document.getElementById('rpgActionButtons').style.display = "flex";
             
@@ -1483,7 +1544,8 @@
             if (gen.inventory && gen.inventory.length > 0) {
                 invHtml = gen.inventory.map(item => {
                     if(typeof item === 'string') return item; 
-                    return `<span class="tooltip" style="color:#ffd700;">${item.name}<span class="tooltiptext"><span class="title">${item.name} (武力+${item.power})</span>${item.desc}</span></span>`;
+                    let color = item.desc.includes("【紅顏伴侶】") ? "var(--accent-pink)" : "#ffd700";
+                    return `<span class="tooltip" style="color:${color};">${item.name}<span class="tooltiptext"><span class="title">${item.name}</span>${item.desc}</span></span>`;
                 }).join("、");
             }
 
@@ -1495,6 +1557,8 @@
                 <strong>武將：</strong> <span style="color:#00ff41;">${gen.name}</span> (異界修羅)<br>
                 <strong>等級：</strong> LV.${gen.level} <span style="color:#aaa;">(EXP: ${gen.exp}/${gen.expNext})</span><br>
                 <strong>總和武力：</strong> <span style="color:#ff8c00;">${gen.power}</span> <br>
+                <strong>HP 上限加成：</strong> <span style="color:var(--accent-pink);">+${statsObj.maxHpBonus}</span> | 
+                <strong>自動治癒：</strong> <span style="color:var(--accent-pink);">+${statsObj.hpRegen}</span><br>
                 <strong>剩餘武力點：</strong> <span style="color:#ff8c00;">${gen.statPoints}</span> | 
                 <strong>剩餘技能點：</strong> <span style="color:#00ffff;">${gen.skillPoints}</span><br>
                 <strong>已習得技能：</strong> ${skillsHtml}<br>
@@ -1579,7 +1643,7 @@
             return;
         }
         
-        let newItemObj = getRandomItemObj();
+        let newItemObj = getRandomItemObj(); // 排除紅顏的隨機神兵
         let alreadyHas = activeRpgGeneral.inventory.find(i => i.name === newItemObj.name);
         if(alreadyHas) {
             battleLog.innerHTML += `<br><span style="color:#aaa;">[尋寶] ${activeRpgGeneral.name} 尋得了『${newItemObj.name}』，但因已擁有而捨棄。</span><br>`;
@@ -1597,48 +1661,42 @@
         battleLog.innerHTML += `<br><span style="color:${logColor}; font-weight:bold; font-size:16px; text-shadow: 0 0 5px ${logColor};">✨ 【神兵認主】${activeRpgGeneral.name} 拔出了『${newItemObj.name}』！武力暴增 ${newItemObj.power} 點！</span><br>`;
         battleLog.scrollTop = battleLog.scrollHeight;
     }
-// ==========================================
-    // 天道後門：一鍵賦予所有神兵 (測試用)
-    // ==========================================
-    function giveAllItems() {
-        if (!activeRpgGeneral || !activeRpgGeneral.isRPG) {
-            alert("主公！此將乃凡人之軀，無法承受神兵的代碼重量！");
-            return;
-        }
-        if (!activeRpgGeneral.inventory) activeRpgGeneral.inventory = [];
 
-        let addedCount = 0;
-        let totalPowerGained = 0;
+    // 天道後門：一鍵賦予所有神兵 (測試用，僅限裝備)
+    function giveAllItems() {
+        if (!activeRpgGeneral || !activeRpgGeneral.isRPG) {
+            alert("主公！此將乃凡人之軀，無法承受神兵的代碼重量！");
+            return;
+        }
+        if (!activeRpgGeneral.inventory) activeRpgGeneral.inventory = [];
 
-        // 遍歷整個神兵庫
-        itemDatabase.forEach(itemObj => {
-            // 檢查行囊是否已達 50 格極限
-            if (activeRpgGeneral.inventory.length >= 50) return;
-            
-            // 檢查是否已擁有該神兵 (防止重複領取)
-            let alreadyHas = activeRpgGeneral.inventory.find(i => i.name === itemObj.name);
-            
-            if (!alreadyHas) {
-                activeRpgGeneral.inventory.push(itemObj);
-                activeRpgGeneral.power += itemObj.power; // 累加神兵武力
-                totalPowerGained += itemObj.power;
-                addedCount++;
-            }
-        });
+        let addedCount = 0;
+        let totalPowerGained = 0;
 
-        if (addedCount > 0) {
-            // 重新渲染面板與下拉選單
-            renderRpgPanel(activeRpgGeneral);
-            updateDropdowns();
-            
-            battleLog.innerHTML += `<br><span style="color:#ff00ff; font-weight:bold; font-size:16px; text-shadow: 0 0 10px #ff00ff;">🌟 【天道寶庫全開】主公降下神蹟！${activeRpgGeneral.name} 瞬間獲得 ${addedCount} 件絕世神兵，武力狂飆 ${totalPowerGained} 點！</span><br>`;
-            triggerShake(); // 觸發沙盤震動特效
-        } else {
-            battleLog.innerHTML += `<br><span style="color:#aaa;">[提示] ${activeRpgGeneral.name} 已擁有所有神兵，或五十格行囊已滿，無法再容納！</span><br>`;
-        }
-        
-        battleLog.scrollTop = battleLog.scrollHeight;
-    }
+        let equipmentOnly = itemDatabase.filter(i => !i.desc.includes("【紅顏伴侶】"));
+
+        equipmentOnly.forEach(itemObj => {
+            if (activeRpgGeneral.inventory.length >= 50) return;
+            let alreadyHas = activeRpgGeneral.inventory.find(i => i.name === itemObj.name);
+            if (!alreadyHas) {
+                activeRpgGeneral.inventory.push(itemObj);
+                activeRpgGeneral.power += itemObj.power; 
+                totalPowerGained += itemObj.power;
+                addedCount++;
+            }
+        });
+
+        if (addedCount > 0) {
+            renderRpgPanel(activeRpgGeneral);
+            updateDropdowns();
+            battleLog.innerHTML += `<br><span style="color:#ff00ff; font-weight:bold; font-size:16px; text-shadow: 0 0 10px #ff00ff;">🌟 【天道寶庫全開】主公降下神蹟！${activeRpgGeneral.name} 瞬間獲得 ${addedCount} 件絕世神兵，武力狂飆 ${totalPowerGained} 點！</span><br>`;
+            triggerShake(); 
+        } else {
+            battleLog.innerHTML += `<br><span style="color:#aaa;">[提示] ${activeRpgGeneral.name} 已擁有所有神兵，或五十格行囊已滿，無法再容納！</span><br>`;
+        }
+        battleLog.scrollTop = battleLog.scrollHeight;
+    }
+
     function populateSavedGenerals() {
         let savedData = JSON.parse(localStorage.getItem('rpgGenerals')) || {};
         let select = document.getElementById('savedGenSelect');
@@ -1715,6 +1773,9 @@
         const tourneySelect = document.getElementById('tourneySelect');
         if(tourneySelect) tourneySelect.innerHTML = '';
         
+        const suitorSelect = document.getElementById('suitorSelect');
+        if (suitorSelect) suitorSelect.innerHTML = '<option value="-1">-- 選擇您的自創武將 --</option>';
+
         const teamSelects = [
             document.getElementById('tA0'), document.getElementById('tA1'), document.getElementById('tA2'),
             document.getElementById('tA3'), document.getElementById('tA4'), document.getElementById('tA5'),
@@ -1752,8 +1813,12 @@
             p1Select.add(new Option(optStr, idx));
             p2Select.add(new Option(optStr, idx));
             if(tourneySelect) tourneySelect.add(new Option(optStr, idx));
-            if (dragonSelect) dragonSelect.add(new Option(optStr, idx));
+            if(dragonSelect) dragonSelect.add(new Option(optStr, idx));
             
+            if(g.inventory !== undefined && suitorSelect) {
+                suitorSelect.add(new Option(optStr, idx));
+            }
+
             teamSelects.forEach(sel => {
                 if(sel) sel.add(new Option(optStr, idx));
             });
@@ -1839,7 +1904,7 @@
         hpChart = new Chart(ctx, {
             type: 'line',
             data: { labels: [0], datasets: [{ label: '先鋒 HP', data: [100], borderColor: '#00ff41', tension: 0.1 }, { label: '敵將 HP', data: [100], borderColor: '#ff3131', tension: 0.1 }] },
-            options: { responsive: true, scales: { y: { min: 0, max: 100 } } }
+            options: { responsive: true, scales: { y: { min: 0 } } }
         });
     }
 
@@ -1849,8 +1914,97 @@
         setTimeout(() => warroom.classList.remove('shaking'), 300);
     }
 
-        // ==============================================================
-    // ▼▼▼ 核心演算法：掛載標籤系統的終極戰鬥推演 ▼▼▼
+    // ==============================================================
+    // 🌸 銅雀春深・比武招親 核心演算法 🌸
+    // ==============================================================
+    async function runMarriageTournament() {
+        let suitorIdx = parseInt(document.getElementById('suitorSelect').value);
+        if(isNaN(suitorIdx) || suitorIdx === -1) { alert("主公，請先選擇參賽的自創武將！"); return; }
+        
+        let suitor = generals[suitorIdx];
+        if(!suitor || suitor.inventory === undefined) { alert("只有擁有行囊的自創武將/歷史遺珠才能招親！"); return; }
+        
+        let beautyName = document.getElementById('beautySelect').value;
+        let beautyItem = itemDatabase.find(i => i.name === beautyName && i.desc.includes("【紅顏伴侶】"));
+        
+        // 檢查是否已經擁有
+        if(suitor.inventory.find(i => i.name === beautyName)) {
+            alert("主公！【" + suitor.name + "】的後宮中已有【" + beautyName + "】，請勿貪得無厭！");
+            return;
+        }
+        if(suitor.inventory.length >= 50) {
+            alert("主公！五十格行囊已滿，無法再迎娶！");
+            return;
+        }
+
+        let guardianName = beautyName; // 預設打女將本人
+        let guardianMap = {
+            "貂蟬": "呂布",
+            "大喬": "孫策",
+            "小喬": "周瑜",
+            "甄氏": "曹丕",
+            "黃氏（黃月英）": "諸葛亮",
+            "孫仁（孫尚香）": "劉備",
+            "樊玥": "趙雲" // 神明級終極BOSS
+        };
+        if(guardianMap[beautyName]) guardianName = guardianMap[beautyName];
+
+        let guardianIdx = generals.findIndex(g => g.name === guardianName);
+        if(guardianIdx === -1) guardianIdx = generals.findIndex(g => g.name === beautyName);
+
+        p1Select.value = suitorIdx;
+        p2Select.value = guardianIdx;
+
+        const buttons = document.querySelectorAll("button");
+        buttons.forEach(b => b.disabled = true);
+
+        battleLog.innerHTML = `<h2 style="color:var(--accent-pink); text-align:center; text-shadow: 0 0 10px var(--accent-pink);">🌸 銅雀春深・比武招親 🌸</h2>`;
+        battleLog.innerHTML += `<div style="text-align:center; color:#ccc; font-weight:bold; font-size:16px;">
+            <span style="color:var(--text-color);">${suitor.name}</span> 誓要迎娶 <span style="color:var(--accent-pink);">${beautyName}</span>！<br>
+            守護武神/考驗者：<span style="color:var(--accent-red);">${generals[guardianIdx].name}</span> 出戰！
+        </div><hr style="border-color:#333;">`;
+        battleLog.scrollTop = battleLog.scrollHeight;
+        await new Promise(r => setTimeout(r, 2000));
+
+        // 臨時 Buff 女將 (如果是女將親自下場考核，武力臨時大幅增加，增加挑戰性)
+        let originalPower = generals[guardianIdx].power;
+        if(guardianName === beautyName) {
+            generals[guardianIdx].power += 30; 
+        }
+
+        // 發動對決
+        let winnerIndex = await startDuel(true);
+
+        // 還原 Buff
+        if(guardianName === beautyName) {
+            generals[guardianIdx].power = originalPower;
+        }
+
+        if(winnerIndex === suitorIdx) {
+            if(beautyItem) {
+                suitor.inventory.push(beautyItem);
+                if (beautyItem.power > 0) suitor.power += beautyItem.power; // 孫尚香、馬雲騄、祝融自帶微量武力加成
+                
+                battleLog.innerHTML += `<br><div style="text-align:center; padding:20px; border: 2px solid var(--accent-pink); background:rgba(255,105,180,0.1); margin-top:20px; box-shadow: 0 0 30px rgba(255,105,180,0.5);">
+                    <h1 style="color:var(--accent-pink); text-shadow: 0 0 15px var(--accent-pink); margin:0;">【招親大捷】</h1>
+                    <h2 style="color:#ffffff; font-size:24px; margin-top:10px;">💍 ${suitor.name} 成功抱得美人歸 💍</h2>
+                    <p style="color:#ccc;">${beautyName} 已入駐行囊！<br>永久獲得 <span style="color:#00ff41;">HP上限 +${beautyItem.maxHpBonus}</span>，<span style="color:#ffd700;">每回合治癒 +${beautyItem.hpRegen}</span>！</p>
+                </div><br><br>`;
+                renderRpgPanel(suitor);
+            }
+        } else {
+            battleLog.innerHTML += `<br><div style="text-align:center; padding:20px; border: 2px solid #555; background:rgba(50,50,50,0.5); margin-top:20px;">
+                <h1 style="color:#aaa; margin:0;">【招親失敗】</h1>
+                <p style="color:#ccc; margin-top:10px;">${suitor.name} 不敵守護者，未能贏得 ${beautyName} 的芳心... 黯然退場。</p>
+            </div><br><br>`;
+        }
+        
+        battleLog.scrollTop = battleLog.scrollHeight;
+        buttons.forEach(b => b.disabled = false);
+    }
+
+    // ==============================================================
+    // ▼▼▼ 核心演算法：掛載標籤系統與紅顏 HP 上限/治癒 的終極戰鬥推演 ▼▼▼
     // ==============================================================
 
     async function startDuel(isTournamentMode = false) {
@@ -1860,7 +2014,7 @@
         let p1ActualPower = p1.name === "趙雲" ? p1.power + 20 : p1.power;
         let p2ActualPower = p2.name === "趙雲" ? p2.power + 20 : p2.power;
 
-        // 【植入標籤系統】解析雙方神兵與技能的真實戰鬥屬性
+        // 【植入標籤系統】解析雙方神兵、技能與紅顏的真實戰鬥屬性
         let p1Stats = parseCombatStats(p1);
         let p2Stats = parseCombatStats(p2);
 
@@ -1873,11 +2027,15 @@
         document.getElementById('p2Name').innerText = p2.name;
         document.getElementById('p2Rank').innerText = p2.rank;
 
-        let h1 = 100, h2 = 100;
+        // 植入紅顏系統：最大 HP 上限擴充
+        let maxHp1 = 100 + p1Stats.maxHpBonus;
+        let maxHp2 = 100 + p2Stats.maxHpBonus;
+        let h1 = maxHp1, h2 = maxHp2;
+
         document.getElementById('p1HpBar').style.width = "100%";
         document.getElementById('p2HpBar').style.width = "100%";
-        document.getElementById('p1HpText').innerText = "100/100";
-        document.getElementById('p2HpText').innerText = "100/100";
+        document.getElementById('p1HpText').innerText = h1 + "/" + maxHp1;
+        document.getElementById('p2HpText').innerText = h2 + "/" + maxHp2;
 
         let round = 1;
         let p1Ult30Used = false, p2Ult30Used = false;
@@ -1912,6 +2070,8 @@
 
         if (!isTournamentMode) {
             battleLog.innerHTML = `[對決啟動] ${p1.name} VS ${p2.name}<br>系統正在進行武力維度模擬...<br>`;
+            if (p1Stats.maxHpBonus > 0) battleLog.innerHTML += `<span style="color:var(--accent-pink);">💖 【銅雀春深】${p1.name} 獲得紅顏庇護，HP 上限提升至 ${maxHp1}！</span><br>`;
+            if (p2Stats.maxHpBonus > 0) battleLog.innerHTML += `<span style="color:var(--accent-pink);">💖 【銅雀春深】${p2.name} 獲得紅顏庇護，HP 上限提升至 ${maxHp2}！</span><br>`;
         }
         initChart();
 
@@ -1961,8 +2121,8 @@
                 }
             }
             
-            let atkPct1 = h1 / 100 * 100;
-            let atkPct2 = h2 / 100 * 100;
+            let atkPct1 = h1 / maxHp1 * 100;
+            let atkPct2 = h2 / maxHp2 * 100;
 
             if (p1.name === "趙雲" && atkPct1 <= 10 && h1 > 0 && p1Ult10Count < 1 && h2 > 0) {
                 p1Ult10Count++; 
@@ -2058,9 +2218,9 @@
 
             // 女將單挑/車輪戰 自我補血與狀態提升
             if (isTournamentMode) {
-                if (femaleHealers[p1.name] && h1 > 0 && h1 < 100 && Math.random() < 0.25) {
+                if (femaleHealers[p1.name] && h1 > 0 && h1 < maxHp1 && Math.random() < 0.25) {
                     let hData = femaleHealers[p1.name];
-                    h1 = Math.min(100, h1 + hData.heal);
+                    h1 = Math.min(maxHp1, h1 + hData.heal);
                     let logMsg = `<span style="color:#ff69b4; font-weight:bold;">[第${round}合] 💖 【紅顏祈禱】<span style="color:var(--text-color)">${p1.name}</span> 施展醫術，恢復自身 ${hData.heal} 點生命！</span><br>`;
                     if (hData.buff > 0) {
                         effP1Power += hData.buff; // 修改實時破壞力
@@ -2069,9 +2229,9 @@
                     battleLog.innerHTML += logMsg;
                     triggerShake();
                 }
-                if (femaleHealers[p2.name] && h2 > 0 && h2 < 100 && Math.random() < 0.25) {
+                if (femaleHealers[p2.name] && h2 > 0 && h2 < maxHp2 && Math.random() < 0.25) {
                     let hData = femaleHealers[p2.name];
-                    h2 = Math.min(100, h2 + hData.heal);
+                    h2 = Math.min(maxHp2, h2 + hData.heal);
                     let logMsg = `<span style="color:#ff69b4; font-weight:bold;">[第${round}合] 💖 【紅顏祈禱】<span style="color:var(--accent-red)">${p2.name}</span> 施展醫術，恢復自身 ${hData.heal} 點生命！</span><br>`;
                     if (hData.buff > 0) {
                         effP2Power += hData.buff;
@@ -2111,9 +2271,9 @@
                         applyDmg2(dmg1, `<span style="color:#b0c4de;">[第${round}合] 🛡️ 鏗鏘巨響！${p2.name} 成功格擋 ${p1.name}，僅承受 ${Math.floor(dmg1)} 點震傷。</span><br>`);
                     } else {
                         applyDmg2(dmg1, `<span style="color:var(--text-color)">[第${round}合]</span> ${p1.name} ${moves[Math.floor(Math.random()*moves.length)]} 造成 ${Math.floor(dmg1)} 點損傷。<br>`);
-                        if (p1Stats.lifesteal > 0 && h1 < 100) {
+                        if (p1Stats.lifesteal > 0 && h1 < maxHp1) {
                             let heal = dmg1 * p1Stats.lifesteal;
-                            h1 = Math.min(100, h1 + heal);
+                            h1 = Math.min(maxHp1, h1 + heal);
                             battleLog.innerHTML += `<span style="color:#ff3131;">🩸 【嗜血生效】${p1.name} 從敵方數據中汲取了 ${Math.floor(heal)} 點生命值！</span><br>`;
                         }
                     }
@@ -2132,9 +2292,9 @@
                     } else {
                         applyDmg1(dmg2, `<span style="color:var(--accent-red)">[第${round}合]</span> ${p2.name} ${moves[Math.floor(Math.random()*moves.length)]} ${p1.name} 承受 ${Math.floor(dmg2)} 點破壞。<br>`);
                         // 3. 吸血判定介入
-                        if (p2Stats.lifesteal > 0 && h2 < 100) {
+                        if (p2Stats.lifesteal > 0 && h2 < maxHp2) {
                             let healAmount = dmg2 * p2Stats.lifesteal;
-                            h2 = Math.min(100, h2 + healAmount);
+                            h2 = Math.min(maxHp2, h2 + healAmount);
                             battleLog.innerHTML += `<span style="color:#ff3131;">🩸 【嗜血生效】${p2.name} 汲取了 ${Math.floor(healAmount)} 點生命值！</span><br>`;
                         }
                     }
@@ -2177,20 +2337,30 @@
             }
 
             if (p1.name === "樊玥" && atkPct1 <= 30 && !p1FanYueHealUsed) {
-                p1FanYueHealUsed = true; h1 = 100;
+                p1FanYueHealUsed = true; h1 = maxHp1;
                 battleLog.innerHTML += `<br><span style="color:#ff69b4; font-weight:bold; font-size:18px;">💋 強制發動專屬神技【樊玥之吻】！${p1.name} 瞬間滿血復活！</span><br><br>`;
                 triggerShake(); setTimeout(triggerShake, 200);
             }
             if (p2.name === "樊玥" && atkPct2 <= 30 && !p2FanYueHealUsed) {
-                p2FanYueHealUsed = true; h2 = 100;
+                p2FanYueHealUsed = true; h2 = maxHp2;
                 battleLog.innerHTML += `<br><span style="color:#ff69b4; font-weight:bold; font-size:18px;">💋 強制發動專屬神技【樊玥之吻】！${p2.name} 瞬間滿血復活！</span><br><br>`;
                 triggerShake(); setTimeout(triggerShake, 200);
             }
 
-            document.getElementById('p1HpBar').style.width = h1 + "%";
-            document.getElementById('p2HpBar').style.width = h2 + "%";
-            document.getElementById('p1HpText').innerText = Math.floor(h1) + "/100";
-            document.getElementById('p2HpText').innerText = Math.floor(h2) + "/100";
+            // 紅顏系統：回合自動治癒結算
+            if(p1Stats.hpRegen > 0 && h1 > 0 && h1 < maxHp1) {
+                h1 = Math.min(maxHp1, h1 + p1Stats.hpRegen);
+                battleLog.innerHTML += `<span style="color:var(--accent-pink);">💖 【紅顏撫慰】${p1.name} 獲得溫柔鄉治癒，恢復了 ${p1Stats.hpRegen} 點 HP！</span><br>`;
+            }
+            if(p2Stats.hpRegen > 0 && h2 > 0 && h2 < maxHp2) {
+                h2 = Math.min(maxHp2, h2 + p2Stats.hpRegen);
+                battleLog.innerHTML += `<span style="color:var(--accent-pink);">💖 【紅顏撫慰】${p2.name} 獲得溫柔鄉治癒，恢復了 ${p2Stats.hpRegen} 點 HP！</span><br>`;
+            }
+
+            document.getElementById('p1HpBar').style.width = (h1/maxHp1*100) + "%";
+            document.getElementById('p2HpBar').style.width = (h2/maxHp2*100) + "%";
+            document.getElementById('p1HpText').innerText = Math.floor(h1) + "/" + maxHp1;
+            document.getElementById('p2HpText').innerText = Math.floor(h2) + "/" + maxHp2;
             
             hpChart.data.labels.push(round);
             hpChart.data.datasets[0].data.push(h1);
@@ -2244,13 +2414,13 @@
         const dStats = parseCombatStats(dGen); // 掛載標籤
 
         let fighters = [];
-        fighters.push({ id: 'D', team: 'A', name: dGen.name, power: dGen.power, rank: dGen.rank, actualPower: dActualPower, stats: dStats, hp: 100, maxHp: 100, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#00ff41' });
+        fighters.push({ id: 'D', team: 'A', name: dGen.name, power: dGen.power, rank: dGen.rank, actualPower: dActualPower, stats: dStats, hp: 100 + dStats.maxHpBonus, maxHp: 100 + dStats.maxHpBonus, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#00ff41' });
         
         for(let i=0; i<tIdxs.length; i++) {
             let g = generals[tIdxs[i]];
             let p = g.name === "趙雲" ? g.power + 20 : g.power;
             let st = parseCombatStats(g); // 掛載標籤
-            fighters.push({ id: 'T'+i, team: 'B', name: g.name, power: g.power, rank: g.rank, actualPower: p, stats: st, hp: 100, maxHp: 100, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#ff3131' });
+            fighters.push({ id: 'T'+i, team: 'B', name: g.name, power: g.power, rank: g.rank, actualPower: p, stats: st, hp: 100 + st.maxHpBonus, maxHp: 100 + st.maxHpBonus, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#ff3131' });
         }
 
         document.getElementById('p1Name').innerText = "狂龍: " + dGen.name;
@@ -2258,7 +2428,7 @@
         document.getElementById('p2Name').innerText = `群虎陣營 (${tIdxs.length}人)`;
         document.getElementById('p2Rank').innerText = "無差別圍剿戰術";
         
-        const totalTigersHp = tIdxs.length * 100;
+        const totalTigersHp = fighters.filter(f=>f.team==='B').reduce((s,f) => s + f.maxHp, 0);
 
         function update1vNBars() {
             let dragon = fighters[0];
@@ -2468,6 +2638,12 @@
                     battleLog.innerHTML += `<span style="color:#ff69b4; font-weight:bold;">💋 【樊玥之吻】<span style="color:${f.color}">${f.name}</span> 瞬間滿血復活！</span><br>`;
                 }
 
+                // 紅顏系統：回合自動治癒結算
+                if(f.stats.hpRegen > 0 && f.hp > 0 && f.hp < f.maxHp) {
+                    f.hp = Math.min(f.maxHp, f.hp + f.stats.hpRegen);
+                    battleLog.innerHTML += `<span style="color:var(--accent-pink);">💖 【紅顏撫慰】<span style="color:${f.color}">${f.name}</span> 獲得治癒，恢復了 ${f.stats.hpRegen} 點 HP！</span><br>`;
+                }
+
                 if (f.hp <= 0) {
                     f.hp = 0; f.isDead = true;
                     battleLog.innerHTML += `<span style="color:#ff3131; font-weight:bold; border-bottom: 1px solid #555; display:block; padding-bottom:5px; margin-bottom:5px;">🩸 [陣亡] <span style="color:${f.color}">${f.name}</span> 倒在了血泊中...</span>`;
@@ -2622,12 +2798,12 @@
         for(let i=0; i<teamA_idxs.length; i++) {
             let g = generals[teamA_idxs[i]];
             let st = parseCombatStats(g);
-            fighters.push({ id: 'A'+i, team: 'A', name: g.name, power: g.power, rank: g.rank, actualPower: g.name === "趙雲" ? g.power + 20 : g.power, stats: st, hp: 100, maxHp: 100, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#00ff41' });
+            fighters.push({ id: 'A'+i, team: 'A', name: g.name, power: g.power, rank: g.rank, actualPower: g.name === "趙雲" ? g.power + 20 : g.power, stats: st, hp: 100 + st.maxHpBonus, maxHp: 100 + st.maxHpBonus, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#00ff41' });
         }
         for(let i=0; i<teamB_idxs.length; i++) {
             let g = generals[teamB_idxs[i]];
             let st = parseCombatStats(g);
-            fighters.push({ id: 'B'+i, team: 'B', name: g.name, power: g.power, rank: g.rank, actualPower: g.name === "趙雲" ? g.power + 20 : g.power, stats: st, hp: 100, maxHp: 100, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#ff3131' });
+            fighters.push({ id: 'B'+i, team: 'B', name: g.name, power: g.power, rank: g.rank, actualPower: g.name === "趙雲" ? g.power + 20 : g.power, stats: st, hp: 100 + st.maxHpBonus, maxHp: 100 + st.maxHpBonus, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#ff3131' });
         }
 
         document.getElementById('p1Name').innerText = "青龍陣營 (全軍)";
@@ -2635,8 +2811,8 @@
         document.getElementById('p2Name').innerText = "赤虎陣營 (全軍)";
         document.getElementById('p2Rank').innerText = `${teamB_idxs.length} 名大將`;
         
-        const totalMaxHpA = teamA_idxs.length * 100;
-        const totalMaxHpB = teamB_idxs.length * 100;
+        const totalMaxHpA = fighters.filter(f=>f.team==='A').reduce((s,f) => s + f.maxHp, 0);
+        const totalMaxHpB = fighters.filter(f=>f.team==='B').reduce((s,f) => s + f.maxHp, 0);
         
         function updateTeamBars() {
             let aHp = fighters.filter(f=>f.team==='A').reduce((s,f)=>s+f.hp,0);
@@ -2721,7 +2897,7 @@
                         battleLog.innerHTML += `<br><span style="color:#ff3131; font-weight:bold;">⚡ 【絕對武力碾壓】<span style="color:${atkColor}">${attacker.name}</span> 身形如鬼魅，【瞬獄秒殺】將 <span style="color:${defColor}">${defender.name}</span> 斬落馬下！當場陣亡！</span><br>`;
                         triggerShake();
                     } else {
-                        let effDefPower = defender.actualPower * (1 - attacker.stats.armorPen); // 破甲衰減
+                        let effDefPower = defender.actualPower * (1 - attacker.stats.armorPen); 
 
                         if (attacker.isRPG && attacker.level >= 99999 && Math.random() < 0.3) {
                             defender.hp = 0; defender.isDead = true;
@@ -2834,6 +3010,13 @@
                     f.fanYueHealUsed = true; f.hp = f.maxHp;
                     battleLog.innerHTML += `<span style="color:#ff69b4; font-weight:bold;">💋 【樊玥之吻】<span style="color:${f.color}">${f.name}</span> 瞬間滿血復活！</span><br>`;
                 }
+
+                // 紅顏系統：回合自動治癒結算
+                if(f.stats.hpRegen > 0 && f.hp > 0 && f.hp < f.maxHp) {
+                    f.hp = Math.min(f.maxHp, f.hp + f.stats.hpRegen);
+                    battleLog.innerHTML += `<span style="color:var(--accent-pink);">💖 【紅顏撫慰】<span style="color:${f.color}">${f.name}</span> 獲得治癒，恢復了 ${f.stats.hpRegen} 點 HP！</span><br>`;
+                }
+
                 if (f.hp <= 0) {
                     f.hp = 0; f.isDead = true;
                     battleLog.innerHTML += `<span style="color:#ff3131; font-weight:bold; border-bottom: 1px solid #555; display:block; padding-bottom:5px; margin-bottom:5px;">🩸 [陣亡] <span style="color:${f.color}">${f.name}</span> 倒在了血泊中...</span>`;
@@ -2896,7 +3079,10 @@
         let effP1Power = p1ActualPower * (1 - p2Stats.armorPen);
         let effP2Power = p2ActualPower * (1 - p1Stats.armorPen);
 
-        let h1 = 100, h2 = 100;
+        let maxHp1 = 100 + p1Stats.maxHpBonus;
+        let maxHp2 = 100 + p2Stats.maxHpBonus;
+        let h1 = maxHp1, h2 = maxHp2;
+        
         let round = 1;
         let p1Ult30Used = false, p1Ult10Used = false, p2Ult30Used = false, p2Ult10Used = false;
         let p1GodDefyUsed = false, p2GodDefyUsed = false, p1CustomUltUsed = false, p2CustomUltUsed = false;
@@ -2964,7 +3150,7 @@
                     else if (eventRand < p2DodgeProb + 0.08 + p2Stats.blockChance) { qApplyDmg2(dmg1 * 0.4); } 
                     else { 
                         qApplyDmg2(dmg1); 
-                        if (p1Stats.lifesteal > 0 && h1 < 100) h1 = Math.min(100, h1 + dmg1 * p1Stats.lifesteal);
+                        if (p1Stats.lifesteal > 0 && h1 < maxHp1) h1 = Math.min(maxHp1, h1 + dmg1 * p1Stats.lifesteal);
                     }
                 } 
                 else { 
@@ -2974,7 +3160,7 @@
                     else if (eventRand < p1DodgeProb + 0.08 + p1Stats.blockChance) { qApplyDmg1(dmg2 * 0.4); } 
                     else { 
                         qApplyDmg1(dmg2); 
-                        if (p2Stats.lifesteal > 0 && h2 < 100) h2 = Math.min(100, h2 + dmg2 * p2Stats.lifesteal);
+                        if (p2Stats.lifesteal > 0 && h2 < maxHp2) h2 = Math.min(maxHp2, h2 + dmg2 * p2Stats.lifesteal);
                     }
                 }
             } 
@@ -2987,8 +3173,12 @@
 
             if (p1.name === "趙雲" && p2.rank.includes("神仙流") && h1 === 0 && !p1GodDefyUsed) { h1 = 1; p1GodDefyUsed = true; }
             if (p2.name === "趙雲" && p1.rank.includes("神仙流") && h2 === 0 && !p2GodDefyUsed) { h2 = 1; p2GodDefyUsed = true; }
-            if (p1.name === "樊玥" && h1 <= 30 && !p1FanYueHealUsed) { p1FanYueHealUsed = true; h1 = 100; }
-            if (p2.name === "樊玥" && h2 <= 30 && !p2FanYueHealUsed) { p2FanYueHealUsed = true; h2 = 100; }
+            if (p1.name === "樊玥" && h1 <= 30 && !p1FanYueHealUsed) { p1FanYueHealUsed = true; h1 = maxHp1; }
+            if (p2.name === "樊玥" && h2 <= 30 && !p2FanYueHealUsed) { p2FanYueHealUsed = true; h2 = maxHp2; }
+            
+            if(p1Stats.hpRegen > 0 && h1 > 0) h1 = Math.min(maxHp1, h1 + p1Stats.hpRegen);
+            if(p2Stats.hpRegen > 0 && h2 > 0) h2 = Math.min(maxHp2, h2 + p2Stats.hpRegen);
+
             round++;
         }
         
