@@ -1077,7 +1077,7 @@
         { name: "嗜血納米蟲群", power: 0, lifesteal: 0.05, desc: "【異界科技】釋放蟲群吞噬敵方數據，獲得 5% 強大吸血。" },
         { name: "墨軍師的錦囊", power: 30, armorPen: 0.1, dodgeBonus: 0.1, blockChance: 0.1, lifesteal: 0.1, revive: true, reviveHp: 100, isConsumable: false, desc: "【彩蛋】內含作者的憤怒與墨軍師的算計，全屬性提升，自帶一次復活。" },
         // --- 😈 【修羅七誓】全破關終極神賞 ---
-        { name: "什年的真理之筆", power: 100000, maxHpBonus: 100, hpRegen: 50, revive: true, reviveHp: 100, reviveCount: 5, isConsumable: false, isHiddenItem: true, desc: "【創世神賞】作者什年親賜。武力+100，HP上限+100，回合治癒+50，附帶 5 次滿血復活神蹟！" }
+        { name: "什年的真理之筆", power: 100, maxHpBonus: 100, hpRegen: 50, revive: true, reviveHp: 100, reviveCount: 5, isConsumable: false, isHiddenItem: true, desc: "【創世神賞】作者什年親賜。武力+100，HP上限+100，回合治癒+50，附帶 5 次滿血復活神蹟！" }
     ];
 
     // 隨機獲取只給裝備，不給紅顏，且排除隱藏神兵(真理之筆)
@@ -3655,6 +3655,21 @@
                 <h1 style="color:#ff0000; text-shadow: 0 0 20px #ff0000; font-size:36px; margin:0;">【抹殺確認】</h1>
                 <p style="color:#ccc; font-size:18px; margin-top:15px;">異數已消除，歷史的齒輪再度轉動...</p>
                 <p style="color:#ff3131;">主公的武將倒在了無盡的亂碼與嘆息之中。</p>
+                <!-- 暗黑兵法轉發區 -->
+                <div style="margin-top:20px; border-top:1px dashed #ff0000; padding-top:15px;">
+                    <h3 style="color:#ff8c00; margin-bottom:5px;">📜【暗黑兵法：借天道之勢】📜</h3>
+                    <p style="color:#aaa; font-size:14px; margin-top:0;">不甘心就此隕落？向諸天萬界轉發此戰況，每轉發一界，汲取10萬點天地靈氣！<br>（累積上限：100萬點）</p>
+                    <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:10px;">
+                        <button onclick="executeDarkShare('FB')" style="border-color:#3b5998; color:#3b5998; width:auto; padding:5px 15px;">轉發至FB</button>
+                        <button onclick="executeDarkShare('LINE')" style="border-color:#00c300; color:#00c300; width:auto; padding:5px 15px;">轉發至LINE</button>
+                        <button onclick="executeDarkShare('IG')" style="border-color:#e1306c; color:#e1306c; width:auto; padding:5px 15px;">轉發至IG</button>
+                        <button onclick="executeDarkShare('Threads')" style="border-color:#ffffff; color:#000000; background:#ffffff; width:auto; padding:5px 15px;">轉發至Threads</button>
+                        <button onclick="executeDarkShare('X')" style="border-color:#1da1f2; color:#1da1f2; width:auto; padding:5px 15px;">轉發至X</button>
+                        <button onclick="executeDarkShare('巴哈姆特')" style="border-color:#00bfff; color:#00bfff; width:auto; padding:5px 15px;">轉發至巴哈姆特</button>
+                        <button onclick="executeDarkShare('B站')" style="border-color:#fb7299; color:#fb7299; width:auto; padding:5px 15px;">轉發至B站</button>
+                        <button onclick="executeDarkShare('微信')" style="border-color:#07c160; color:#07c160; width:auto; padding:5px 15px;">轉發至微信</button>
+                    </div>
+                </div>
             </div><br><br>`;
         }
 
@@ -3666,6 +3681,48 @@
             updateAsuraUI();
             if (p1Hp > 0) renderRpgPanel(activeRpgGeneral); // 更新 UI 以顯示真理之筆
         }, 5000);
+    }
+        // ==============================================================
+    // 😈 【暗黑兵法】轉發吸星大法 (全域變數與函數)
+    // ==============================================================
+    function executeDarkShare(platform) {
+        if (!activeRpgGeneral || !activeRpgGeneral.isRPG) {
+            alert("主公！僅有自創之異界修羅能施展此暗黑兵法！");
+            return;
+        }
+        
+        // 於武將命盤中初始化該武將的轉發加成記錄
+        if (typeof activeRpgGeneral.sharedPower === 'undefined') {
+            activeRpgGeneral.sharedPower = 0;
+        }
+
+        if (activeRpgGeneral.sharedPower >= 1000000) {
+            alert("主公！此武將的天地靈氣已被吸乾，已達100萬武力點數上限！請速速重啟弒神之戰！");
+            return;
+        }
+
+        // 喚起諸天萬界之門 (開啟分享連結)
+        let shareUrls = {
+            'FB': 'https://www.facebook.com/sharer/sharer.php?u=https://www.google.com',
+            'LINE': 'https://social-plugins.line.me/lineit/share?url=https://www.google.com',
+            'X': 'https://twitter.com/intent/tweet?text=我正在挑戰三國真神！&url=https://www.google.com',
+            'Threads': 'https://www.threads.net/intent/post?text=我正在挑戰三國真神！'
+        };
+        let url = shareUrls[platform] || 'about:blank';
+        window.open(url, '_blank', 'width=600,height=400');
+
+        // 強制竄改源代碼注入武力
+        activeRpgGeneral.sharedPower += 100000;
+        activeRpgGeneral.power += 100000;
+        saveActiveRpgGeneral(); // 封存入命盤
+
+        let logNode = document.getElementById('battleLog');
+        logNode.innerHTML += `<br><span style="color:#00ff41; font-weight:bold; font-size:18px; text-shadow:0 0 10px #00ff41;">🌌【借勢成功】成功轉發至${platform}！汲取天地靈氣，武力暴增100000點！（當前加成：${activeRpgGeneral.sharedPower}/1000000）</span><br>`;
+        logNode.scrollTop = logNode.scrollHeight;
+
+        // 更新介面
+        renderRpgPanel(activeRpgGeneral);
+        updateDropdowns();
     }
 </script>
 </body>
