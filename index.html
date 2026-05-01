@@ -2157,7 +2157,7 @@
                 } else if (p2.name === "趙雲" && Math.random() < 0.5) {
                     battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】${p1.name} 強發動【九天龍吟驚寰宇】！</span><br><span style="color:#00ffff; font-weight:bold; font-size:18px;">🛡️ 【龍膽同源】敵方 ${p2.name} 【無傷】化解！</span><br><br>`;
                 } else {
-                    applyDmg2(50, `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】${p1.name} 槍出如龍！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 天地變色！${p2.name} 瞬間慘遭重創（-50 HP）！</span><br><br>`);
+                    applyDmg2(50, `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】${p1.name} 槍出如龍！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 發動【九天龍吟驚寰宇】！天地變色！${p2.name} 瞬間慘遭重創（-50 HP）！</span><br><br>`);
                 }
                 triggerShake(); setTimeout(triggerShake, 150); setTimeout(triggerShake, 300);
                 await new Promise(r => setTimeout(r, 800));
@@ -2170,7 +2170,7 @@
                 } else if (p1.name === "趙雲" && Math.random() < 0.5) {
                     battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】敵將 ${p2.name} 強發動【九天龍吟驚寰宇】！</span><br><span style="color:#00ffff; font-weight:bold; font-size:18px;">🛡️ 【龍膽同源】我方 ${p1.name} 【無傷】化解！</span><br><br>`;
                 } else {
-                    applyDmg1(50, `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】敵將 ${p2.name} 槍出如龍！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 天地變色！${p1.name} 瞬間慘遭重創（-50 HP）！</span><br><br>`);
+                    applyDmg1(50, `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】敵將 ${p2.name} 槍出如龍！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 發動【九天龍吟驚寰宇】！天地變色！${p1.name} 瞬間慘遭重創（-50 HP）！</span><br><br>`);
                 }
                 triggerShake(); setTimeout(triggerShake, 150); setTimeout(triggerShake, 300);
                 await new Promise(r => setTimeout(r, 800));
