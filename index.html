@@ -138,7 +138,7 @@
     <!-- 銅雀臺・紅顏招親系統 UI -->
     <div class="controls" style="border: 2px dashed var(--accent-pink); padding: 15px; border-radius: 5px; background: rgba(255, 105, 180, 0.05); display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
         <h3 style="color: var(--accent-pink); margin: 0; text-shadow: 0 0 5px var(--accent-pink);">🌸 銅雀臺・比武招親大會 🌸</h3>
-        <p style="font-size: 12px; color: #aaa; margin-top: -5px; margin-bottom: 5px;">異界修羅專屬福利！戰勝紅顏（或其守護者），將其收入行囊。提升 HP 上限與每回合治癒！</p>
+        <p style="font-size: 12px; color: #aaa; margin-top: -5px; margin-bottom: 5px;">異界修羅與在野猛將專屬福利！戰勝紅顏（或其守護者），將其迎入深宮。提升 HP 上限與每回合治癒！</p>
         
         <div style="display: flex; gap: 10px; width: 100%; align-items: center; flex-wrap: wrap;">
             <select id="suitorSelect" style="flex: 1; min-width: 150px; border-color: #00ff41; color:#00ff41; background:#000;">
@@ -169,7 +169,7 @@
     <!-- RPG 面板 -->
     <div class="controls" style="border: 2px dashed #ff00ff; padding: 15px; border-radius: 5px; background: rgba(255, 0, 255, 0.05); display: flex; flex-direction: column; gap: 10px;">
         <h3 style="color: #ff00ff; margin: 0; text-shadow: 0 0 5px #ff00ff;">🌌 綜合創角與天道命盤管理 🌌</h3>
-        <p style="font-size: 12px; color: #aaa; margin-top: -5px; margin-bottom: 5px;">異界修羅可無限升級；歷史遺珠(凡人)武力由主公手動鎖定。皆具備50格神兵行囊。</p>
+        <p style="font-size: 12px; color: #aaa; margin-top: -5px; margin-bottom: 5px;">異界修羅可無限升級；歷史遺珠(凡人)武力由主公手動鎖定。皆具備50格神兵行囊與15格銅雀深宮。</p>
         
         <div style="display: flex; gap: 10px; width: 100%; align-items: center;">
             <input type="text" id="rpgName" placeholder="輸入自創武將姓名" style="flex: 2; border-color: #ff00ff;">
@@ -231,7 +231,7 @@
     <!-- 一龍鬥群虎 -->
     <div class="controls" style="border: 1px solid #ffd700; padding: 15px; border-radius: 5px; background: rgba(255, 215, 0, 0.05); display: block; margin-bottom: 20px;">
         <h3 style="color: #ffd700; margin-top: 0; margin-bottom: 10px; text-shadow: 0 0 5px #ffd700;">🐉 一龍鬥群虎 (無加成極限挑戰) 🐅</h3>
-        <p style="font-size: 12px; color: #aaa; margin-top: -5px; margin-bottom: 15px;">狂龍以 100 HP 單挑全場群虎！趙雲遭群毆時將觸發【高機率閃避格擋】與【10次玥之極】。瀕死附帶被動【九陽之火】！</p>
+        <p style="font-size: 12px; color: #aaa; margin-top: -5px; margin-bottom: 15px;">狂龍以滿血 單挑全場群虎！趙雲遭群毆時將觸發【高機率閃避格擋】與【10次玥之極】。瀕死附帶被動【九陽之火】！</p>
         <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
             <div class="team-selects" style="flex: 1; border: 1px solid #00ff41; padding: 10px; border-radius: 5px; min-width: 250px;">
                 <h4 style="color:#00ff41; margin-top:0; text-align:center;">狂龍 (單挑者)</h4>
@@ -314,7 +314,7 @@
 
     <div id="battleLog">系統待命中...請選擇將領並按下發動，或舉辦賽事。</div>
     <div class="chart-container"><canvas id="hpChart"></canvas></div>
-    <div class="footer">什年工作室《三國演義武力超百科》授權終端 // 支援軍團自選與神蹟系統 // 內建暗黑RPG養成與行囊管理 // 銅雀春深紅顏招親大會</div>
+    <div class="footer">什年工作室《三國演義武力超百科》授權終端 // 支援軍團自選與神蹟系統 // 內建暗黑RPG養成、行囊管理與銅雀深宮招親系統</div>
 </div>
 
     <script>
@@ -1026,7 +1026,6 @@
 
     // 將武將的神兵、技能、紅顏伴侶轉換為動態戰鬥變數
     function parseCombatStats(gen) {
-        // 新增 maxHpBonus 與 hpRegen
         let stats = { armorPen: 0, dodgeBonus: 0, lifesteal: 0, blockChance: 0, maxHpBonus: 0, hpRegen: 0, revives: [] };
         
         if (gen.isRPG && gen.skills) {
@@ -1042,6 +1041,7 @@
             });
         }
         
+        // 讀取神兵行囊 (50格)
         if (gen.inventory) {
             gen.inventory.forEach(item => {
                 if (item.lifesteal) stats.lifesteal += item.lifesteal;
@@ -1049,11 +1049,18 @@
                 if (item.armorPen) stats.armorPen += item.armorPen;
                 if (item.blockChance) stats.blockChance += item.blockChance;
                 if (item.revive) stats.revives.push({ type: "item", hp: item.reviveHp, name: item.name, isConsumable: item.isConsumable });
-                // 讀取紅顏數值
-                if (item.maxHpBonus) stats.maxHpBonus += item.maxHpBonus;
-                if (item.hpRegen) stats.hpRegen += item.hpRegen;
             });
         }
+
+        // 讀取銅雀深宮 (15格紅顏) - 向下相容舊存檔
+        if (gen.harem) {
+            gen.harem.forEach(wife => {
+                if (wife.revive) stats.revives.push({ type: "harem", hp: wife.reviveHp, name: wife.name, isConsumable: wife.isConsumable });
+                if (wife.maxHpBonus) stats.maxHpBonus += wife.maxHpBonus;
+                if (wife.hpRegen) stats.hpRegen += wife.hpRegen;
+            });
+        }
+
         return stats;
     }
 
@@ -1438,7 +1445,7 @@
             currentRpgDraft = {
                 name: nameInput, power: initPower, rank: "異界凡人 (LV.1)",
                 isRPG: true, level: 1, exp: 0, expNext: 100, statPoints: 0, skillPoints: 0,
-                skills: initSkills, inventory: [], isMaxAwakened: false
+                skills: initSkills, inventory: [], harem: [], isMaxAwakened: false // 新增 harem 陣列
             };
             document.getElementById('prevSkillsContainer').style.display = "block";
             
@@ -1456,7 +1463,7 @@
             }
             currentRpgDraft = {
                 name: nameInput, power: manualPower, rank: "自創在野猛將",
-                isRPG: false, inventory: [] 
+                isRPG: false, inventory: [], harem: [] // 凡人亦可擁有行囊與紅顏
             };
             document.getElementById('prevSkillsContainer').style.display = "none";
         }
@@ -1543,9 +1550,16 @@
             let invHtml = "無";
             if (gen.inventory && gen.inventory.length > 0) {
                 invHtml = gen.inventory.map(item => {
-                    if(typeof item === 'string') return item; 
-                    let color = item.desc.includes("【紅顏伴侶】") ? "var(--accent-pink)" : "#ffd700";
-                    return `<span class="tooltip" style="color:${color};">${item.name}<span class="tooltiptext"><span class="title">${item.name}</span>${item.desc}</span></span>`;
+                    return `<span class="tooltip" style="color:#ffd700;">${item.name}<span class="tooltiptext"><span class="title">${item.name}</span>${item.desc}</span></span>`;
+                }).join("、");
+            }
+
+            let haremHtml = "虛位以待";
+            // 兼容舊存檔防錯
+            if (!gen.harem) gen.harem = [];
+            if (gen.harem && gen.harem.length > 0) {
+                haremHtml = gen.harem.map(wife => {
+                    return `<span class="tooltip" style="color:var(--accent-pink);">${wife.name}<span class="tooltiptext"><span class="title" style="color:var(--accent-pink);">${wife.name}</span>${wife.desc}</span></span>`;
                 }).join("、");
             }
 
@@ -1559,18 +1573,31 @@
                 <strong>總和武力：</strong> <span style="color:#ff8c00;">${gen.power}</span> <br>
                 <strong>HP 上限加成：</strong> <span style="color:var(--accent-pink);">+${statsObj.maxHpBonus}</span> | 
                 <strong>自動治癒：</strong> <span style="color:var(--accent-pink);">+${statsObj.hpRegen}</span><br>
-                <strong>剩餘武力點：</strong> <span style="color:#ff8c00;">${gen.statPoints}</span> | 
-                <strong>剩餘技能點：</strong> <span style="color:#00ffff;">${gen.skillPoints}</span><br>
+                <strong>剩餘武力/技能點：</strong> <span style="color:#ff8c00;">${gen.statPoints}</span> / <span style="color:#00ffff;">${gen.skillPoints}</span><br>
                 <strong>已習得技能：</strong> ${skillsHtml}<br>
-                <strong style="color:#ffd700;">五十格行囊 (${gen.inventory.length}/50)：</strong><br> ${invHtml}
+                <div style="margin-top:8px; border-top:1px dashed #555; padding-top:8px;">
+                    <strong style="color:var(--accent-pink);">🌸 銅雀深宮 (${gen.harem.length}/15)：</strong><br> ${haremHtml}<br>
+                </div>
+                <div style="margin-top:8px;">
+                    <strong style="color:#ffd700;">⚔️ 五十格行囊 (${gen.inventory.length}/50)：</strong><br> ${invHtml}
+                </div>
             `;
             document.getElementById('rpgActionButtons').nextElementSibling.style.display = "flex";
         } else {
+            // 凡人將領面板簡化
             document.getElementById('rpgActionButtons').style.display = "none";
+            
+            let haremHtml = "無";
+            if (!gen.harem) gen.harem = [];
+            if (gen.harem && gen.harem.length > 0) {
+                haremHtml = gen.harem.map(w => `<span style="color:var(--accent-pink);">${w.name}</span>`).join("、");
+            }
+
             document.getElementById('rpgStatsDisplay').innerHTML = `
                 <strong>武將：</strong> <span style="color:#ff3131;">${gen.name}</span> (歷史遺珠)<br>
                 <strong>鎖定武力：</strong> <span style="color:#ff8c00;">${gen.power}</span><br>
-                <strong style="color:#aaa;">【階級壁壘】：凡人之軀，不具備異界行囊，無法裝備神兵與技能。</strong>
+                <strong style="color:var(--accent-pink);">🌸 銅雀深宮 (${gen.harem.length}/15)：</strong> ${haremHtml}<br>
+                <strong style="color:#aaa;">【階級壁壘】：凡人之軀，不具備神兵行囊與技能樹。</strong>
             `;
             document.getElementById('rpgActionButtons').nextElementSibling.style.display = "none";
         }
@@ -1922,18 +1949,22 @@
         if(isNaN(suitorIdx) || suitorIdx === -1) { alert("主公，請先選擇參賽的自創武將！"); return; }
         
         let suitor = generals[suitorIdx];
-        if(!suitor || suitor.inventory === undefined) { alert("只有擁有行囊的自創武將/歷史遺珠才能招親！"); return; }
+        if(!suitor || suitor.inventory === undefined) { alert("只有自創武將/歷史遺珠才能參與招親！"); return; }
         
+        // 兼容舊存檔防錯
+        if(!suitor.harem) suitor.harem = [];
+
         let beautyName = document.getElementById('beautySelect').value;
         let beautyItem = itemDatabase.find(i => i.name === beautyName && i.desc.includes("【紅顏伴侶】"));
         
-        // 檢查是否已經擁有
-        if(suitor.inventory.find(i => i.name === beautyName)) {
-            alert("主公！【" + suitor.name + "】的後宮中已有【" + beautyName + "】，請勿貪得無厭！");
+        // 檢查是否已經擁有該紅顏
+        if(suitor.harem.find(i => i.name === beautyName)) {
+            alert("主公！【" + suitor.name + "】的銅雀臺中已有【" + beautyName + "】，請勿貪得無厭！");
             return;
         }
-        if(suitor.inventory.length >= 50) {
-            alert("主公！五十格行囊已滿，無法再迎娶！");
+        // 檢查紅顏15格上限
+        if(suitor.harem.length >= 15) {
+            alert("主公！十五格銅雀深宮已滿，無法再迎娶更多佳麗！");
             return;
         }
 
@@ -1966,13 +1997,12 @@
         battleLog.scrollTop = battleLog.scrollHeight;
         await new Promise(r => setTimeout(r, 2000));
 
-        // 臨時 Buff 女將 (如果是女將親自下場考核，武力臨時大幅增加，增加挑戰性)
+        // 臨時 Buff 女將
         let originalPower = generals[guardianIdx].power;
         if(guardianName === beautyName) {
             generals[guardianIdx].power += 30; 
         }
 
-        // 發動對決
         let winnerIndex = await startDuel(true);
 
         // 還原 Buff
@@ -1982,13 +2012,13 @@
 
         if(winnerIndex === suitorIdx) {
             if(beautyItem) {
-                suitor.inventory.push(beautyItem);
-                if (beautyItem.power > 0) suitor.power += beautyItem.power; // 孫尚香、馬雲騄、祝融自帶微量武力加成
+                suitor.harem.push(beautyItem); // 寫入紅顏專屬陣列
+                if (beautyItem.power > 0) suitor.power += beautyItem.power; // 孫尚香等人加持基礎武力
                 
                 battleLog.innerHTML += `<br><div style="text-align:center; padding:20px; border: 2px solid var(--accent-pink); background:rgba(255,105,180,0.1); margin-top:20px; box-shadow: 0 0 30px rgba(255,105,180,0.5);">
                     <h1 style="color:var(--accent-pink); text-shadow: 0 0 15px var(--accent-pink); margin:0;">【招親大捷】</h1>
                     <h2 style="color:#ffffff; font-size:24px; margin-top:10px;">💍 ${suitor.name} 成功抱得美人歸 💍</h2>
-                    <p style="color:#ccc;">${beautyName} 已入駐行囊！<br>永久獲得 <span style="color:#00ff41;">HP上限 +${beautyItem.maxHpBonus}</span>，<span style="color:#ffd700;">每回合治癒 +${beautyItem.hpRegen}</span>！</p>
+                    <p style="color:#ccc;">${beautyName} 已入駐銅雀深宮！<br>永久獲得 <span style="color:#00ff41;">HP上限 +${beautyItem.maxHpBonus}</span>，<span style="color:#ffd700;">每回合治癒 +${beautyItem.hpRegen}</span>！</p>
                 </div><br><br>`;
                 renderRpgPanel(suitor);
             }
@@ -2157,7 +2187,7 @@
                 } else if (p2.name === "趙雲" && Math.random() < 0.5) {
                     battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】${p1.name} 強發動【九天龍吟驚寰宇】！</span><br><span style="color:#00ffff; font-weight:bold; font-size:18px;">🛡️ 【龍膽同源】敵方 ${p2.name} 【無傷】化解！</span><br><br>`;
                 } else {
-                    applyDmg2(50, `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】${p1.name} 槍出如龍！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 發動【九天龍吟驚寰宇】！天地變色！${p2.name} 瞬間慘遭重創（-50 HP）！</span><br><br>`);
+                    applyDmg2(50, `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】${p1.name} 槍出如龍！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 天地變色！${p2.name} 瞬間慘遭重創（-50 HP）！</span><br><br>`);
                 }
                 triggerShake(); setTimeout(triggerShake, 150); setTimeout(triggerShake, 300);
                 await new Promise(r => setTimeout(r, 800));
@@ -2170,7 +2200,7 @@
                 } else if (p1.name === "趙雲" && Math.random() < 0.5) {
                     battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】敵將 ${p2.name} 強發動【九天龍吟驚寰宇】！</span><br><span style="color:#00ffff; font-weight:bold; font-size:18px;">🛡️ 【龍膽同源】我方 ${p1.name} 【無傷】化解！</span><br><br>`;
                 } else {
-                    applyDmg1(50, `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】敵將 ${p2.name} 槍出如龍！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 發動【九天龍吟驚寰宇】！天地變色！${p1.name} 瞬間慘遭重創（-50 HP）！</span><br><br>`);
+                    applyDmg1(50, `<br><span style="color:#00ffff; font-weight:bold; font-size:15px;">【武神爆發】敵將 ${p2.name} 槍出如龍！</span><br><span style="color:#ffcc00; font-weight:bold; font-size:18px;">🔥 天地變色！${p1.name} 瞬間慘遭重創（-50 HP）！</span><br><br>`);
                 }
                 triggerShake(); setTimeout(triggerShake, 150); setTimeout(triggerShake, 300);
                 await new Promise(r => setTimeout(r, 800));
