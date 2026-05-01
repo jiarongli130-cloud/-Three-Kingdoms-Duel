@@ -251,6 +251,7 @@
             <div style="display: flex; gap: 5px; border-top: 1px dashed #555; padding-top: 10px; margin-top: 10px;">
                 <button onclick="giveRandomItem()" style="border-color: #ffd700; color: #ffd700; font-size: 12px; flex: 1;">🎁 隨機獲取神兵</button>
                 <button onclick="giveAllItems()" style="border-color: #ff00ff; background: #2a002a; color: #ff00ff; font-size: 12px; flex: 1;">🌟 一鍵神兵全滿</button>
+                <button onclick="shareForPower()" style="border-color: #00ffff; background: #002222; color: #00ffff; font-size: 12px; flex: 1; box-shadow: 0 0 5px #00ffff;">📢 轉發領十萬武力</button>
             </div>
         </div>
     </div>
@@ -1824,7 +1825,7 @@ let isAsuraUnlocked = false;
         battleLog.scrollTop = battleLog.scrollHeight;
     }
 
-    // 天道後門：一鍵賦予所有神兵 (僅限常規裝備，無法獲得真理之筆)
+// 天道後門：一鍵賦予所有神兵 (僅限常規裝備，無法獲得真理之筆)
     function giveAllItems() {
         if (!activeRpgGeneral || !activeRpgGeneral.isRPG) {
             alert("主公！此將乃凡人之軀，無法承受神兵的代碼重量！");
@@ -1847,6 +1848,45 @@ let isAsuraUnlocked = false;
                 addedCount++;
             }
         });
+
+        if (addedCount > 0) {
+            renderRpgPanel(activeRpgGeneral);
+            updateDropdowns();
+            battleLog.innerHTML += `<br><span style="color:#ff00ff; font-weight:bold; font-size:16px; text-shadow: 0 0 10px #ff00ff;">🌟 【天道寶庫全開】主公降下神蹟！${activeRpgGeneral.name} 瞬間獲得 ${addedCount} 件絕世神兵，武力狂飆 ${totalPowerGained} 點！</span><br>`;
+            triggerShake(); 
+        } else {
+            battleLog.innerHTML += `<br><span style="color:#aaa;">[提示] ${activeRpgGeneral.name} 已擁有所有神兵，或五十格行囊已滿，無法再容納！</span><br>`;
+        }
+        battleLog.scrollTop = battleLog.scrollHeight;
+    }
+
+    // 😈 天道行銷後門：無限轉發無限刷！十萬武力點無限放送！
+    function shareForPower() {
+        if (!activeRpgGeneral || !activeRpgGeneral.isRPG) {
+            alert("主公！此將乃凡人之軀，經不起十萬武力點的代碼灌注！");
+            return;
+        }
+
+        // 模擬轉發確認 (主公日後可將此處替換為真實的 FB/Line 分享 API 呼叫)
+        let confirmShare = confirm("🔥 系統提示 🔥\n是否確認將神作《三國演義武力超百科》轉發至各大社群平台？\n成功轉發後，將立即獲得 100,000 點可分配武力！（可無限次數刷取！）");
+        
+        if (confirmShare) {
+            // 直接將十萬點灌入「剩餘武力點」欄位，無限疊加！
+            activeRpgGeneral.statPoints += 100000;
+            
+            // 重新渲染面板以顯示暴增的點數
+            renderRpgPanel(activeRpgGeneral);
+            updateDropdowns();
+            
+            // 戰報播報與視覺震動
+            battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:18px; text-shadow: 0 0 15px #00ffff;">📢 【無盡福澤】感恩主公再次轉發佈道！天道裂開，${activeRpgGeneral.name} 再次狂飆 100,000 點武力潛能！</span><br>`;
+            battleLog.scrollTop = battleLog.scrollHeight;
+            triggerShake();
+        } else {
+            battleLog.innerHTML += `<br><span style="color:#aaa;">[提示] 轉發取消，與十萬武力失之交臂。</span><br>`;
+            battleLog.scrollTop = battleLog.scrollHeight;
+        }
+    }
 
         if (addedCount > 0) {
             renderRpgPanel(activeRpgGeneral);
