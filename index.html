@@ -361,23 +361,44 @@
     <span style="color:#8b0000; font-weight:bold;">⚠️ 隱藏協議：【修羅七誓與弒神之戰】已加載</span></div>
 </div>
 
-    <script>
-    // ==============================================================
-    // ▼▼▼ 全局數據與核心陣列 (Global Scope) ▼▼▼
-    // ==============================================================
-    
-    // 【修羅七誓】成就追蹤器 (新增底層變數)
-    let asuraAchievements = {
-        inventoryFull: false,
-        haremFull: false,
-        oneVsTenGods: false,
-        sixGodsSweep: false,
-        meleeGodsSurvive: false,
-        tourneyGodsChamp: false,
-        battleRoyaleChamp: false
-    };
-    let isAsuraUnlocked = false;
+<!-- 八荒六合・多重維度傳送陣 UI -->
+<div id="shareModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; justify-content:center; align-items:center;">
+    <div style="background:#0a0a0a; border:2px solid #ff00ff; padding:20px; border-radius:5px; width:90%; max-width:500px; box-shadow:0 0 30px rgba(255,0,255,0.5); text-align:center;">
+        <h2 style="color:#ff00ff; margin-top:0; text-shadow:0 0 10px #ff00ff;">🌌 啟動八荒維度傳送陣 🌌</h2>
+        <p style="color:#ccc; font-size:14px;">請選擇目標位面發送求援詔書，成功後武力暴增十萬！</p>
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:15px; margin-bottom:15px;">
+            <button onclick="shareTo('FB')" style="border-color:#1877F2; color:#1877F2; font-weight:bold;">📘 Facebook</button>
+            <button onclick="shareTo('LINE')" style="border-color:#00B900; color:#00B900; font-weight:bold;">🟩 LINE</button>
+            <button onclick="shareTo('X')" style="border-color:#aaaaaa; color:#ffffff; font-weight:bold;">🐦 X (Twitter)</button>
+            <button onclick="shareTo('IG')" style="border-color:#E1306C; color:#E1306C; font-style:italic;">📸 IG (預留)</button>
+            <button onclick="shareTo('Threads')" style="border-color:#ffffff; color:#ffffff; font-style:italic;">🧵 Threads (預留)</button>
+            <button onclick="shareTo('WeChat')" style="border-color:#07C160; color:#07C160; font-style:italic;">💬 WeChat (預留)</button>
+            <button onclick="shareTo('Bahamut')" style="border-color:#00AE9D; color:#00AE9D; font-style:italic;">🐲 巴哈姆特 (預留)</button>
+            <button onclick="shareTo('Bilibili')" style="border-color:#00A1D6; color:#00A1D6; font-style:italic;">📺 Bilibili (預留)</button>
+        </div>
+        
+        <button onclick="closeShareModal()" style="width:100%; background:#4a0000; border-color:#ff3131; color:#fff;">❌ 關閉陣法</button>
+    </div>
+</div>
 
+<script>
+// ==============================================================
+// ▼▼▼ 全局數據與核心陣列 (Global Scope) ▼▼▼
+// ==============================================================
+let asuraShareBuff = 0; // 【維度轉發】暗黑武力池
+
+// 【修羅七誓】成就追蹤器 (新增底層變數)
+let asuraAchievements = {
+    inventoryFull: false,
+    haremFull: false,
+    oneVsTenGods: false,
+    sixGodsSweep: false,
+    meleeGodsSurvive: false,
+    tourneyGodsChamp: false,
+    battleRoyaleChamp: false
+};
+let isAsuraUnlocked = false;
     let generals = [
         {"name": "趙雲", "power": 100, "rank": "天下第一"},
         {"name": "關羽", "power": 99, "rank": "超一流"},
@@ -1161,7 +1182,7 @@
         "鄧艾": { name: "偷渡陰平・死地奇襲", dmg: 32, color: "#556b2f", desc: "從系統最底層的漏洞中鑽出，給予對手毫無防備的致命背刺！" },
         "李嚴": { name: "白帝托孤・奇門重戟", dmg: 31, color: "#d8bfd8", desc: "以沉穩的陣法封鎖對方走位，隨即給予雷霆萬鈞的重砸！" },
         "張任": { name: "落鳳破滅・百鳥絕殺", dmg: 31, color: "#8b4513", desc: "埋伏於暗處的冷箭齊發，將對手的運算空間徹底釘死！" },
-        "高覽": { name: "河北雙壁・泰山開天劈", dmg: 31, color: "#a0522d", desc: "巨斧帶著開山裂石之威，硬生生劈開對手的物理碰撞箱！" },
+        "高覽": { name: "河北雙壁・泰山開天劈", dmg: 31, color: "#a0522d", desc: "巨斧帶著開山裂 স্ক্র石之威，硬生生劈開對手的物理碰撞箱！" },
         "徐晃": { name: "長驅直入・開山大斧", dmg: 30, color: "#4682b4", desc: "大斧挾帶無堅不摧的力場，將眼前的障礙與敵人一併斬斷！" },
         "曹洪": { name: "拼死護主・血刃連斬", dmg: 30, color: "#b22222", desc: "雙眼佈滿血絲，不顧一切地向前狂砍，完全捨棄防禦邏輯！" },
         "曹彰": { name: "黃鬚兒・搏虎降龍拳", dmg: 30, color: "#daa520", desc: "捨棄兵器，以純粹的肉身力量打出引發空間扭曲的爆發拳！" },
@@ -2145,7 +2166,7 @@
         buttons.forEach(b => b.disabled = false);
     }
 
-        // ==============================================================
+    // ==============================================================
     // ▼▼▼ 核心演算法：掛載標籤系統與修羅業障判定的終極戰鬥推演 ▼▼▼
     // ==============================================================
 
@@ -3537,10 +3558,21 @@
         const buttons = document.querySelectorAll("button");
         buttons.forEach(b => b.disabled = true);
 
+        // 重置轉發Buff並顯示按鍵
+        asuraShareBuff = 0;
+        let asuraUI = document.getElementById('asuraUI');
+        let shareBtnHTML = `<button id="btnSharePower" style="margin-top:10px; width: 100%; background: #ff00ff; color:#fff; border-color:#fff; font-size:18px; font-weight:bold; box-shadow: 0 0 20px #ff00ff; animation: shake 0.5s infinite alternate;" onclick="invokeDimensionalShare()">🌌 轉發至平行宇宙 (武力＋100000)</button>`;
+
+        if (!document.getElementById('btnSharePower')) {
+            asuraUI.innerHTML += shareBtnHTML;
+        } else {
+            document.getElementById('btnSharePower').style.display = 'block';
+            document.getElementById('btnSharePower').disabled = false;
+        }
+
         let p1Stats = parseCombatStats(activeRpgGeneral);
         let p1MaxHp = 100 + p1Stats.maxHpBonus;
         let p1Hp = p1MaxHp;
-        let p1EffPower = activeRpgGeneral.power;
 
         let jiangHp = 100;
         let jiangMaxHp = 100;
@@ -3565,13 +3597,16 @@
         while(p1Hp > 0 && (jiangHp > 0 || maoHp > 0) && round < 1000) {
             await new Promise(r => setTimeout(r, 400));
             
+            // 【動態套用轉發Buff】
+            let currentEffPower = activeRpgGeneral.power + asuraShareBuff;
+
             // --- 修羅的回合 ---
             let targets = [];
             if(jiangHp > 0) targets.push({name: "蔣大器", hp: jiangHp, ref: 'jiang'});
             if(maoHp > 0) targets.push({name: "毛宗崗", hp: maoHp, ref: 'mao'});
             
             let target = targets[Math.floor(Math.random() * targets.length)];
-            let p1Dmg = Math.max(3, (p1EffPower * 0.15) + (Math.random() * 20 - 10));
+            let p1Dmg = Math.max(3, (currentEffPower * 0.15) + (Math.random() * 20 - 10)); // 改用 currentEffPower
             
             if(target.ref === 'mao') {
                 p1Dmg = Math.floor(p1Dmg * 0.05); // 毛宗崗嘆息之牆，硬減傷 95%
@@ -3663,9 +3698,92 @@
         setTimeout(() => {
             document.body.classList.remove('asura-mode');
             buttons.forEach(b => b.disabled = false);
+            
+            // 戰後隱藏轉發按鍵
+            let shareBtn = document.getElementById('btnSharePower');
+            if (shareBtn) shareBtn.style.display = 'none';
+
             updateAsuraUI();
             if (p1Hp > 0) renderRpgPanel(activeRpgGeneral); // 更新 UI 以顯示真理之筆
         }, 5000);
+    }
+
+    // ==============================================================
+    // 🌌 八荒六合・多重維度傳送陣 (轉發系統核心)
+    // ==============================================================
+    function invokeDimensionalShare() {
+        if (!document.body.classList.contains('asura-mode')) return;
+
+        const shareTitle = "《三國演義武力超百科》狂龍極限無雙";
+        const shareText = "狂龍趙雲正在血戰歷史真神！我已注入100000武力支援，快來助陣！";
+        const shareUrl = window.location.href; 
+
+        if (navigator.share) {
+            navigator.share({
+                title: shareTitle,
+                text: shareText,
+                url: shareUrl
+            }).then(() => {
+                triggerPowerBuff();
+            }).catch((error) => {
+                console.log("主公取消了傳送：", error);
+            });
+        } else {
+            document.getElementById('shareModal').style.display = 'flex';
+        }
+    }
+
+    function closeShareModal() {
+        document.getElementById('shareModal').style.display = 'none';
+    }
+
+    function shareTo(platform) {
+        const shareText = "狂龍趙雲正在血戰歷史真神！我已注入100000武力支援，快來助陣！";
+        const shareUrl = window.location.href; 
+        const fullClipboardText = `${shareText} \n傳送門：${shareUrl}`;
+        let targetUrl = '';
+
+        switch(platform) {
+            case 'FB':
+                targetUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+                window.open(targetUrl, '_blank', 'width=600,height=500');
+                break;
+            case 'LINE':
+                targetUrl = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+                window.open(targetUrl, '_blank', 'width=600,height=500');
+                break;
+            case 'X':
+                targetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+                window.open(targetUrl, '_blank', 'width=600,height=500');
+                break;
+            case 'IG':
+            case 'Threads':
+            case 'WeChat':
+            case 'Bahamut':
+            case 'Bilibili':
+                navigator.clipboard.writeText(fullClipboardText).then(() => {
+                    alert(`【${platform} 陣地預留】\n求援詔書與傳送門已成功寫入系統剪貼簿！\n請主公前往 ${platform} 貼上發佈，完成降維打擊！`);
+                }).catch(err => {
+                    alert("剪貼簿存取失敗，請手動複製網址分享！");
+                });
+                break;
+        }
+        closeShareModal();
+        triggerPowerBuff();
+    }
+
+    function triggerPowerBuff() {
+        asuraShareBuff += 100000;
+        let logMsg = `<br><span style="color:#ff00ff; font-weight:bold; font-size:24px; text-shadow: 0 0 20px #ff00ff;">🌌 【維度轉發】主公成功發送求援詔書！現世算力瘋狂湧入！<br>武力暴增 100000 點！當前總外掛武力：${asuraShareBuff}！</span><br><br>`;
+        
+        let battleLog = document.getElementById('battleLog');
+        battleLog.innerHTML += logMsg;
+        
+        const warroom = document.getElementById('mainWarroom');
+        warroom.classList.add('shaking');
+        setTimeout(() => warroom.classList.remove('shaking'), 300);
+        
+        battleLog.scrollTop = battleLog.scrollHeight;
     }
 </script>
 </body>
