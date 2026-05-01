@@ -3658,7 +3658,7 @@
                 <!-- 暗黑兵法轉發區 -->
                 <div style="margin-top:20px; border-top:1px dashed #ff0000; padding-top:15px;">
                     <h3 style="color:#ff8c00; margin-bottom:5px;">📜【暗黑兵法：借天道之勢】📜</h3>
-                    <p style="color:#aaa; font-size:14px; margin-top:0;">不甘心就此隕落？向諸天萬界轉發此戰況，每轉發一界，汲取10萬點天地靈氣！<br>（累積上限：100萬點）</p>
+                    <p style="color:#aaa; font-size:14px; margin-top:0;">不甘心就此隕落？向諸天萬界轉發此戰況，每轉發一界，汲取10萬點天地靈氣！<br>（累積上限：1000萬點）</p>
                     <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:10px;">
                         <button onclick="executeDarkShare('FB')" style="border-color:#3b5998; color:#3b5998; width:auto; padding:5px 15px;">轉發至FB</button>
                         <button onclick="executeDarkShare('LINE')" style="border-color:#00c300; color:#00c300; width:auto; padding:5px 15px;">轉發至LINE</button>
@@ -3696,8 +3696,8 @@
             activeRpgGeneral.sharedPower = 0;
         }
 
-        if (activeRpgGeneral.sharedPower >= 1000000) {
-            alert("主公！此武將的天地靈氣已被吸乾，已達100萬武力點數上限！請速速重啟弒神之戰！");
+        if (activeRpgGeneral.sharedPower >= 10000000) {
+            alert("主公！此武將的天地靈氣已被吸乾，已達1000萬武力點數上限！請速速重啟弒神之戰！");
             return;
         }
 
@@ -3717,7 +3717,7 @@
         saveActiveRpgGeneral(); // 封存入命盤
 
         let logNode = document.getElementById('battleLog');
-        logNode.innerHTML += `<br><span style="color:#00ff41; font-weight:bold; font-size:18px; text-shadow:0 0 10px #00ff41;">🌌【借勢成功】成功轉發至${platform}！汲取天地靈氣，武力暴增100000點！（當前加成：${activeRpgGeneral.sharedPower}/1000000）</span><br>`;
+        logNode.innerHTML += `<br><span style="color:#00ff41; font-weight:bold; font-size:18px; text-shadow:0 0 10px #00ff41;">🌌【借勢成功】成功轉發至${platform}！汲取天地靈氣，武力暴增100000點！（當前加成：${activeRpgGeneral.sharedPower}/10000000）</span><br>`;
         logNode.scrollTop = logNode.scrollHeight;
 
         // 更新介面
