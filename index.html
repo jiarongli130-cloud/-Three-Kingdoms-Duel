@@ -1668,6 +1668,12 @@ let isAsuraUnlocked = false;
         activeRpgGeneral = gen;
         document.getElementById('rpgPanel').style.display = "block";
         
+        if (gen.asuraAchievements) {
+            asuraAchievements = Object.assign({}, gen.asuraAchievements);
+        } else {
+            asuraAchievements = { inventoryFull: false, haremFull: false, oneVsTenGods: false, sixGodsSweep: false, meleeGodsSurvive: false, tourneyGodsChamp: false, battleRoyaleChamp: false };
+        }
+        
         let statsObj = parseCombatStats(gen);
 
         if (gen.isRPG) {
@@ -1868,6 +1874,8 @@ let isAsuraUnlocked = false;
         if (!activeRpgGeneral) { alert("主公，請先在單挑選單中選定欲封存的自創武將！"); return; }
         if (activeRpgGeneral.inventory === undefined) { alert("此乃原生將領，無法寫入天道命盤！"); return; }
         
+        activeRpgGeneral.asuraAchievements = Object.assign({}, asuraAchievements);
+
         let savedData = JSON.parse(localStorage.getItem('rpgGenerals')) || {};
         savedData[activeRpgGeneral.name] = activeRpgGeneral;
         localStorage.setItem('rpgGenerals', JSON.stringify(savedData));
@@ -1886,6 +1894,12 @@ let isAsuraUnlocked = false;
         if (!savedData || !savedData[targetName]) { alert("命盤中找不到該武將數據！"); return; }
         
         let gen = savedData[targetName];
+if (gen.asuraAchievements) {
+            asuraAchievements = Object.assign({}, gen.asuraAchievements);
+        } else {
+            asuraAchievements = { inventoryFull: false, haremFull: false, oneVsTenGods: false, sixGodsSweep: false, meleeGodsSurvive: false, tourneyGodsChamp: false, battleRoyaleChamp: false };
+        }
+
         let existingIdx = generals.findIndex(g => g.name === gen.name && g.inventory !== undefined);
         if (existingIdx !== -1) {
             generals[existingIdx] = gen; 
