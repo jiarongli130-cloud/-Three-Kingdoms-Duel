@@ -3948,44 +3948,57 @@
             let atkColor = attacker.color;
             let defColor = defender.color;
 
-            // 真神降維打擊邏輯
+           // 真神降維打擊邏輯
             if (attacker.id === 'God') {
                 if (defender.name === "趙雲" && !defender.nineSunsUsed) {
                     defender.nineSunsUsed = true;
                     battleLog.innerHTML += `<span style="color:#ff4500; font-weight:bold;">🔥 【天下第一的骨氣】趙雲於真神神威之下，極限爆發【九陽之火】，強行擋下了降維打擊！</span><br>`;
-                } else if (defender.name === "蔣大器" || defender.name === "毛宗崗") {
-                    // 😈 舊神被抹殺時的專屬演出
-                    defender.hp = 0; defender.isDead = true;
-                    battleLog.innerHTML += `<span style="color:#ff00ff; font-weight:bold; font-size:16px;">🌌 【弒神之巔】<span style="color:${atkColor}">${attacker.name}</span> 揮舞真理之筆，舊日支配者 <span style="color:${defColor}">${defender.name}</span> 的權限被徹底粉碎，化為虛無！</span><br>`;
-                    if(typeof playBossShakeSound === 'function') playBossShakeSound();
-                    triggerShake();
                 } else {
-                    defender.hp = 0; defender.isDead = true;
-                    battleLog.innerHTML += `<span style="color:#00ffff;">⚡ 【真理抹殺】<span style="color:${atkColor}">${attacker.name}</span> 揮舞真理之筆，<span style="color:${defColor}">${defender.name}</span> 的代碼瞬間被強制刪除！</span><br>`;
-                    if(typeof playCyberStrikeSound === 'function') playCyberStrikeSound();
+                    // 😈【軍師兵法：拔除秒殺，改用真實數據碾壓】
+                    // 真理之筆的99999武力，將打出破萬的實體傷害！
+                    let godDmg = Math.floor(attacker.actualPower * 0.15 + (Math.random() * 5000)); 
+                    defender.hp -= godDmg;
+                    
+                    if (defender.name === "蔣大器" || defender.name === "毛宗崗") {
+                        battleLog.innerHTML += `<span style="color:#ff00ff; font-weight:bold; font-size:16px;">🌌 【弒神交鋒】<span style="color:${atkColor}">${attacker.name}</span> 揮舞真理之筆，重重劃過 <span style="color:${defColor}">${defender.name}</span> 的核心！造成 ${godDmg} 點毀滅傷害！</span><br>`;
+                        if(typeof playBossShakeSound === 'function') playBossShakeSound();
+                        triggerShake();
+                    } else if (defender.hp <= 0) {
+                        defender.isDead = true;
+                        battleLog.innerHTML += `<span style="color:#00ffff;">⚡ 【真理碾壓】<span style="color:${atkColor}">${attacker.name}</span> 筆鋒掃過，<span style="color:${defColor}">${defender.name}</span> 無法承受 ${godDmg} 點溢位傷害，代碼瞬間崩解！</span><br>`;
+                        if(typeof playCyberStrikeSound === 'function') playCyberStrikeSound();
+                    } else {
+                        battleLog.innerHTML += `<span style="color:#00ffff;">⚡ 【真理碾壓】<span style="color:${defColor}">${defender.name}</span> 苦苦支撐，承受了 ${godDmg} 點傷害！</span><br>`;
+                    }
                 }
-           } else {
+            } else {
                 // 凡人與舊神的絕望抵抗
-                let dmg = Math.max(1, (attacker.actualPower * 0.1));
-                
-                // 😈 舊神反撲，造成鉅額真實傷害
-                if (attacker.name === "蔣大器" || attacker.name === "毛宗崗") {
-                    dmg = 9999; 
-                    battleLog.innerHTML += `<span style="color:#ff0000; font-weight:bold;">⚠️ 【天道反撲】舊神 <span style="color:${atkColor}">${attacker.name}</span> 拼死釋放底層亂碼，對真神造成 ${dmg} 點鉅額傷害！</span><br>`;
-                    if(typeof playBossStrikeSound === 'function') playBossStrikeSound();
-                    triggerShake();
-                } else if(Math.random() < 0.1) {
-                    battleLog.innerHTML += `<span style="color:#aaaaaa;">[逆神] <span style="color:${atkColor}">${attacker.name}</span> 拼死砍中真神，造成 ${Math.floor(dmg)} 點微弱傷害。</span><br>`;
-                }
-                defender.hp -= dmg;
+                let dodgeChance = 0.25; // 真神自帶25％賽博殘影閃避
+                if (Math.random() < dodgeChance) {
+                    battleLog.innerHTML += `<span style="color:#aaaaaa;">[虛無] <span style="color:${defColor}">${defender.name}</span> 身形化為亂碼殘影，<span style="color:${atkColor}">${attacker.name}</span> 的攻擊直接穿透了虛空！</span><br>`;
+                } else {
+                    let dmg = Math.max(1, (attacker.actualPower * 0.2));
+                    
+                    // 😈 舊神反撲，改為極具壓迫感的百分比真實傷害
+                    if (attacker.name === "蔣大器" || attacker.name === "毛宗崗") {
+                        // 每次咬掉真神約12％的血量，製造拉鋸戰的張力
+                        dmg = Math.floor(defender.maxHp * 0.12 + (Math.random() * 3000)); 
+                        battleLog.innerHTML += `<span style="color:#ff0000; font-weight:bold;">⚠️ 【天道反撲】舊神 <span style="color:${atkColor}">${attacker.name}</span> 釋放底層亂碼，強行撕裂真神防禦，造成 ${dmg} 點鉅額傷害！</span><br>`;
+                        if(typeof playBossStrikeSound === 'function') playBossStrikeSound();
+                        triggerShake();
+                    } else if(Math.random() < 0.1) {
+                        battleLog.innerHTML += `<span style="color:#aaaaaa;">[群蟻噬象] <span style="color:${atkColor}">${attacker.name}</span> 拼死砍中真神，造成 ${Math.floor(dmg)} 點微弱傷害。</span><br>`;
+                    }
+                    defender.hp -= dmg;
 
-                // 😈 【軍師補丁：真理之筆無限復活機制】
-                if (defender.hp <= 0 && defender.stats.revives.length > 0) {
-                    let rev = defender.stats.revives.pop();
-                    defender.hp = rev.hp;
-                    battleLog.innerHTML += `<span style="color:#ffd700; font-weight:bold; font-size:18px;">✨ 【創世神蹟】觸發『${rev.name}』！<span style="color:${defColor}">${defender.name}</span> 於死境中重塑神軀，滿血回歸！（剩餘神蹟：${defender.stats.revives.length}次）</span><br>`;
-                    triggerShake();
-                    if(typeof playBossShakeSound === 'function') playBossShakeSound();
+                    // 😈 【軍師補丁：真理之筆無限復活機制】
+                    if (defender.hp <= 0 && defender.stats.revives.length > 0) {
+                        let rev = defender.stats.revives.pop();
+                        defender.hp = rev.hp;
+                        battleLog.innerHTML += `<span style="color:#ffd700; font-weight:bold; font-size:18px;">✨ 【創世神蹟】觸發『${rev.name}』！<span style="color:${defColor}">${defender.name}</span> 於死境中重塑神軀，滿血回歸！（剩餘神蹟：${defender.stats.revives.length}次）</span><br>`;
+                        triggerShake();
+                        if(typeof playBossShakeSound === 'function') playBossShakeSound();
+                    }
                 }
             }
 
