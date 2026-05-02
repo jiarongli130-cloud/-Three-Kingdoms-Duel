@@ -387,6 +387,45 @@
         osc.start();
         osc.stop(audioCtx.currentTime + 0.15);
     }
+        
+        // 😈 【弒神專屬】重型故障打擊音 (BossStrike)
+    function playBossStrikeSound() {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        osc.type = 'square'; // 方波帶來更粗糙的失真與故障感
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime); // 起始頻率極低
+        osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 0.3); // 拖長尾音，製造沉重壓迫感
+        
+        gainNode.gain.setValueAtTime(0.8, audioCtx.currentTime); // 音量更大
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+    }
+
+    // 😈 【弒神專屬】空間崩塌震動音 (BossShake)
+    function playBossShakeSound() {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        osc.type = 'sawtooth';
+        // 模擬地震的超低頻震盪(30Hz)
+        osc.frequency.setValueAtTime(30, audioCtx.currentTime);
+        osc.frequency.linearRampToValueAtTime(15, audioCtx.currentTime + 0.5);
+        
+        gainNode.gain.setValueAtTime(0.7, audioCtx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+        
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.5);
+    }
     // ==============================================================
     // ▼▼▼ 全局數據與核心陣列 (Global Scope) ▼▼▼
     // ==============================================================
@@ -3581,13 +3620,14 @@
         document.getElementById('p2Name').innerText = "蔣大器 & 毛宗崗";
         document.getElementById('p2Rank').innerText = "【歷史的審判者】";
 
-        battleLog.innerHTML = `<h1 style="color:#ff0000; text-align:center; text-shadow: 0 0 20px #ff0000; font-size: 30px;">⚠️ 警告：系統遭遇非法侵入 ⚠️</h1>`;
         battleLog.innerHTML += `<div style="color:#fff; text-align:center; margin-bottom: 15px; font-weight:bold; font-size:18px;">
             【時空斷裂】歷史的修正者降臨！<br>
             <span style="color:#ff0000;">狂暴武神・蔣大器</span> & <span style="color:#8b008b;">萬代嘆息・毛宗崗</span><br>
             企圖抹殺打破第四面牆的異數 <span style="color:#00ff41;">${activeRpgGeneral.name}</span>！
         </div><hr style="border-color:#ff0000;">`;
         battleLog.scrollTop = battleLog.scrollHeight;
+        triggerShake(); 
+        playBossShakeSound(); // 😈 主公！開場魔王降臨，強制觸發空間崩塌音效！
         await new Promise(r => setTimeout(r, 3000));
 
         let round = 1;
@@ -3602,10 +3642,11 @@
             let target = targets[Math.floor(Math.random() * targets.length)];
             let p1Dmg = Math.max(3, (p1EffPower * 0.15) + (Math.random() * 20 - 10));
             
-            if(target.ref === 'mao') {
-                p1Dmg = Math.floor(p1Dmg * 0.05); // 毛宗崗嘆息之牆，硬減傷 95%
+           if(target.ref === 'mao') {
+                p1Dmg = Math.floor(p1Dmg * 0.05); // 毛宗崗嘆息之牆，硬減傷95％
                 maoHp -= p1Dmg;
                 battleLog.innerHTML += `<span style="color:#00ff41;">[第${round}合]</span> ${activeRpgGeneral.name} 攻擊 毛宗崗，但被其【嘆息之牆】大幅削減，僅造成 <span style="color:#ff3131;">${p1Dmg}</span> 點微弱傷害！<br>`;
+                playBossStrikeSound(); // 😈 主公！攻擊毛宗崗觸發沉重打擊音效！
                 
                 // 反傷機制
                 let reflect = Math.floor(p1Dmg * 0.5);
@@ -3614,6 +3655,7 @@
             } else {
                 jiangHp -= p1Dmg;
                 battleLog.innerHTML += `<span style="color:#00ff41;">[第${round}合]</span> ${activeRpgGeneral.name} 攻擊 蔣大器，造成 <span style="color:#ff3131;">${Math.floor(p1Dmg)}</span> 點傷害！<br>`;
+                playBossStrikeSound(); // 😈 主公！攻擊蔣大器觸發沉重打擊音效！
             }
 
             if(p1Stats.lifesteal > 0 && p1Hp < p1MaxHp && p1Hp > 0) {
@@ -3629,6 +3671,8 @@
                 p1Hp -= jDmg;
                 battleLog.innerHTML += `<span style="color:#ff0000;">[敵襲] 蔣大器 發動【降維打擊】！無視防禦與閃避，直接撕裂 ${activeRpgGeneral.name} 的代碼，造成 <span style="color:#fff;">${Math.floor(jDmg)}</span> 點真實傷害！</span><br>`;
                 triggerShake();
+                playBossShakeSound(); // 😈 主公！蔣大器出手，空間崩塌！
+                playBossStrikeSound(); // 😈 同時伴隨致命打擊音效！
             }
 
             if(maoHp > 0 && p1Hp > 0) {
