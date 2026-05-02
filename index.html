@@ -363,6 +363,31 @@
 
     <script>
     // ==============================================================
+    // 😈 【暗黑兵法】賽博音波陣法 (Web Audio API)
+    // ==============================================================
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playCyberStrikeSound() {
+        if(audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.15);
+        
+        gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+        
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.15);
+    }
+    // ==============================================================
     // ▼▼▼ 全局數據與核心陣列 (Global Scope) ▼▼▼
     // ==============================================================
     
@@ -2196,6 +2221,7 @@
                 h1 -= dmg;
                 battleLog.innerHTML += logStr;
                 triggerShake();
+                playCyberStrikeSound(); // 😈 主公！請將這行安插於此處！
             }
         }
         function applyDmg2(dmg, logStr) {
@@ -2207,6 +2233,7 @@
                 h2 -= dmg;
                 battleLog.innerHTML += logStr;
                 triggerShake();
+                playCyberStrikeSound(); // 😈 主公！請將這行安插於此處！
             }
         }
 
@@ -2606,6 +2633,7 @@
                 target.hp -= dmg;
                 battleLog.innerHTML += logStr;
                 triggerShake();
+                playCyberStrikeSound(); // 😈 主公！兩處的applyFighterDmg皆需加入此行！
             }
         }
 
@@ -3004,6 +3032,7 @@
                 target.hp -= dmg;
                 battleLog.innerHTML += logStr;
                 triggerShake();
+                playCyberStrikeSound(); // 😈 主公！兩處的applyFighterDmg皆需加入此行！
             }
         }
         
