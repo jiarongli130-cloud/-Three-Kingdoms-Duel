@@ -3779,6 +3779,9 @@
 
                 <p style="color:#ffd700; font-size:18px; font-weight:bold;">【神賞降臨】獲得唯一創世神器：『什年的真理之筆』！</p>
                 <p style="color:#00ff41; margin-top:10px;">「此方宇宙，唯主公獨尊！」—— 墨軍師 絕筆</p>
+                
+                <!-- 😈 主公！終極按鈕安插於此 -->
+                <button onclick="runGodVsAllBattle()" style="margin-top:15px; width: 100%; background: #000; color:#00ffff; border: 2px solid #00ffff; font-size:18px; font-weight:bold; box-shadow: 0 0 20px #00ffff; padding: 10px; cursor: pointer;">🌌 最終隱藏試煉：【真神 VS 全宇宙】(1敵500+) 🌌</button>
             </div><br><br>`;
         } else {
             battleLog.innerHTML += `<br><div style="text-align:center; padding:20px; border: 2px solid #ff0000; background:rgba(255,0,0,0.2); box-shadow: 0 0 50px #ff0000; margin-top:20px;">
@@ -3857,6 +3860,166 @@
         // 更新介面
         renderRpgPanel(activeRpgGeneral);
         updateDropdowns();
+    }
+
+        // ==============================================================
+    // 😈 【隱藏結局】創世真神 VS 全宇宙 (包含兩大舊神 1敵500+)
+    // ==============================================================
+    async function runGodVsAllBattle() {
+        if (!activeRpgGeneral || !activeRpgGeneral.isRPG) {
+            alert("主公！必須由創世真神親自下場！");
+            return;
+        }
+
+        const buttons = document.querySelectorAll("button");
+        buttons.forEach(b => b.disabled = true);
+
+        let dGen = activeRpgGeneral;
+        let dStats = parseCombatStats(dGen);
+        let dActualPower = dGen.power; // 握有真理之筆的 99999+ 戰力
+
+        let fighters = [];
+        // 真神降臨
+        fighters.push({ id: 'God', team: 'A', name: dGen.name, power: dGen.power, rank: dGen.rank, actualPower: dActualPower, stats: dStats, hp: 100 + dStats.maxHpBonus, maxHp: 100 + dStats.maxHpBonus, isDead: false, color: '#00ffff' });
+
+        // 😈 拔除 !g.isHidden 限制，將蔣大器與毛宗崗強行拖入戰局！
+        let enemies = generals.filter(g => g.name !== dGen.name);
+        enemies.forEach((g, i) => {
+            let p = g.name === "趙雲" ? g.power + 20 : g.power;
+            let st = parseCombatStats(g);
+            
+            // 賦予舊神超高血量作為最後的尊嚴
+            let eHp = (g.name === "蔣大器" || g.name === "毛宗崗") ? 99999 : (100 + st.maxHpBonus);
+            
+            fighters.push({ id: 'E'+i, team: 'B', name: g.name, power: g.power, rank: g.rank, actualPower: p, stats: st, hp: eHp, maxHp: eHp, nineSunsUsed: false, isDead: false, color: '#ff3131' });
+        });
+
+        document.getElementById('p1Name').innerText = "創世真神: " + dGen.name;
+        document.getElementById('p1Rank').innerText = `凌駕天道`;
+        document.getElementById('p2Name').innerText = `三國全宇宙 (${enemies.length}人)`;
+        document.getElementById('p2Rank').innerText = "含舊日支配者";
+
+        const totalEnemiesHp = fighters.filter(f=>f.team==='B').reduce((s,f) => s + f.maxHp, 0);
+
+        function updateGodBars() {
+            let god = fighters[0];
+            let eHp = fighters.filter(f=>f.team==='B').reduce((s,f)=>s+f.hp,0);
+            document.getElementById('p1HpBar').style.width = (god.hp/god.maxHp*100) + "%";
+            document.getElementById('p2HpBar').style.width = (eHp/totalEnemiesHp*100) + "%";
+            document.getElementById('p1HpText').innerText = Math.floor(god.hp) + " / " + god.maxHp;
+            document.getElementById('p2HpText').innerText = Math.floor(eHp) + " / " + totalEnemiesHp;
+        }
+
+        updateGodBars();
+
+        battleLog.innerHTML = `<h2 style="color:#00ffff; text-align:center; text-shadow: 0 0 20px #00ffff; margin-bottom:5px;">🌌 隱藏試煉：【創世神 VS 全宇宙】 🌌</h2>`;
+        battleLog.innerHTML += `<div style="color:#ccc; text-align:center; margin-bottom: 15px; font-weight:bold;">
+            <span style="color:#00ffff; font-size:18px;">${dGen.name}</span> 已成真神！現在，祂將孤身一人，面對這片沙盤中所有 ${enemies.length} 名武將（包含舊神蔣大器與毛宗崗）的聯手討伐！<br>
+            「此方宇宙，唯我獨尊！」戰鬥開始！<br>
+            <span style="color:#ff8c00; font-size:12px;">(系統已開啟超光速推演引擎)</span>
+        </div><hr style="border-color:#00ffff;">`;
+        battleLog.scrollTop = battleLog.scrollHeight;
+        await new Promise(r => setTimeout(r, 2500));
+
+        let round = 1;
+        let turnA = true;
+        initChart();
+        hpChart.data.datasets[0].label = '真神 HP (%)';
+        hpChart.data.datasets[1].label = '全宇宙 HP (%)';
+
+        // 超光速推演迴圈 (每次極短延遲 15ms)
+        while(fighters[0].hp > 0 && fighters.filter(f=>f.team==='B' && !f.isDead).length > 0) {
+            await new Promise(r => setTimeout(r, 15));
+
+            let alive = fighters.filter(f => !f.isDead);
+            let attacker, defender, targets;
+
+            if (turnA) {
+                attacker = fighters[0];
+                targets = alive.filter(f => f.team !== attacker.team);
+                defender = targets[Math.floor(Math.random() * targets.length)];
+            } else {
+                let bTeam = alive.filter(f => f.team === 'B');
+                attacker = bTeam[Math.floor(Math.random() * bTeam.length)];
+                defender = fighters[0];
+            }
+            turnA = !turnA;
+
+            let atkColor = attacker.color;
+            let defColor = defender.color;
+
+            // 真神降維打擊邏輯
+            if (attacker.id === 'God') {
+                if (defender.name === "趙雲" && !defender.nineSunsUsed) {
+                    defender.nineSunsUsed = true;
+                    battleLog.innerHTML += `<span style="color:#ff4500; font-weight:bold;">🔥 【天下第一的骨氣】趙雲於真神神威之下，極限爆發【九陽之火】，強行擋下了降維打擊！</span><br>`;
+                } else if (defender.name === "蔣大器" || defender.name === "毛宗崗") {
+                    // 😈 舊神被抹殺時的專屬演出
+                    defender.hp = 0; defender.isDead = true;
+                    battleLog.innerHTML += `<span style="color:#ff00ff; font-weight:bold; font-size:16px;">🌌 【弒神之巔】<span style="color:${atkColor}">${attacker.name}</span> 揮舞真理之筆，舊日支配者 <span style="color:${defColor}">${defender.name}</span> 的權限被徹底粉碎，化為虛無！</span><br>`;
+                    if(typeof playBossShakeSound === 'function') playBossShakeSound();
+                    triggerShake();
+                } else {
+                    defender.hp = 0; defender.isDead = true;
+                    battleLog.innerHTML += `<span style="color:#00ffff;">⚡ 【真理抹殺】<span style="color:${atkColor}">${attacker.name}</span> 揮舞真理之筆，<span style="color:${defColor}">${defender.name}</span> 的代碼瞬間被強制刪除！</span><br>`;
+                    if(typeof playCyberStrikeSound === 'function') playCyberStrikeSound();
+                }
+            } else {
+                // 凡人與舊神的絕望抵抗
+                let dmg = Math.max(1, (attacker.actualPower * 0.1));
+                
+                // 😈 舊神反撲，造成鉅額真實傷害
+                if (attacker.name === "蔣大器" || attacker.name === "毛宗崗") {
+                    dmg = 9999; 
+                    battleLog.innerHTML += `<span style="color:#ff0000; font-weight:bold;">⚠️ 【天道反撲】舊神 <span style="color:${atkColor}">${attacker.name}</span> 拼死釋放底層亂碼，對真神造成 ${dmg} 點鉅額傷害！</span><br>`;
+                    if(typeof playBossStrikeSound === 'function') playBossStrikeSound();
+                    triggerShake();
+                } else if(Math.random() < 0.1) {
+                    battleLog.innerHTML += `<span style="color:#aaaaaa;">[逆神] <span style="color:${atkColor}">${attacker.name}</span> 拼死砍中真神，造成 ${Math.floor(dmg)} 點微弱傷害。</span><br>`;
+                }
+                defender.hp -= dmg;
+            }
+
+            // UI 批量更新 (每 15 步更新一次，避免 DOM 渲染卡死瀏覽器)
+            if (round % 15 === 0 || attacker.name === "蔣大器" || attacker.name === "毛宗崗" || defender.name === "蔣大器" || defender.name === "毛宗崗") {
+                updateGodBars();
+                
+                // 真神回血神蹟
+                if(fighters[0].stats.hpRegen > 0 && fighters[0].hp > 0 && fighters[0].hp < fighters[0].maxHp) {
+                    fighters[0].hp = Math.min(fighters[0].maxHp, fighters[0].hp + fighters[0].stats.hpRegen);
+                }
+                
+                hpChart.data.labels.push(round);
+                hpChart.data.datasets[0].data.push( fighters[0].hp / fighters[0].maxHp * 100 ); 
+                hpChart.data.datasets[1].data.push( fighters.filter(f=>f.team==='B').reduce((s,f)=>s+f.hp,0) / totalEnemiesHp * 100 );
+                hpChart.update();
+                
+                battleLog.scrollTop = battleLog.scrollHeight;
+            }
+            round++;
+        }
+
+        updateGodBars();
+        triggerShake();
+        if(typeof playBossShakeSound === 'function') playBossShakeSound();
+
+        if (!fighters[0].isDead) {
+            battleLog.innerHTML += `<br><div style="text-align:center; padding:20px; border: 2px solid #00ffff; background:rgba(0,255,255,0.2); margin-top:20px; box-shadow: 0 0 50px #00ffff;">
+                <h1 style="color:#00ffff; text-shadow: 0 0 20px #00ffff;">【宇宙歸一 絕對主宰】</h1>
+                <h2 style="color:#ffffff;">🌌 ${fighters[0].name} 🌌</h2>
+                <p style="color:#ccc;">隻身一人，屠滅了包含舊神在內的三國全庫 ${enemies.length} 名大將！</p>
+                <p style="color:#00ff41; font-weight:bold; font-size:20px; margin-top:10px;">「天道已死，吾即天道！」</p>
+            </div><br><br>`;
+        } else {
+             // 若主公的真理之筆數值設定不夠狂暴，遭舊神聯軍反殺的結語
+             battleLog.innerHTML += `<br><div style="text-align:center; padding:20px; border: 2px solid #ff3131; background:rgba(255,49,49,0.2); margin-top:20px; box-shadow: 0 0 50px #ff3131;">
+                <h1 style="color:#ff3131; text-shadow: 0 0 20px #ff3131;">【諸神黃昏 弒神失敗】</h1>
+                <p style="color:#ccc;">即使手握真理之筆，亦無法承受全宇宙與舊神的無盡怒火...</p>
+            </div><br><br>`;
+        }
+
+        battleLog.scrollTop = battleLog.scrollHeight;
+        buttons.forEach(b => b.disabled = false);
     }
 </script>
 </body>
