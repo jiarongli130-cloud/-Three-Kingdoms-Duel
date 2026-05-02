@@ -3964,7 +3964,7 @@
                     battleLog.innerHTML += `<span style="color:#00ffff;">⚡ 【真理抹殺】<span style="color:${atkColor}">${attacker.name}</span> 揮舞真理之筆，<span style="color:${defColor}">${defender.name}</span> 的代碼瞬間被強制刪除！</span><br>`;
                     if(typeof playCyberStrikeSound === 'function') playCyberStrikeSound();
                 }
-            } else {
+           } else {
                 // 凡人與舊神的絕望抵抗
                 let dmg = Math.max(1, (attacker.actualPower * 0.1));
                 
@@ -3978,6 +3978,15 @@
                     battleLog.innerHTML += `<span style="color:#aaaaaa;">[逆神] <span style="color:${atkColor}">${attacker.name}</span> 拼死砍中真神，造成 ${Math.floor(dmg)} 點微弱傷害。</span><br>`;
                 }
                 defender.hp -= dmg;
+
+                // 😈 【軍師補丁：真理之筆無限復活機制】
+                if (defender.hp <= 0 && defender.stats.revives.length > 0) {
+                    let rev = defender.stats.revives.pop();
+                    defender.hp = rev.hp;
+                    battleLog.innerHTML += `<span style="color:#ffd700; font-weight:bold; font-size:18px;">✨ 【創世神蹟】觸發『${rev.name}』！<span style="color:${defColor}">${defender.name}</span> 於死境中重塑神軀，滿血回歸！（剩餘神蹟：${defender.stats.revives.length}次）</span><br>`;
+                    triggerShake();
+                    if(typeof playBossShakeSound === 'function') playBossShakeSound();
+                }
             }
 
             // UI 批量更新 (每 15 步更新一次，避免 DOM 渲染卡死瀏覽器)
