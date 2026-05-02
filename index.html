@@ -160,7 +160,14 @@
     <div class="controls">
         <button onclick="startDuel()" style="flex: 1;">發動單挑處決</button>
         <button class="btn-random" onclick="randomize()" style="flex: 1;">天道隨機點將</button>
+        <button id="bgmToggleBtn" onclick="toggleBgm()" style="flex: 0.5; background: #111; border-color: #00ffff; color: #00ffff;">🎵 戰歌：未解封</button>
     </div>
+
+    <!-- 隱藏的賽博琴瑟陣眼 -->
+    <audio id="bgmAudio" loop preload="auto">
+        <!-- 主公！請將下方的 src 網址替換為您在 GitHub 上傳的 MP3 Raw 連結！ -->
+        <source src="https://github.com/jiarongli130-cloud/-Three-Kingdoms-Duel/raw/refs/heads/main/%E3%80%90%E7%84%A1%E6%96%99%E3%83%95%E3%83%AA%E3%83%BCBGM%E3%80%91%E4%B8%AD%E8%8F%AF%E9%A2%A8%E3%81%AE%E5%8B%87%E5%A3%AE%E3%81%AA%E3%82%AA%E3%83%BC%E3%82%B1%E3%82%B9%E3%83%88%E3%83%A9%E6%9B%B2%E3%80%8CWuxia%E3%80%8D.mp3" type="audio/mpeg">
+    </audio>
 
     <!-- 銅雀臺・紅顏招親系統 UI -->
     <div class="controls" style="border: 2px dashed var(--accent-pink); padding: 15px; border-radius: 5px; background: rgba(255, 105, 180, 0.05); display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
@@ -425,6 +432,50 @@
         gainNode.connect(audioCtx.destination);
         osc.start();
         osc.stop(audioCtx.currentTime + 0.5);
+    }
+
+        // ==============================================================
+    // 😈 【暗黑兵法】常駐戰歌控制樞紐 (BGM System)
+    // ==============================================================
+    let bgmUnlocked = false;
+    let bgmPlayer = null;
+
+    // 監聽全域點擊：只要玩家一點擊畫面任何地方，立刻解除瀏覽器靜音封印！
+    document.addEventListener('click', function unlockBgm() {
+        if (!bgmUnlocked) {
+            bgmPlayer = document.getElementById('bgmAudio');
+            if (bgmPlayer) {
+                bgmPlayer.volume = 0.4; // 預設音量 40%，避免蓋過金屬打擊音效
+                bgmPlayer.play().then(() => {
+                    bgmUnlocked = true;
+                    document.getElementById('bgmToggleBtn').innerText = "🔊 戰歌：奏響中";
+                    document.getElementById('bgmToggleBtn').style.color = "#00ff41";
+                    document.getElementById('bgmToggleBtn').style.borderColor = "#00ff41";
+                }).catch(err => {
+                    console.log("天道法則阻擋了戰歌：", err);
+                });
+            }
+            // 解封後即可移除此監聽器，避免浪費效能
+            document.removeEventListener('click', unlockBgm);
+        }
+    }, { once: true }); // once: true 確保只觸發一次
+
+    // 手動開關戰歌陣法
+    function toggleBgm() {
+        if (!bgmPlayer) bgmPlayer = document.getElementById('bgmAudio');
+        let btn = document.getElementById('bgmToggleBtn');
+        
+        if (bgmPlayer.paused) {
+            bgmPlayer.play();
+            btn.innerText = "🔊 戰歌：奏響中";
+            btn.style.color = "#00ff41";
+            btn.style.borderColor = "#00ff41";
+        } else {
+            bgmPlayer.pause();
+            btn.innerText = "🔇 戰歌：靜音中";
+            btn.style.color = "#aaa";
+            btn.style.borderColor = "#aaa";
+        }
     }
     // ==============================================================
     // ▼▼▼ 全局數據與核心陣列 (Global Scope) ▼▼▼
