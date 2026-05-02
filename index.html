@@ -3968,16 +3968,37 @@
                 // 凡人與舊神的絕望抵抗
                 let dmg = Math.max(1, (attacker.actualPower * 0.1));
                 
-                // 😈 舊神反撲，造成鉅額真實傷害
-                if (attacker.name === "蔣大器" || attacker.name === "毛宗崗") {
-                    dmg = 9999; 
-                    battleLog.innerHTML += `<span style="color:#ff0000; font-weight:bold;">⚠️ 【天道反撲】舊神 <span style="color:${atkColor}">${attacker.name}</span> 拼死釋放底層亂碼，對真神造成 ${dmg} 點鉅額傷害！</span><br>`;
-                    if(typeof playBossStrikeSound === 'function') playBossStrikeSound();
+                // 凡人與舊神的絕望抵抗
+            let dmg = Math.max(1, (attacker.actualPower * 0.1));
+            
+            // 😈 舊神反撲，造成鉅額真實傷害
+            if (attacker.name === "蔣大器" || attacker.name === "毛宗崗") {
+                dmg = 9999; 
+                battleLog.innerHTML += `<span style="color:#ff0000; font-weight:bold;">⚠️ 【天道反撲】舊神 <span style="color:${atkColor}">${attacker.name}</span> 拼死釋放底層亂碼，對真神造成 ${dmg} 點鉅額傷害！</span><br>`;
+                if(typeof playBossStrikeSound === 'function') playBossStrikeSound();
+                triggerShake();
+            } else if(Math.random() < 0.1) {
+                battleLog.innerHTML += `<span style="color:#aaaaaa;">[逆神] <span style="color:${atkColor}">${attacker.name}</span> 拼死砍中真神，造成 ${Math.floor(dmg)} 點微弱傷害。</span><br>`;
+            }
+            
+            defender.hp -= dmg;
+
+            // 😈 【九十九重真理輪迴】判定
+            if (defender.id === 'God' && defender.hp <= 0) {
+                if (defender.stats.revives.length > 0) {
+                    let rev = defender.stats.revives.pop();
+                    defender.hp = rev.hp; // 恢復為真理之筆設定的滿血
+                    battleLog.innerHTML += `<br><span style="color:#ff00ff; font-weight:bold; font-size:18px; text-shadow: 0 0 10px #ff00ff;">✨ 【真理輪迴】「吾乃天道，豈會輕易隕落！」<br><span style="color:${defColor}">${defender.name}</span> 消耗 1 次神蹟，強行重組代碼，滿血復活！（剩餘神蹟：${defender.stats.revives.length} 次）</span><br><br>`;
                     triggerShake();
-                } else if(Math.random() < 0.1) {
-                    battleLog.innerHTML += `<span style="color:#aaaaaa;">[逆神] <span style="color:${atkColor}">${attacker.name}</span> 拼死砍中真神，造成 ${Math.floor(dmg)} 點微弱傷害。</span><br>`;
+                    if(typeof playBossShakeSound === 'function') playBossShakeSound();
+                } else {
+                    // 神蹟耗盡，真正隕落
+                    defender.hp = 0;
+                    defender.isDead = true;
+                    battleLog.innerHTML += `<br><span style="color:#ff3131; font-weight:bold; font-size:24px; text-shadow: 0 0 15px #ff3131;">💀 【諸神黃昏】真理之筆的墨水已然耗盡！<span style="color:${defColor}">${defender.name}</span> 發出不甘的怒吼，神格徹底粉碎！</span><br><br>`;
+                    triggerShake();
+                    if(typeof playBossShakeSound === 'function') playBossShakeSound();
                 }
-                defender.hp -= dmg;
             }
 
             // UI 批量更新 (每 15 步更新一次，避免 DOM 渲染卡死瀏覽器)
