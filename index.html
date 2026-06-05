@@ -1201,7 +1201,36 @@
         let equipmentOnly = itemDatabase.filter(i => !i.desc.includes("【紅顏伴侶】") && !i.isHiddenItem);
         return equipmentOnly[Math.floor(Math.random() * equipmentOnly.length)];
     }
+// 😈【暗黑兵法：弒神奪寶】指定神魔與超一流猛將掉落清單
+    const dropBosses = ["棄天帝", "南斗", "北斗", "南華老仙", "左慈", "于吉", "民王", "李意", "紫虛上人", "管輅", "童淵", "趙雲", "關羽", "張飛", "馬超", "黃忠", "呂布", "許褚", "典韋", "文醜", "顏良"];
 
+    function triggerBossDrop(killerGen, deadBossName) {
+        if (!killerGen || !killerGen.isRPG || !dropBosses.includes(deadBossName)) return;
+
+        if (!killerGen.inventory) killerGen.inventory = [];
+        if (killerGen.inventory.length >= 50) {
+            battleLog.innerHTML += `<span style="color:#aaa;">[行囊滿載] ${deadBossName} 灰飛煙滅，神兵掉落！但 ${killerGen.name} 行囊已滿，只能任其消散於虛空！</span><br>`;
+            return;
+        }
+
+        // 過濾出尚未擁有的常規神兵
+        let availableItems = itemDatabase.filter(i => !i.desc.includes("【紅顏伴侶】") && !i.isHiddenItem && !killerGen.inventory.find(inv => inv.name === i.name));
+
+        if (availableItems.length > 0) {
+            let newItemObj = availableItems[Math.floor(Math.random() * availableItems.length)];
+            killerGen.inventory.push(newItemObj);
+            killerGen.power += newItemObj.power;
+            battleLog.innerHTML += `<br><span style="color:#ff00ff; font-weight:bold; font-size:16px; text-shadow: 0 0 10px #ff00ff;">🎁 【弒神奪寶】${killerGen.name} 踏過 ${deadBossName} 的屍骸，100％奪得神兵『${newItemObj.name}』！武力提升 ${newItemObj.power} 點！</span><br><br>`;
+
+            // 動態更新面板
+            if (activeRpgGeneral && activeRpgGeneral.name === killerGen.name) {
+                renderRpgPanel(activeRpgGeneral);
+                updateDropdowns();
+            }
+        } else {
+            battleLog.innerHTML += `<span style="color:#aaa;">[武神之巔] ${killerGen.name} 擊殺 ${deadBossName}，但已收藏盡天下神兵，對其掉落物不屑一顧！</span><br>`;
+        }
+    }
     // 將武將的神兵、技能、紅顏伴侶轉換為動態戰鬥變數
     function parseCombatStats(gen) {
         let stats = { armorPen: 0, dodgeBonus: 0, lifesteal: 0, blockChance: 0, maxHpBonus: 0, hpRegen: 0, revives: [] };
