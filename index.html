@@ -269,6 +269,16 @@
                         <button onclick="executeRpgShareBoost('微信')" style="border-color:#07c160; color:#07c160; font-size:12px; flex:1; min-width:90px;">轉發微信</button>
                     </div>
                 </div>
+
+                <!-- 自創武將拜師學藝系統：武力前三十名師傅，對應三十種師承技能 -->
+                <div id="rpgMasterPanel" style="border:1px solid #ffd700; padding:10px; background:rgba(255,215,0,0.06); margin-top:5px;">
+                    <div style="color:#ffd700; font-weight:bold; text-shadow:0 0 5px #ffd700; margin-bottom:5px;">🥋 自創武將拜師學藝系統</div>
+                    <div id="rpgMasterStatus" style="font-size:12px; color:#ccc; margin-bottom:8px;">可向武力前三十名高手拜師；每次須與師傅切磋，勝敗皆得經驗，達成條件可覺醒師傅專屬技能。</div>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+                        <select id="masterSelect" style="flex:2; min-width:220px; border-color:#ffd700; color:#ffd700; background:#000;"></select>
+                        <button onclick="runMasterTrainingBattle()" style="border-color:#ffd700; color:#ffd700; font-size:12px; flex:1; min-width:140px;">⚔️ 拜師切磋學藝</button>
+                    </div>
+                </div>
             </div>
             
             <div style="display: none !important;">
@@ -1142,6 +1152,84 @@
         "時空鎖定": { dodgeBonus: 0.05 }
     };
 
+    // 【拜師學藝・三十名師專屬技能】武力前三十名師傅各傳一招
+    Object.assign(skillDict, {
+        "百鳥朝鳳槍": "【童淵師承】槍法宗師真傳，破甲 18%，閃避 3%，每次出手如百鳥歸巢。",
+        "龍膽破軍": "【趙雲師承】單騎破陣之膽，閃避 6%，吸血 2%，越戰越勇。",
+        "青龍斬月": "【關羽師承】義絕青龍刀勢，破甲 14%，格擋 3%，重擊敵方核心。",
+        "丈八雷吼": "【張飛師承】長坂怒吼震碎敵膽，破甲 12%，格擋 5%。",
+        "錦馬銀槍": "【馬超師承】西涼疾風槍術，閃避 5%，破甲 8%。",
+        "老將穿楊": "【黃忠師承】百步穿楊之眼，破甲 16%，精準打穿防線。",
+        "無雙鬼神戟": "【呂布師承】鬼神無雙，破甲 20%，吸血 1%，霸道壓制。",
+        "虎痴鐵軀": "【許褚師承】虎痴肉身橫練，格擋 12%，瀕死不退。",
+        "古之惡來": "【典韋師承】惡來死戰，格擋 8%，吸血 2%，可硬扛亂軍。",
+        "河北快刀": "【文醜師承】河北猛將快刀，破甲 10%，閃避 2%。",
+        "白馬斬將": "【顏良師承】斬將銳氣，破甲 13%，先聲奪人。",
+        "西涼死鬥": "【龐德師承】棺材死戰之志，格擋 5%，破甲 10%。",
+        "藤甲獸魂": "【兀突骨師承】異獸藤甲之軀，格擋 14%，減少被秒殺風險。",
+        "巧變破陣": "【張郃師承】臨陣巧變，閃避 4%，格擋 4%。",
+        "威震江東": "【張遼師承】八百破陣軍威，破甲 15%，閃避 2%。",
+        "獨目剛烈": "【夏侯惇師承】拔矢啖睛之勇，格擋 7%，吸血 1%。",
+        "麒麟繼武": "【姜維師承】麒麟兒兵武合一，閃避 3%，破甲 9%，格擋 2%。",
+        "神亭酣戰": "【太史慈師承】神亭鏖戰之勇，破甲 10%，閃避 3%。",
+        "小霸王突陣": "【孫策師承】江東小霸王氣勢，破甲 12%，吸血 1%。",
+        "虎步急射": "【夏侯淵師承】疾行神射，閃避 4%，破甲 8%。",
+        "江東斷後": "【凌統師承】斷後死戰，格擋 6%，閃避 3%。",
+        "錦帆夜襲": "【甘寧師承】錦帆夜襲，破甲 11%，閃避 3%。",
+        "浴血護主": "【周泰師承】百創護主，格擋 10%，復活恢復 3 HP。",
+        "奇襲破蜀": "【鄧艾師承】奇襲穿插，閃避 4%，破甲 7%。",
+        "單騎退雄兵": "【文鴦師承】單騎震退雄兵，破甲 14%，閃避 4%。",
+        "嚴整守勢": "【李嚴師承】鎮守軍門，格擋 8%，破甲 4%。",
+        "河北銳鋒": "【高覽師承】河北四庭柱銳鋒，破甲 9%，格擋 3%。",
+        "落鳳伏擊": "【張任師承】伏擊名將之術，破甲 10%，閃避 2%。",
+        "開山巨斧": "【徐晃師承】開山斧勢，破甲 12%，格擋 4%。",
+        "曹洪護駕": "【曹洪師承】捨命護主，格擋 9%，復活恢復 2 HP。"
+    });
+
+    Object.assign(skillEffects, {
+        "百鳥朝鳳槍": { armorPen: 0.18, dodgeBonus: 0.03 },
+        "龍膽破軍": { dodgeBonus: 0.06, lifesteal: 0.02 },
+        "青龍斬月": { armorPen: 0.14, blockChance: 0.03 },
+        "丈八雷吼": { armorPen: 0.12, blockChance: 0.05 },
+        "錦馬銀槍": { dodgeBonus: 0.05, armorPen: 0.08 },
+        "老將穿楊": { armorPen: 0.16 },
+        "無雙鬼神戟": { armorPen: 0.20, lifesteal: 0.01 },
+        "虎痴鐵軀": { blockChance: 0.12 },
+        "古之惡來": { blockChance: 0.08, lifesteal: 0.02 },
+        "河北快刀": { armorPen: 0.10, dodgeBonus: 0.02 },
+        "白馬斬將": { armorPen: 0.13 },
+        "西涼死鬥": { blockChance: 0.05, armorPen: 0.10 },
+        "藤甲獸魂": { blockChance: 0.14 },
+        "巧變破陣": { dodgeBonus: 0.04, blockChance: 0.04 },
+        "威震江東": { armorPen: 0.15, dodgeBonus: 0.02 },
+        "獨目剛烈": { blockChance: 0.07, lifesteal: 0.01 },
+        "麒麟繼武": { dodgeBonus: 0.03, armorPen: 0.09, blockChance: 0.02 },
+        "神亭酣戰": { armorPen: 0.10, dodgeBonus: 0.03 },
+        "小霸王突陣": { armorPen: 0.12, lifesteal: 0.01 },
+        "虎步急射": { dodgeBonus: 0.04, armorPen: 0.08 },
+        "江東斷後": { blockChance: 0.06, dodgeBonus: 0.03 },
+        "錦帆夜襲": { armorPen: 0.11, dodgeBonus: 0.03 },
+        "浴血護主": { blockChance: 0.10, revive: true, reviveHp: 3, isConsumable: false },
+        "奇襲破蜀": { dodgeBonus: 0.04, armorPen: 0.07 },
+        "單騎退雄兵": { armorPen: 0.14, dodgeBonus: 0.04 },
+        "嚴整守勢": { blockChance: 0.08, armorPen: 0.04 },
+        "河北銳鋒": { armorPen: 0.09, blockChance: 0.03 },
+        "落鳳伏擊": { armorPen: 0.10, dodgeBonus: 0.02 },
+        "開山巨斧": { armorPen: 0.12, blockChance: 0.04 },
+        "曹洪護駕": { blockChance: 0.09, revive: true, reviveHp: 2, isConsumable: false }
+    });
+
+    const masterSkillMap = {
+        "童淵": "百鳥朝鳳槍", "趙雲": "龍膽破軍", "關羽": "青龍斬月", "張飛": "丈八雷吼", "馬超": "錦馬銀槍",
+        "黃忠": "老將穿楊", "呂布": "無雙鬼神戟", "許褚": "虎痴鐵軀", "典韋": "古之惡來", "文醜": "河北快刀",
+        "顏良": "白馬斬將", "龐德": "西涼死鬥", "兀突骨": "藤甲獸魂", "張郃": "巧變破陣", "張遼": "威震江東",
+        "夏侯惇": "獨目剛烈", "姜維": "麒麟繼武", "太史慈": "神亭酣戰", "孫策": "小霸王突陣", "夏侯淵": "虎步急射",
+        "凌統": "江東斷後", "甘寧": "錦帆夜襲", "周泰": "浴血護主", "鄧艾": "奇襲破蜀", "文鴦": "單騎退雄兵",
+        "李嚴": "嚴整守勢", "高覽": "河北銳鋒", "張任": "落鳳伏擊", "徐晃": "開山巨斧", "曹洪": "曹洪護駕"
+    };
+
+    const masterOrder = Object.keys(masterSkillMap);
+
     const skillPool = Object.keys(skillDict);
 
     // 【50件武神兵器譜 + 15件紅顏伴侶 + 終極神賞】 植入底層標籤
@@ -1718,7 +1806,7 @@
             currentRpgDraft = {
                 name: nameInput, power: initPower, rank: "異界凡人 (LV.1)",
                 isRPG: true, level: 1, exp: 0, expNext: 100, statPoints: 0, skillPoints: 0,
-                skills: initSkills, inventory: [], harem: [], isMaxAwakened: false // 新增 harem 陣列
+                skills: initSkills, inventory: [], harem: [], masteries: {}, masteredSkills: [], masterBattleCount: 0, isMaxAwakened: false // 新增 harem 與拜師學藝陣列
             };
             document.getElementById('prevSkillsContainer').style.display = "block";
             
@@ -1842,12 +1930,19 @@
 
             if (typeof gen.rpgShareCount === 'undefined') gen.rpgShareCount = 0;
             if (typeof gen.rpgSharePower === 'undefined') gen.rpgSharePower = 0;
+            if (!gen.masteries) gen.masteries = {};
+            if (!gen.masteredSkills) gen.masteredSkills = [];
+            if (typeof gen.masterBattleCount === 'undefined') gen.masterBattleCount = 0;
+            let learnedMasterSkillsHtml = gen.masteredSkills.length > 0 ? gen.masteredSkills.map(s =>
+                `<span class="tooltip" style="color:#ffd700;">${s}<span class="tooltiptext"><span class="title" style="color:#ffd700;">${s}</span>${skillDict[s] || '師承絕技'}</span></span>`
+            ).join("、") : "尚未覺醒師承絕技";
 
             document.getElementById('rpgStatsDisplay').innerHTML = `
                 <strong>武將：</strong> <span style="color:#00ff41;">${gen.name}</span> (異界修羅)<br>
                 <strong>等級：</strong> LV.${gen.level} <span style="color:#aaa;">(EXP: ${gen.exp}/${gen.expNext})</span><br>
                 <strong>總和武力：</strong> <span style="color:#ff8c00;">${gen.power}</span> <br>
                 <strong style="color:#00ffff;">📣 自創轉發加成：</strong> <span style="color:#00ffff;">${gen.rpgSharePower}/2000</span>（${gen.rpgShareCount}/20 次）<br>
+                <strong style="color:#ffd700;">🥋 拜師學藝：</strong> 已切磋 <span style="color:#ffd700;">${gen.masterBattleCount}</span> 次｜已覺醒 <span style="color:#ffd700;">${gen.masteredSkills.length}/30</span> 招：${learnedMasterSkillsHtml}<br>
                 <strong>HP 上限加成：</strong> <span style="color:var(--accent-pink);">+${statsObj.maxHpBonus}</span> | 
                 <strong>自動治癒：</strong> <span style="color:var(--accent-pink);">+${statsObj.hpRegen}</span><br>
                 <strong>剩餘武力/技能點：</strong> <span style="color:#ff8c00;">${gen.statPoints}</span> / <span style="color:#00ffff;">${gen.skillPoints}</span><br>
@@ -1864,6 +1959,7 @@
             if (rpgShareStatus) {
                 rpgShareStatus.innerHTML = `已轉發 <span style="color:#00ffff; font-weight:bold;">${gen.rpgShareCount}/20</span> 次｜已增加武力 <span style="color:#ff8c00; font-weight:bold;">${gen.rpgSharePower}/2000</span>｜剩餘 <span style="color:#00ff41; font-weight:bold;">${20 - gen.rpgShareCount}</span> 次`;
             }
+            populateMasterSelect();
         } else {
             // 凡人將領面板簡化
             document.getElementById('rpgActionButtons').style.display = "none";
@@ -3913,7 +4009,97 @@
     // 📣 【自創武將專屬】八平台轉發修煉：與 executeDarkShare 完全分離
     // 規則：每次轉發 +100 武力，總共最多 20 次，最高 +2000。
     // ==============================================================
-    function executeRpgShareBoost(platform) {
+    function getTopThirtyMasters() {
+        // 固定師傅名單：童淵起算，往下取武力前三十名武道宗師，避免神仙 T0/T1 亂入。
+        return masterOrder.map(name => generals.find(g => g.name === name)).filter(Boolean).slice(0, 30);
+    }
+
+    function populateMasterSelect() {
+        const select = document.getElementById('masterSelect');
+        if (!select || !activeRpgGeneral || !activeRpgGeneral.isRPG) return;
+        const currentVal = select.value;
+        select.innerHTML = '';
+        getTopThirtyMasters().forEach(master => {
+            const skillName = masterSkillMap[master.name];
+            const learned = activeRpgGeneral.skills && activeRpgGeneral.skills.includes(skillName);
+            const progress = activeRpgGeneral.masteries && activeRpgGeneral.masteries[master.name] ? activeRpgGeneral.masteries[master.name] : 0;
+            select.add(new Option(`${master.name}｜武力${master.power}｜傳授：${skillName}${learned ? ' ✅已覺醒' : `｜切磋${progress}/3`}`, master.name));
+        });
+        if ([...select.options].some(o => o.value === currentVal)) select.value = currentVal;
+
+        const status = document.getElementById('rpgMasterStatus');
+        if (status) {
+            const learnedCount = activeRpgGeneral.masteredSkills ? activeRpgGeneral.masteredSkills.length : 0;
+            status.innerHTML = `前三十名師傅全開放：童淵以下三十名高手皆可拜師。每次與師傅切磋可得經驗；同一師傅切磋 3 次或擊敗師傅，可覺醒其專屬技能。進度：<span style="color:#ffd700; font-weight:bold;">${learnedCount}/30</span>`;
+        }
+    }
+
+    async function runMasterTrainingBattle() {
+        if (!activeRpgGeneral || !activeRpgGeneral.isRPG) {
+            alert("主公！拜師學藝只開放自創武將，請先選定異界修羅！");
+            return;
+        }
+        const select = document.getElementById('masterSelect');
+        if (!select || !select.value) { alert("請先選擇一位師傅！"); return; }
+
+        const masterName = select.value;
+        const master = generals.find(g => g.name === masterName);
+        const skillName = masterSkillMap[masterName];
+        if (!master || !skillName) { alert("師傅資料錯誤，請重新選擇！"); return; }
+
+        if (!activeRpgGeneral.masteries) activeRpgGeneral.masteries = {};
+        if (!activeRpgGeneral.masteredSkills) activeRpgGeneral.masteredSkills = [];
+        if (typeof activeRpgGeneral.masterBattleCount === 'undefined') activeRpgGeneral.masterBattleCount = 0;
+
+        const hasSkill = activeRpgGeneral.skills.includes(skillName);
+        const traineePower = activeRpgGeneral.power;
+        const masterPower = master.power;
+        const winChance = Math.max(8, Math.min(85, 45 + (traineePower - masterPower) * 0.45));
+        const traineeWins = Math.random() * 100 < winChance;
+        const expGain = traineeWins ? 900 + Math.floor(masterPower * 2) : 350 + Math.floor(masterPower);
+
+        activeRpgGeneral.masterBattleCount += 1;
+        activeRpgGeneral.masteries[masterName] = (activeRpgGeneral.masteries[masterName] || 0) + 1;
+
+        battleLog.innerHTML += `<br><span style="color:#ffd700; font-weight:bold; font-size:18px; text-shadow:0 0 8px #ffd700;">🥋【拜師學藝】${activeRpgGeneral.name} 向 ${masterName} 行拜師禮，請教「${skillName}」！</span><br>`;
+        battleLog.innerHTML += `<span style="color:#ccc;">師徒切磋開始：${activeRpgGeneral.name} 武力 ${traineePower} VS ${masterName} 武力 ${masterPower}｜勝率約 ${winChance.toFixed(1)}%</span><br>`;
+
+        await new Promise(r => setTimeout(r, 250));
+        triggerShake();
+        playCyberStrikeSound();
+
+        if (traineeWins) {
+            battleLog.innerHTML += `<span style="color:#00ff41; font-weight:bold;">✅【師門試煉勝利】${activeRpgGeneral.name} 在血戰中逼退 ${masterName}，獲得 ${expGain} 點經驗！</span><br>`;
+        } else {
+            battleLog.innerHTML += `<span style="color:#8a2be2; font-weight:bold;">💀【師門痛擊】${masterName} 親自出手打醒弟子，${activeRpgGeneral.name} 雖敗仍獲得 ${expGain} 點經驗！</span><br>`;
+        }
+
+        gainExp(activeRpgGeneral.name, expGain);
+
+        if (!hasSkill && (traineeWins || activeRpgGeneral.masteries[masterName] >= 3)) {
+            activeRpgGeneral.skills.push(skillName);
+            activeRpgGeneral.masteredSkills.push(skillName);
+            activeRpgGeneral.skillPoints += 1;
+            battleLog.innerHTML += `<span style="color:#ffffff; font-weight:bold; font-size:18px; text-shadow:0 0 12px #ffd700;">🌟【師承覺醒】${activeRpgGeneral.name} 領悟 ${masterName} 真傳：專屬技能【${skillName}】！額外獲得 1 點技能點！</span><br>`;
+        } else if (hasSkill) {
+            battleLog.innerHTML += `<span style="color:#aaa;">📜【溫故知新】已掌握【${skillName}】，本次切磋轉為純經驗修煉。</span><br>`;
+        } else {
+            const remain = Math.max(0, 3 - activeRpgGeneral.masteries[masterName]);
+            battleLog.innerHTML += `<span style="color:#ffd700;">🔥【師承進度】${masterName} 認可度 ${activeRpgGeneral.masteries[masterName]}/3，再切磋 ${remain} 次必定覺醒【${skillName}】。</span><br>`;
+        }
+
+        // 靜默封存，不彈出保存提示，避免每次拜師都打斷流程。
+        let savedData = JSON.parse(localStorage.getItem('rpgGenerals')) || {};
+        savedData[activeRpgGeneral.name] = activeRpgGeneral;
+        localStorage.setItem('rpgGenerals', JSON.stringify(savedData));
+        populateSavedGenerals();
+
+        renderRpgPanel(activeRpgGeneral);
+        updateDropdowns();
+        battleLog.scrollTop = battleLog.scrollHeight;
+    }
+
+        function executeRpgShareBoost(platform) {
         if (!activeRpgGeneral || !activeRpgGeneral.isRPG) {
             alert("主公！此功能只給自創武將使用，請先選定異界修羅！");
             return;
