@@ -2984,6 +2984,12 @@
         } else {
             let names = fighters.filter(f=>f.team==='B' && !f.isDead).map(f => f.name).join("、");
             fighters.filter(f=>f.team==='B' && !f.isDead).forEach(f => gainExp(f.name, 150)); // 存活群虎獎勵
+            // 😈 狂龍戰死，依然獲得極限血戰經驗
+            gainExp(fighters[0].name, 200);
+            let isRpgDragon = generals.find(g => g.name === fighters[0].name && g.isRPG);
+            if (isRpgDragon) {
+                 battleLog.innerHTML += `<span style="color:#8a2be2; font-weight:bold;">💀 【生死淬鍊】狂龍 ${fighters[0].name} 雖被群虎撕裂，卻在極限死戰中強行汲取了 200 點修羅經驗！</span><br>`;
+            }
             battleLog.innerHTML += `<br><div style="text-align:center; padding:20px; border: 2px solid #ff3131; background:rgba(255,49,49,0.1); margin-top:20px; box-shadow: 0 0 30px rgba(255,49,49,0.5);">
                 <h1 style="color:#ff3131; text-shadow: 0 0 10px #ff3131;">【群虎噬龍 慘烈落幕】</h1>
                 <h2 style="color:#ffffff;">🐅 群虎陣營 🐅</h2>
