@@ -1697,7 +1697,7 @@
         if (!nameInput) { alert("主公，請先賜予武將姓名！"); return; }
 
         if (type === 'rpg') {
-            let initPower = Math.floor(Math.random() * 41) + 40; 
+            let initPower = 1; 
             let initSkills = [...skillPool].sort(() => 0.5 - Math.random()).slice(0, 3);
             currentRpgDraft = {
                 name: nameInput, power: initPower, rank: "異界凡人 (LV.1)",
