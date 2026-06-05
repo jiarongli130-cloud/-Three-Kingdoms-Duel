@@ -3338,6 +3338,11 @@
                     f.hp = 0; f.isDead = true;
                     battleLog.innerHTML += `<span style="color:#ff3131; font-weight:bold; border-bottom: 1px solid #555; display:block; padding-bottom:5px; margin-bottom:5px;">🩸 [陣亡] <span style="color:${f.color}">${f.name}</span> 倒在了血泊中...</span>`;
                     gainExp(attacker.name, 50); // 大亂鬥擊殺經驗
+                    // 😈加入弒神奪寶判定(亂鬥擊殺者獲取)
+                    if (f.team !== attacker.team) {
+                        let killerGen = generals.find(g => g.name === attacker.name);
+                        triggerBossDrop(killerGen, f.name);
+                    }
                 }
             });
 
