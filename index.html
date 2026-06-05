@@ -3346,14 +3346,21 @@
                     battleLog.innerHTML += `<span style="color:var(--accent-pink);">💖 【紅顏撫慰】<span style="color:${f.color}">${f.name}</span> 獲得治癒，恢復了 ${f.stats.hpRegen} 點 HP！</span><br>`;
                 }
 
-                if (f.hp <= 0) {
+               if (f.hp <= 0) {
                     f.hp = 0; f.isDead = true;
                     battleLog.innerHTML += `<span style="color:#ff3131; font-weight:bold; border-bottom: 1px solid #555; display:block; padding-bottom:5px; margin-bottom:5px;">🩸 [陣亡] <span style="color:${f.color}">${f.name}</span> 倒在了血泊中...</span>`;
                     gainExp(attacker.name, 50); // 大亂鬥擊殺經驗
+                    
                     // 😈加入弒神奪寶判定(亂鬥擊殺者獲取)
                     if (f.team !== attacker.team) {
                         let killerGen = generals.find(g => g.name === attacker.name);
                         triggerBossDrop(killerGen, f.name);
+                    }
+
+                    // 😈 戰死者若為修羅，獲取敗北經驗
+                    gainExp(f.name, 40);
+                    if (generals.find(g => g.name === f.name && g.isRPG)) {
+                         battleLog.innerHTML += `<span style="color:#8a2be2; font-weight:bold; font-size:12px;">💀 【生死淬鍊】${f.name} 於亂軍中陣亡，化為光塵前強行掠奪了 40 點經驗！</span><br>`;
                     }
                 }
             });
