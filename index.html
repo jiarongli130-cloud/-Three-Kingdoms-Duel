@@ -2667,15 +2667,21 @@
             battleLog.innerHTML += `<br><strong style="color:var(--accent-orange); font-size:22px;">[演武終結] 最終處決結果：${winner} 傲立戰場！</strong>`;
         }
 
-       // RPG 經驗值結算與弒神奪寶
+       // RPG 經驗值結算與弒神奪寶 (含敗北淬鍊)
         if (h1 > h2) {
             gainExp(p1.name, 300);
-            gainExp(p2.name, 50);
+            gainExp(p2.name, 100); // 失敗者獲得生死淬鍊經驗
             triggerBossDrop(p1, p2.name);
+            if (generals.find(g => g.name === p2.name && g.isRPG)) {
+                battleLog.innerHTML += `<span style="color:#8a2be2; font-weight:bold;">💀 【生死淬鍊】${p2.name} 雖敗猶榮，從瀕死邊緣強行汲取了 100 點修羅經驗！</span><br>`;
+            }
         } else {
             gainExp(p2.name, 300);
-            gainExp(p1.name, 50);
+            gainExp(p1.name, 100); // 失敗者獲得生死淬鍊經驗
             triggerBossDrop(p2, p1.name);
+            if (generals.find(g => g.name === p1.name && g.isRPG)) {
+                battleLog.innerHTML += `<span style="color:#8a2be2; font-weight:bold;">💀 【生死淬鍊】${p1.name} 雖敗猶榮，從瀕死邊緣強行汲取了 100 點修羅經驗！</span><br>`;
+            }
         }
         
         updateAsuraUI();
