@@ -2940,6 +2940,11 @@
                     f.hp = 0; f.isDead = true;
                     battleLog.innerHTML += `<span style="color:#ff3131; font-weight:bold; border-bottom: 1px solid #555; display:block; padding-bottom:5px; margin-bottom:5px;">🩸 [陣亡] <span style="color:${f.color}">${f.name}</span> 倒在了血泊中...</span>`;
                     gainExp(fighters[0].name, 50); // 狂龍擊殺獎勵
+                    // 😈加入弒神奪寶判定(狂龍專屬)
+                    if (f.team === 'B') {
+                        let killerGen = generals.find(g => g.name === fighters[0].name);
+                        triggerBossDrop(killerGen, f.name);
+                    }
                     gainExp(f.name, 10);
                 }
             });
