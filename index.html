@@ -4023,14 +4023,14 @@
             const skillName = masterSkillMap[master.name];
             const learned = activeRpgGeneral.skills && activeRpgGeneral.skills.includes(skillName);
             const progress = activeRpgGeneral.masteries && activeRpgGeneral.masteries[master.name] ? activeRpgGeneral.masteries[master.name] : 0;
-            select.add(new Option(`${master.name}｜武力${master.power}｜傳授：${skillName}${learned ? ' ✅已覺醒' : `｜切磋${progress}/3`}`, master.name));
+            select.add(new Option(`${master.name}｜武力${master.power}｜傳授：${skillName}${learned ? ' ✅已覺醒' : `｜切磋${progress}/60`}`, master.name));
         });
         if ([...select.options].some(o => o.value === currentVal)) select.value = currentVal;
 
         const status = document.getElementById('rpgMasterStatus');
         if (status) {
             const learnedCount = activeRpgGeneral.masteredSkills ? activeRpgGeneral.masteredSkills.length : 0;
-            status.innerHTML = `前三十名師傅全開放：童淵以下三十名高手皆可拜師。每次與師傅切磋可得經驗；同一師傅切磋 3 次或擊敗師傅，可覺醒其專屬技能。進度：<span style="color:#ffd700; font-weight:bold;">${learnedCount}/30</span>`;
+            status.innerHTML = `前三十名師傅全開放：童淵以下三十名高手皆可拜師。每次與師傅切磋可得經驗；同一師傅切磋 60 次或擊敗師傅，可覺醒其專屬技能。進度：<span style="color:#ffd700; font-weight:bold;">${learnedCount}/30</span>`;
         }
     }
 
@@ -4076,7 +4076,7 @@
 
         gainExp(activeRpgGeneral.name, expGain);
 
-        if (!hasSkill && (traineeWins || activeRpgGeneral.masteries[masterName] >= 3)) {
+        if (!hasSkill && (traineeWins || activeRpgGeneral.masteries[masterName] >= 60)) {
             activeRpgGeneral.skills.push(skillName);
             activeRpgGeneral.masteredSkills.push(skillName);
             activeRpgGeneral.skillPoints += 1;
@@ -4084,7 +4084,7 @@
         } else if (hasSkill) {
             battleLog.innerHTML += `<span style="color:#aaa;">📜【溫故知新】已掌握【${skillName}】，本次切磋轉為純經驗修煉。</span><br>`;
         } else {
-            const remain = Math.max(0, 3 - activeRpgGeneral.masteries[masterName]);
+            const remain = Math.max(0, 60 - activeRpgGeneral.masteries[masterName]);
             battleLog.innerHTML += `<span style="color:#ffd700;">🔥【師承進度】${masterName} 認可度 ${activeRpgGeneral.masteries[masterName]}/3，再切磋 ${remain} 次必定覺醒【${skillName}】。</span><br>`;
         }
 
