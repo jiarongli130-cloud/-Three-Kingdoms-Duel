@@ -253,6 +253,22 @@
                     <button onclick="awakenSkill()" style="border-color: #00ffff; color: #00ffff; font-size: 12px; flex: 1;">覺醒新技能 (-3 點)</button>
                     <button onclick="cheatMaxLevel()" style="display:none; border-color: #ff3131; color: #ff3131; font-size: 12px; flex: 1;">🔥 瞬間滿級</button>
                 </div>
+
+                <!-- 自創武將專屬轉發系統：與原本弒神轉發 executeDarkShare 完全分離 -->
+                <div id="rpgSharePanel" style="border:1px solid #00ffff; padding:10px; background:rgba(0,255,255,0.06); margin-top:5px;">
+                    <div style="color:#00ffff; font-weight:bold; text-shadow:0 0 5px #00ffff; margin-bottom:5px;">📣 自創武將專屬轉發修煉</div>
+                    <div id="rpgShareStatus" style="font-size:12px; color:#ccc; margin-bottom:8px;">轉發八平台，每次武力 +100，最多 20 次。</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                        <button onclick="executeRpgShareBoost('FB')" style="border-color:#3b5998; color:#3b5998; font-size:12px; flex:1; min-width:90px;">轉發FB</button>
+                        <button onclick="executeRpgShareBoost('LINE')" style="border-color:#00c300; color:#00c300; font-size:12px; flex:1; min-width:90px;">轉發LINE</button>
+                        <button onclick="executeRpgShareBoost('IG')" style="border-color:#e1306c; color:#e1306c; font-size:12px; flex:1; min-width:90px;">轉發IG</button>
+                        <button onclick="executeRpgShareBoost('Threads')" style="border-color:#ffffff; color:#ffffff; font-size:12px; flex:1; min-width:90px;">轉發Threads</button>
+                        <button onclick="executeRpgShareBoost('X')" style="border-color:#1da1f2; color:#1da1f2; font-size:12px; flex:1; min-width:90px;">轉發X</button>
+                        <button onclick="executeRpgShareBoost('巴哈姆特')" style="border-color:#00bfff; color:#00bfff; font-size:12px; flex:1; min-width:90px;">轉發巴哈姆特</button>
+                        <button onclick="executeRpgShareBoost('B站')" style="border-color:#fb7299; color:#fb7299; font-size:12px; flex:1; min-width:90px;">轉發B站</button>
+                        <button onclick="executeRpgShareBoost('微信')" style="border-color:#07c160; color:#07c160; font-size:12px; flex:1; min-width:90px;">轉發微信</button>
+                    </div>
+                </div>
             </div>
             
             <div style="display: none !important;">
@@ -1824,10 +1840,14 @@
                 `<span class="tooltip" style="color:#00ffff;">${s}<span class="tooltiptext"><span class="title">${s}</span>${skillDict[s]}</span></span>`
             ).join("、");
 
+            if (typeof gen.rpgShareCount === 'undefined') gen.rpgShareCount = 0;
+            if (typeof gen.rpgSharePower === 'undefined') gen.rpgSharePower = 0;
+
             document.getElementById('rpgStatsDisplay').innerHTML = `
                 <strong>武將：</strong> <span style="color:#00ff41;">${gen.name}</span> (異界修羅)<br>
                 <strong>等級：</strong> LV.${gen.level} <span style="color:#aaa;">(EXP: ${gen.exp}/${gen.expNext})</span><br>
                 <strong>總和武力：</strong> <span style="color:#ff8c00;">${gen.power}</span> <br>
+                <strong style="color:#00ffff;">📣 自創轉發加成：</strong> <span style="color:#00ffff;">${gen.rpgSharePower}/2000</span>（${gen.rpgShareCount}/20 次）<br>
                 <strong>HP 上限加成：</strong> <span style="color:var(--accent-pink);">+${statsObj.maxHpBonus}</span> | 
                 <strong>自動治癒：</strong> <span style="color:var(--accent-pink);">+${statsObj.hpRegen}</span><br>
                 <strong>剩餘武力/技能點：</strong> <span style="color:#ff8c00;">${gen.statPoints}</span> / <span style="color:#00ffff;">${gen.skillPoints}</span><br>
@@ -1840,6 +1860,10 @@
                 </div>
             `;
             document.getElementById('rpgActionButtons').nextElementSibling.style.display = "flex";
+            const rpgShareStatus = document.getElementById('rpgShareStatus');
+            if (rpgShareStatus) {
+                rpgShareStatus.innerHTML = `已轉發 <span style="color:#00ffff; font-weight:bold;">${gen.rpgShareCount}/20</span> 次｜已增加武力 <span style="color:#ff8c00; font-weight:bold;">${gen.rpgSharePower}/2000</span>｜剩餘 <span style="color:#00ff41; font-weight:bold;">${20 - gen.rpgShareCount}</span> 次`;
+            }
         } else {
             // 凡人將領面板簡化
             document.getElementById('rpgActionButtons').style.display = "none";
@@ -3885,6 +3909,50 @@
     }
         // ==============================================================
     // 😈 【暗黑兵法】轉發吸星大法 (全域變數與函數)
+    // ==============================================================
+    // 📣 【自創武將專屬】八平台轉發修煉：與 executeDarkShare 完全分離
+    // 規則：每次轉發 +100 武力，總共最多 20 次，最高 +2000。
+    // ==============================================================
+    function executeRpgShareBoost(platform) {
+        if (!activeRpgGeneral || !activeRpgGeneral.isRPG) {
+            alert("主公！此功能只給自創武將使用，請先選定異界修羅！");
+            return;
+        }
+
+        if (typeof activeRpgGeneral.rpgShareCount === 'undefined') activeRpgGeneral.rpgShareCount = 0;
+        if (typeof activeRpgGeneral.rpgSharePower === 'undefined') activeRpgGeneral.rpgSharePower = 0;
+
+        if (activeRpgGeneral.rpgShareCount >= 20) {
+            alert("主公！此自創武將專屬轉發修煉已達 20 次上限，最高只能增加 2000 武力！");
+            return;
+        }
+
+        const shareUrls = {
+            'FB': 'https://www.facebook.com/sharer/sharer.php?u=https://jiarongli130-cloud.github.io/-Three-Kingdoms-Duel/',
+            'LINE': 'https://social-plugins.line.me/lineit/share?url=https://jiarongli130-cloud.github.io/-Three-Kingdoms-Duel/',
+            'X': 'https://twitter.com/intent/tweet?text=我正在三國武神演武沙盤培養自創武將！&url=https://jiarongli130-cloud.github.io/-Three-Kingdoms-Duel/',
+            'Threads': 'https://www.threads.net/intent/post?text=我正在三國武神演武沙盤培養自創武將！ https://jiarongli130-cloud.github.io/-Three-Kingdoms-Duel/',
+            'IG': 'https://www.instagram.com/',
+            '巴哈姆特': 'https://forum.gamer.com.tw/',
+            'B站': 'https://www.bilibili.com/',
+            '微信': 'https://weixin.qq.com/'
+        };
+        window.open(shareUrls[platform] || 'about:blank', '_blank', 'width=600,height=400');
+
+        activeRpgGeneral.rpgShareCount += 1;
+        activeRpgGeneral.rpgSharePower += 100;
+        activeRpgGeneral.power += 100;
+
+        saveActiveRpgGeneral();
+
+        let logNode = document.getElementById('battleLog');
+        logNode.innerHTML += `<br><span style="color:#00ffff; font-weight:bold; font-size:16px; text-shadow:0 0 8px #00ffff;">📣【自創轉發修煉成功】${activeRpgGeneral.name} 成功轉發至 ${platform}，武力 +100！（進度：${activeRpgGeneral.rpgShareCount}/20，累計加成：${activeRpgGeneral.rpgSharePower}/2000）</span><br>`;
+        logNode.scrollTop = logNode.scrollHeight;
+
+        renderRpgPanel(activeRpgGeneral);
+        updateDropdowns();
+    }
+
     // ==============================================================
     function executeDarkShare(platform) {
         if (!activeRpgGeneral || !activeRpgGeneral.isRPG) {
