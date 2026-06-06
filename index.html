@@ -2727,7 +2727,7 @@
     // ▼▼▼ 核心演算法：掛載標籤系統與修羅業障判定的終極戰鬥推演 ▼▼▼
     // ==============================================================
 
-    async function startDuel(isTournamentMode = false) {
+    async function startDuel(isTournamentMode = false, carryHp1 = null, carryHp2 = null, returnFullResult = false) {
         const p1 = generals[p1Select.value];
         const p2 = generals[p2Select.value];
         
@@ -2750,12 +2750,15 @@
         // 植入紅顏系統：最大 HP 上限擴充
         let maxHp1 = 100 + p1Stats.maxHpBonus;
         let maxHp2 = 100 + p2Stats.maxHpBonus;
-        let h1 = maxHp1, h2 = maxHp2;
 
-        document.getElementById('p1HpBar').style.width = "100%";
-        document.getElementById('p2HpBar').style.width = "100%";
-        document.getElementById('p1HpText').innerText = h1 + "/" + maxHp1;
-        document.getElementById('p2HpText').innerText = h2 + "/" + maxHp2;
+        // 【擂台車輪戰・殘血續戰】若有傳入上一場剩餘 HP，下一場沿用；一般單挑仍滿血開局
+        let h1 = (carryHp1 !== null) ? Math.max(1, Math.min(carryHp1, maxHp1)) : maxHp1;
+        let h2 = (carryHp2 !== null) ? Math.max(1, Math.min(carryHp2, maxHp2)) : maxHp2;
+
+        document.getElementById('p1HpBar').style.width = (h1 / maxHp1 * 100) + "%";
+        document.getElementById('p2HpBar').style.width = (h2 / maxHp2 * 100) + "%";
+        document.getElementById('p1HpText').innerText = Math.floor(h1) + "/" + maxHp1;
+        document.getElementById('p2HpText').innerText = Math.floor(h2) + "/" + maxHp2;
 
         let round = 1;
         let p1Ult30Used = false, p2Ult30Used = false;
@@ -3117,7 +3120,18 @@
         }
         
         updateAsuraUI();
-        return h1 > h2 ? parseInt(p1Select.value) : parseInt(p2Select.value);
+
+        const winnerIndex = h1 > h2 ? parseInt(p1Select.value) : parseInt(p2Select.value);
+        if (returnFullResult) {
+            return {
+                winnerIndex: winnerIndex,
+                p1Hp: Math.max(0, h1),
+                p2Hp: Math.max(0, h2),
+                p1MaxHp: maxHp1,
+                p2MaxHp: maxHp2
+            };
+        }
+        return winnerIndex;
     }
 
     // -------------------------------------------------------------
@@ -3466,7 +3480,7 @@
         battleLog.innerHTML = `<h2 style="color:#00ffff; text-align:center; text-shadow: 0 0 10px #00ffff; margin-bottom:5px;">🛡️ 巔峰團隊死鬥 🛡️</h2>`;
         battleLog.innerHTML += `<div style="color:#ccc; text-align:center; margin-bottom: 15px; font-weight:bold;">
             <span style="color:#00ff41;">【青龍陣營 ${teamA.length}將】</span> VS <span style="color:#ff3131;">【赤虎陣營 ${teamB.length}將】</span><br>
-            擂台死鬥啟動，敗者退場，勝者繼續迎戰！
+            擂台死鬥啟動，敗者退場，勝者殘血續戰，不會回滿 HP！
         </div><hr style="border-color:#333;">`;
         battleLog.scrollTop = battleLog.scrollHeight;
         await new Promise(r => setTimeout(r, 2000));
@@ -3474,6 +3488,10 @@
         let a_idx = 0; 
         let b_idx = 0; 
         let matchNum = 1;
+
+        // 【擂台車輪戰・殘血續戰】記錄每位勝者上一場結束後的剩餘 HP
+        let teamAHp = {};
+        let teamBHp = {};
 
         while (a_idx < teamA.length && b_idx < teamB.length) {
             let pA_idx = teamA[a_idx];
@@ -3488,7 +3506,16 @@
             p1Select.value = pA_idx;
             p2Select.value = pB_idx;
 
-            let winnerIndex = await startDuel(true);
+            // 勝者下一場不補滿：讀取上一場保存的剩餘 HP
+            let carryA = teamAHp[pA_idx] ?? null;
+            let carryB = teamBHp[pB_idx] ?? null;
+
+            let duelResult = await startDuel(true, carryA, carryB, true);
+            let winnerIndex = duelResult.winnerIndex;
+
+            // 保存本場結束 HP；敗者雖會退場，勝者會以此 HP 繼續迎戰下一位
+            teamAHp[pA_idx] = duelResult.p1Hp;
+            teamBHp[pB_idx] = duelResult.p2Hp;
 
             if (winnerIndex === pA_idx) {
                 battleLog.innerHTML += `<br><span style="color:#00ff41; font-weight:bold; font-size:16px;">🩸 [陣亡] 赤虎陣營的 ${generals[pB_idx].name} 戰死沙場！</span><br><hr style="border-color:#333; margin-top:15px;">`;
