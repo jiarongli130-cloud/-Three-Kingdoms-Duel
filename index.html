@@ -187,8 +187,195 @@
         }
         .pinned-chat-card .pin-title { color:#ffd700; font-weight:bold; text-shadow:0 0 6px #ffd700; }
         .arena-status-card { border: 1px solid #ffd700; background: rgba(255,215,0,0.06); padding: 8px; color: #ddd; margin-bottom: 8px; }
-        .rank-row { padding: 5px 0; border-bottom: 1px solid #222; }
-        .rank-top { color: #ffd700; font-weight: bold; text-shadow: 0 0 6px #ffd700; }
+.rank-row { 
+    padding: 5px 0; 
+    border-bottom: 1px solid #222; 
+}
+
+.rank-top { 
+    color: #ffd700; 
+    font-weight: bold; 
+    text-shadow: 0 0 6px #ffd700; 
+}
+
+/* ==============================================================
+   🏆 自創武將擂台排行榜第一名：七彩流光閃耀皮膚
+   ============================================================== */
+@keyframes rainbowRankFlow {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+}
+
+@keyframes no1SparklePulse {
+    0% { 
+        transform: scale(1); 
+        filter: drop-shadow(0 0 4px rgba(255,255,255,0.45))
+                drop-shadow(0 0 8px rgba(255,215,0,0.45))
+                drop-shadow(0 0 12px rgba(0,255,255,0.25));
+    }
+    100% { 
+        transform: scale(1.025); 
+        filter: drop-shadow(0 0 8px rgba(255,255,255,0.85))
+                drop-shadow(0 0 18px rgba(255,215,0,0.85))
+                drop-shadow(0 0 28px rgba(0,255,255,0.55));
+    }
+}
+
+@keyframes no1FrameGlow {
+    0% { 
+        box-shadow: 
+            0 0 8px rgba(255, 215, 0, 0.35),
+            0 0 16px rgba(255, 0, 255, 0.18),
+            inset 0 0 8px rgba(255,255,255,0.08);
+    }
+    100% { 
+        box-shadow: 
+            0 0 18px rgba(255, 215, 0, 0.85),
+            0 0 32px rgba(0, 255, 255, 0.45),
+            0 0 45px rgba(255, 0, 255, 0.35),
+            inset 0 0 14px rgba(255,255,255,0.18);
+    }
+}
+
+.rank-no1-skin {
+    position: relative;
+    padding: 11px 12px;
+    margin-bottom: 7px;
+    border: 1px solid rgba(255,255,255,0.35);
+    border-radius: 9px;
+    background: linear-gradient(135deg,
+        rgba(255,0,0,0.13),
+        rgba(255,140,0,0.13),
+        rgba(255,255,0,0.13),
+        rgba(0,255,0,0.13),
+        rgba(0,255,255,0.13),
+        rgba(0,80,255,0.13),
+        rgba(255,0,255,0.13)
+    );
+    animation: no1FrameGlow 1s ease-in-out infinite alternate;
+    overflow: hidden;
+}
+
+.rank-no1-skin::before {
+    content: "✦";
+    position: absolute;
+    right: 10px;
+    top: 4px;
+    color: #ffffff;
+    font-size: 14px;
+    text-shadow: 0 0 8px #fff, 0 0 16px #ffd700;
+    animation: no1SparklePulse 0.7s ease-in-out infinite alternate;
+}
+
+.rank-no1-skin::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.18) 45%, transparent 70%);
+    transform: translateX(-100%);
+    animation: no1ShineSweep 2.2s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes no1ShineSweep {
+    0%   { transform: translateX(-120%); }
+    100% { transform: translateX(120%); }
+}
+
+.rank-no1-text {
+    position: relative;
+    z-index: 1;
+    display: inline-block;
+    font-weight: bold;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+    background: linear-gradient(90deg,
+        #ff2d2d,
+        #ff8c00,
+        #ffff00,
+        #00ff66,
+        #00ffff,
+        #4da6ff,
+        #ff4dff,
+        #ff2d2d
+    );
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: rainbowRankFlow 2.8s linear infinite, no1SparklePulse 0.9s ease-in-out infinite alternate;
+}
+
+/* 排行榜內的現任擂主標記 */
+.rank-champion-badge {
+    position: relative;
+    z-index: 1;
+    color: #00ffff;
+    font-weight: bold;
+    text-shadow: 0 0 6px #00ffff, 0 0 12px #00ffff;
+    margin-left: 6px;
+}
+
+/* ==============================================================
+   👑 目前擂台主：專屬閃耀皮膚，低於排行榜第一名但仍然突出
+   ============================================================== */
+@keyframes arenaChampionGlow {
+    0% { 
+        box-shadow: 
+            0 0 8px rgba(255,215,0,0.28),
+            0 0 15px rgba(0,255,255,0.12),
+            inset 0 0 8px rgba(255,215,0,0.06);
+    }
+    100% { 
+        box-shadow: 
+            0 0 16px rgba(255,215,0,0.62),
+            0 0 26px rgba(0,255,255,0.32),
+            inset 0 0 12px rgba(255,215,0,0.15);
+    }
+}
+
+@keyframes arenaChampionNamePulse {
+    0% {
+        text-shadow: 
+            0 0 5px #ffd700,
+            0 0 10px rgba(255,215,0,0.6);
+    }
+    100% {
+        text-shadow: 
+            0 0 8px #fff3a0,
+            0 0 16px #ffd700,
+            0 0 24px rgba(0,255,255,0.45);
+    }
+}
+
+.arena-champion-skin {
+    border: 1px solid #ffd700;
+    border-radius: 8px;
+    padding: 10px;
+    background: linear-gradient(135deg, rgba(255,215,0,0.12), rgba(0,255,255,0.08), rgba(255,140,0,0.06));
+    animation: arenaChampionGlow 1.45s ease-in-out infinite alternate;
+}
+
+.arena-champion-title {
+    color: #ffd700;
+    font-weight: bold;
+    text-shadow: 0 0 6px #ffd700;
+    margin-bottom: 4px;
+}
+
+.arena-champion-name {
+    color: #fff3a0;
+    font-size: 20px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    animation: arenaChampionNamePulse 1s ease-in-out infinite alternate;
+}
+
+.arena-champion-meta {
+    color: #ddd;
+    font-size: 13px;
+    margin-top: 4px;
+}
         .firebase-off { color: #aaa; }
         .firebase-on { color: #00ff41; text-shadow: 0 0 5px #00ff41; }
         @media (max-width: 760px) { .public-warroom-grid { grid-template-columns: 1fr; } }
@@ -5328,28 +5515,68 @@
         cyberSendSystemChat(msg);
     }
 
-    function cyberRefreshArenaUI() {
-        const state = cyberGetArenaState();
-        const champBox = document.getElementById('arenaChampionBox');
-        if (champBox) {
-            if (state.champion && state.champion.name) {
-                champBox.innerHTML = `目前擂主：<span style="color:#ffd700; font-weight:bold;">${cyberEscapeHtml(state.champion.name)}</span>｜武力 ${cyberEscapeHtml(state.champion.power)}｜${cyberEscapeHtml(state.champion.rank || '自創武將')}<br><span style="font-size:12px; color:#aaa;">勝者繼續留場，直到被下一位挑戰者擊敗。</span>`;
-            } else {
-                champBox.innerHTML = '目前擂主：無，等待第一位自創武將登台。';
-            }
+function cyberRefreshArenaUI() {
+    const state = cyberGetArenaState();
+
+    const champBox = document.getElementById('arenaChampionBox');
+    if (champBox) {
+        if (state.champion && state.champion.name) {
+            champBox.innerHTML = `
+                <div class="arena-champion-skin">
+                    <div class="arena-champion-title">👑 目前擂台主 👑</div>
+                    <div class="arena-champion-name">${cyberEscapeHtml(state.champion.name)}</div>
+                    <div class="arena-champion-meta">
+                        武力 ${cyberEscapeHtml(state.champion.power)} ｜ ${cyberEscapeHtml(state.champion.rank || '自創武將')}
+                    </div>
+                    <div style="font-size:12px; color:#bbb; margin-top:6px;">
+                        勝者繼續留場，直到被下一位挑戰者擊敗。
+                    </div>
+                </div>
+            `;
+        } else {
+            champBox.innerHTML = '目前擂主：無，等待第一位自創武將登台。';
         }
-        const board = document.getElementById('arenaRankBoard');
-        if (board) {
-            const rows = Object.values(state.scores || {}).sort((a,b) => (b.score || 0) - (a.score || 0) || (b.win || 0) - (a.win || 0));
-            board.innerHTML = rows.length ? rows.map((p, idx) => {
-                const cdUntil = Number((state.cooldowns || {})[p.name] || 0);
-                const cdText = Date.now() < cdUntil ? `｜冷卻 ${Math.ceil((cdUntil-Date.now())/1000)}秒` : '';
-                const cls = idx < 3 ? 'rank-row rank-top' : 'rank-row';
-                return `<div class="${cls}">第 ${idx+1} 名｜${cyberEscapeHtml(p.name)}｜積分 ${p.score || 0}｜勝 ${p.win || 0}｜敗 ${p.lose || 0}｜出戰 ${p.fights || 0}${cdText}</div>`;
-            }).join('') : '<span style="color:#777;">尚無擂台排名，第一場戰鬥後自動建立。</span>';
-        }
-        cyberRefreshArenaSelect();
     }
+
+    const board = document.getElementById('arenaRankBoard');
+    if (board) {
+        const rows = Object.values(state.scores || {}).sort(
+            (a, b) => (b.score || 0) - (a.score || 0) || (b.win || 0) - (a.win || 0)
+        );
+
+        board.innerHTML = rows.length ? rows.map((p, idx) => {
+            const cdUntil = Number((state.cooldowns || {})[p.name] || 0);
+            const cdText = Date.now() < cdUntil
+                ? `｜冷卻 ${Math.ceil((cdUntil - Date.now()) / 1000)}秒`
+                : '';
+
+            const isChampion = state.champion && state.champion.name === p.name;
+
+            if (idx === 0) {
+                return `
+                    <div class="rank-row rank-no1-skin">
+                        <span class="rank-no1-text">
+                            🏆 第 ${idx + 1} 名｜${cyberEscapeHtml(p.name)}｜積分 ${p.score || 0}｜勝 ${p.win || 0}｜敗 ${p.lose || 0}｜出戰 ${p.fights || 0}${cdText}
+                        </span>
+                        ${isChampion ? '<span class="rank-champion-badge">｜⚔️ 現任擂主</span>' : ''}
+                    </div>
+                `;
+            }
+
+            const cls = idx < 3 ? 'rank-row rank-top' : 'rank-row';
+
+            return `
+                <div class="${cls}">
+                    第 ${idx + 1} 名｜${cyberEscapeHtml(p.name)}
+                    ${isChampion ? '<span class="rank-champion-badge">｜⚔️ 現任擂主</span>' : ''}
+                    ｜積分 ${p.score || 0}｜勝 ${p.win || 0}｜敗 ${p.lose || 0}｜出戰 ${p.fights || 0}${cdText}
+                </div>
+            `;
+        }).join('') : '<span style="color:#777;">尚無擂台排名，第一場戰鬥後自動建立。</span>';
+    }
+
+    cyberRefreshArenaSelect();
+}
 
     function cyberRefreshAllPublicWarroom() {
         const nickInput = document.getElementById('chatNickInput');
