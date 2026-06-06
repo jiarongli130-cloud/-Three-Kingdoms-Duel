@@ -508,7 +508,7 @@
     // ==============================================================
     
     // 【修羅七誓】成就追蹤器 (新增底層變數)
-    let asuraAchievements = {
+    const ASURA_DEFAULT_ACHIEVEMENTS = {
         inventoryFull: false,
         haremFull: false,
         oneVsTenGods: false,
@@ -517,6 +517,7 @@
         tourneyGodsChamp: false,
         battleRoyaleChamp: false
     };
+    let asuraAchievements = { ...ASURA_DEFAULT_ACHIEVEMENTS };
     let isAsuraUnlocked = false;
 
     let generals = [
@@ -2066,14 +2067,74 @@
     let activeRpgGeneral = null;
 
     // ==============================================================
-    // 😈 【修羅七誓】業障監控系統
+    // 😈 【修羅七誓】業障監控系統：每位自創武將獨立保存
     // ==============================================================
+    function getAsuraStorageKey(gen = activeRpgGeneral) {
+        return (gen && gen.name) ? `asuraAchievements_${gen.name}` : null;
+    }
+
+    function normalizeAsuraAchievements(data = {}) {
+        return { ...ASURA_DEFAULT_ACHIEVEMENTS, ...data };
+    }
+
+    function loadAsuraAchievements(gen = activeRpgGeneral) {
+        if (!gen || !gen.isRPG) return;
+        let merged = normalizeAsuraAchievements(gen.asuraAchievements || {});
+        const key = getAsuraStorageKey(gen);
+        if (key) {
+            try {
+                const saved = JSON.parse(localStorage.getItem(key));
+                if (saved) merged = normalizeAsuraAchievements({ ...merged, ...saved });
+            } catch (e) {
+                console.warn('修羅七誓讀取失敗：', e);
+            }
+        }
+        gen.asuraAchievements = merged;
+        asuraAchievements = { ...merged };
+    }
+
+    function saveAsuraAchievements(gen = activeRpgGeneral) {
+        if (!gen || !gen.isRPG) return;
+        gen.asuraAchievements = normalizeAsuraAchievements(asuraAchievements);
+        const key = getAsuraStorageKey(gen);
+        if (key) localStorage.setItem(key, JSON.stringify(gen.asuraAchievements));
+
+        // 若此武將已封存在天道命盤，也同步寫回 rpgGenerals，避免重刷後喚醒時遺失七誓進度
+        let savedData = JSON.parse(localStorage.getItem('rpgGenerals')) || {};
+        if (savedData[gen.name]) {
+            savedData[gen.name].asuraAchievements = gen.asuraAchievements;
+            localStorage.setItem('rpgGenerals', JSON.stringify(savedData));
+        }
+    }
+
+    function markAsuraAchievement(key) {
+        if (!activeRpgGeneral || !activeRpgGeneral.isRPG) return;
+        loadAsuraAchievements(activeRpgGeneral);
+        if (!asuraAchievements[key]) {
+            asuraAchievements[key] = true;
+            saveAsuraAchievements(activeRpgGeneral);
+            battleLog.innerHTML += `<br><span style="color:#ff0000; font-weight:bold; text-shadow:0 0 8px #ff0000;">😈【修羅七誓保存】${activeRpgGeneral.name} 已永久完成：${key}！重刷網頁也會保留。</span><br>`;
+            battleLog.scrollTop = battleLog.scrollHeight;
+        } else {
+            saveAsuraAchievements(activeRpgGeneral);
+        }
+    }
+
     function updateAsuraUI() {
         if (!activeRpgGeneral || !activeRpgGeneral.isRPG) return;
+        loadAsuraAchievements(activeRpgGeneral);
         
-        // 檢查行囊與紅顏數量
-        if (activeRpgGeneral.inventory && activeRpgGeneral.inventory.length >= 50) asuraAchievements.inventoryFull = true;
-        if (activeRpgGeneral.harem && activeRpgGeneral.harem.length >= 15) asuraAchievements.haremFull = true;
+        // 檢查行囊與紅顏數量；一旦達成就立刻永久保存
+        let changed = false;
+        if (activeRpgGeneral.inventory && activeRpgGeneral.inventory.length >= 50 && !asuraAchievements.inventoryFull) {
+            asuraAchievements.inventoryFull = true;
+            changed = true;
+        }
+        if (activeRpgGeneral.harem && activeRpgGeneral.harem.length >= 15 && !asuraAchievements.haremFull) {
+            asuraAchievements.haremFull = true;
+            changed = true;
+        }
+        if (changed) saveAsuraAchievements(activeRpgGeneral);
 
         document.getElementById('oath0').innerHTML = (asuraAchievements.inventoryFull ? '✅' : '❌') + ' 【武庫之主】神兵行囊 50 格全滿';
         document.getElementById('oath1').innerHTML = (asuraAchievements.haremFull ? '✅' : '❌') + ' 【銅雀霸主】紅顏深宮 15 位全滿';
@@ -2087,6 +2148,7 @@
         for (let i=0; i<=6; i++) {
             let el = document.getElementById('oath'+i);
             if (el.innerHTML.includes('✅')) el.classList.add('oath-done');
+            else el.classList.remove('oath-done');
         }
 
         if (asuraAchievements.inventoryFull && asuraAchievements.haremFull && asuraAchievements.oneVsTenGods &&
@@ -2096,6 +2158,13 @@
             document.getElementById('asuraUI').style.borderColor = '#ff0000';
             document.getElementById('asuraUI').style.boxShadow = '0 0 30px #ff0000';
             document.getElementById('asuraUI').style.background = 'rgba(255,0,0,0.15)';
+            saveAsuraAchievements(activeRpgGeneral);
+        } else {
+            isAsuraUnlocked = false;
+            document.getElementById('btnAsura').style.display = 'none';
+            document.getElementById('asuraUI').style.borderColor = '#8b0000';
+            document.getElementById('asuraUI').style.boxShadow = 'none';
+            document.getElementById('asuraUI').style.background = 'rgba(50, 0, 0, 0.3)';
         }
     }
 
@@ -2142,6 +2211,10 @@
 
     function confirmRpgGeneral() {
         if (!currentRpgDraft) return;
+        if (currentRpgDraft.isRPG) {
+            currentRpgDraft.asuraAchievements = normalizeAsuraAchievements(currentRpgDraft.asuraAchievements || {});
+            localStorage.setItem(getAsuraStorageKey(currentRpgDraft), JSON.stringify(currentRpgDraft.asuraAchievements));
+        }
         generals.push(currentRpgDraft);
         updateDropdowns();
         checkRpgPanel();
@@ -2201,12 +2274,14 @@
             } else {
                 document.getElementById('rpgPanel').style.display = "none";
                 activeRpgGeneral = null;
+                asuraAchievements = { ...ASURA_DEFAULT_ACHIEVEMENTS };
             }
         }
     }
 
     function renderRpgPanel(gen) {
         activeRpgGeneral = gen;
+        if (activeRpgGeneral && activeRpgGeneral.isRPG) loadAsuraAchievements(activeRpgGeneral);
         document.getElementById('rpgPanel').style.display = "block";
         
         let statsObj = parseCombatStats(gen);
@@ -2425,6 +2500,7 @@
         if (!activeRpgGeneral) { alert("主公，請先在單挑選單中選定欲封存的自創武將！"); return; }
         if (activeRpgGeneral.inventory === undefined) { alert("此乃原生將領，無法寫入天道命盤！"); return; }
         
+        saveAsuraAchievements(activeRpgGeneral);
         let savedData = JSON.parse(localStorage.getItem('rpgGenerals')) || {};
         savedData[activeRpgGeneral.name] = activeRpgGeneral;
         localStorage.setItem('rpgGenerals', JSON.stringify(savedData));
@@ -2443,6 +2519,7 @@
         if (!savedData || !savedData[targetName]) { alert("命盤中找不到該武將數據！"); return; }
         
         let gen = savedData[targetName];
+        if (gen && gen.isRPG) loadAsuraAchievements(gen);
         let existingIdx = generals.findIndex(g => g.name === gen.name && g.inventory !== undefined);
         if (existingIdx !== -1) {
             generals[existingIdx] = gen; 
@@ -3418,7 +3495,7 @@
             let tigers = fighters.filter(f => f.team === 'B');
             if (tigers.length === 10 && tigers.every(t => t.power >= 98)) {
                 if (activeRpgGeneral && fighters[0].name === activeRpgGeneral.name) {
-                    asuraAchievements.oneVsTenGods = true;
+                    markAsuraAchievement('oneVsTenGods');
                 }
             }
 
@@ -3533,7 +3610,7 @@
             // 😈【修羅七誓】判定：【血洗神仙閣】
             if (teamA.length === 1 && teamB.length === 6 && teamB.every(idx => generals[idx].power >= 98)) {
                 if (activeRpgGeneral && generals[teamA[0]].name === activeRpgGeneral.name) {
-                    asuraAchievements.sixGodsSweep = true;
+                    markAsuraAchievement('sixGodsSweep');
                 }
             }
 
@@ -3843,7 +3920,7 @@
             // 😈【修羅七誓】判定：【亂世終結者】
             if (teamB_idxs.length > 0 && teamB_idxs.every(idx => generals[idx].power >= 98)) {
                 if (activeRpgGeneral && aAlive.find(f => f.name === activeRpgGeneral.name)) {
-                    asuraAchievements.meleeGodsSurvive = true;
+                    markAsuraAchievement('meleeGodsSurvive');
                 }
             }
 
@@ -4064,7 +4141,7 @@
 
         // 😈【修羅七誓】判定：【萬軍辟易】
         if (activeRpgGeneral && generals[champion].name === activeRpgGeneral.name) {
-            asuraAchievements.battleRoyaleChamp = true;
+            markAsuraAchievement('battleRoyaleChamp');
         }
 
         battleLog.innerHTML += `<br><div style="text-align:center; padding:20px; border: 2px solid #ffd700; background:rgba(255,215,0,0.1); box-shadow: 0 0 30px rgba(255,215,0,0.5); margin-top:20px;">
@@ -4133,7 +4210,7 @@
         if (activeRpgGeneral && generals[champion].name === activeRpgGeneral.name) {
             let others = indices.filter(i => i !== champion);
             if (others.length === 11 && others.every(i => generals[i].power >= 98)) {
-                asuraAchievements.tourneyGodsChamp = true;
+                markAsuraAchievement('tourneyGodsChamp');
             }
         }
 
