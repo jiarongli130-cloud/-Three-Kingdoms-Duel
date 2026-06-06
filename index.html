@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三國武神演武沙盤 7.0－狂龍極限無雙・天下公頻擂台正式版</title>
+    <title>三國武神演武沙盤 7.0 - 狂龍極限無雙 (完全體 + RPG養成 + 銅雀紅顏 + 修羅弒神系統)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -170,7 +170,7 @@
             line-height: 1.55;
             box-sizing: border-box;
         }
-        #arenaBattleFeed { height: 260px; }
+        #arenaBattleFeed { height: 150px; }
         #arenaRankBoard { height: 260px; }
         .chat-row { border-bottom: 1px solid #222; padding: 4px 0; word-break: break-word; }
         .chat-row .name { color: #ffd700; font-weight: bold; }
@@ -186,7 +186,7 @@
 </head>
 <body>
 <div class="container" id="mainWarroom">
-    <h1>三國武神演武沙盤 7.0－狂龍極限無雙・天下公頻擂台正式版</h1>
+    <h1>三國武神演武沙盤 7.0 - 狂龍極限無雙</h1>
     
     <div class="controls">
         <div class="select-group">
@@ -338,7 +338,9 @@
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
             <input id="chatNickInput" placeholder="輸入聊天室暱稱 / 玩家名" style="flex:2; min-width:180px; border-color:#00ffff; color:#00ffff;">
             <button onclick="cyberSaveChatNick()" style="flex:1; min-width:100px; border-color:#00ffff; color:#00ffff;">保存暱稱</button>
-            <button onclick="cyberBecomeRoomOwner()" style="flex:1; min-width:100px; border-color:#ffd700; color:#ffd700;">群主模式</button>
+            <button onclick="cyberGoogleOwnerLogin()" style="flex:1; min-width:130px; border-color:#ffd700; color:#ffd700;">Google 群主登入</button>
+            <button onclick="cyberGoogleOwnerLogout()" style="flex:1; min-width:100px; border-color:#aaa; color:#aaa;">登出群主</button>
+            <span id="firebaseOwnerStatus" style="font-size:12px; color:#aaa; flex:2; min-width:220px;">尚未登入 Google 群主帳號</span>
             <span id="firebaseArenaStatus" class="firebase-off" style="font-size:12px; flex:1; min-width:160px;">Firebase：未啟用，本機模式</span>
         </div>
         <div class="public-warroom-grid">
@@ -366,7 +368,7 @@
                     <button onclick="cyberEnterArenaAsChampion()" style="flex:1; border-color:#ffd700; color:#ffd700;">無擂主時登台</button>
                     <button onclick="cyberChallengeArenaChampion()" style="flex:1; border-color:#ff3131; color:#ff3131;">挑戰擂主</button>
                 </div>
-                <div id="arenaBattleFeed" style="margin-top:8px;">擂台戰報待命中...開戰後會顯示完整回合、招式、傷害與血量變化。</div>
+                <div id="arenaBattleFeed" style="margin-top:8px;">擂台戰報待命中...</div>
             </div>
         </div>
         <div class="public-warroom-box" style="margin-top:14px;">
@@ -4849,7 +4851,7 @@
     // 支援 localStorage 本機模式；貼入 Firebase 設定後可啟用即時同步。
     // ==============================================================
     const CYBER_OWNER_NAME = '李家榮';
-    const CYBER_OWNER_PASSCODE = '130'; // 本機版簡易群主碼；真正公開網站請用 Firebase Auth + Rules 保護。
+    const CYBER_OWNER_EMAIL = 'jiarongli130@gmail.com'; // 正式群主：只有此 Gmail 登入 Google 後才有管理權。
     const CYBER_COOLDOWN_MS = 5 * 60 * 1000;
     const CYBER_CHAT_KEY = 'publicChatMessages_v1';
     const CYBER_MUTED_KEY = 'publicChatMutedUsers_v1';
@@ -4871,7 +4873,11 @@
     measurementId: "G-H3YXWXJ4CL"
     };
     let cyberDb = null;
+    let cyberAuth = null;
+    let cyberGoogleProvider = null;
     let cyberFirebaseReady = false;
+    let cyberFirebaseUser = null;
+    let cyberIsFirebaseRoomOwner = false;
     let cyberRemoteChatMessages = [];
     let cyberRemoteMutedUsers = {};
     let cyberRemoteArenaState = null;
@@ -4913,19 +4919,64 @@
     }
 
     function cyberIsRoomOwner() {
-        return localStorage.getItem('cyberRoomOwnerMode') === 'true' || cyberGetNick() === CYBER_OWNER_NAME;
+        return cyberIsFirebaseRoomOwner === true;
+    }
+
+    function cyberUpdateOwnerStatus() {
+        const status = document.getElementById('firebaseOwnerStatus');
+        if (!status) return;
+        if (cyberFirebaseUser) {
+            status.innerText = `目前登入：${cyberFirebaseUser.email}${cyberIsFirebaseRoomOwner ? '｜群主權限已啟用' : '｜一般帳號，無群主權限'}`;
+            status.style.color = cyberIsFirebaseRoomOwner ? '#ffd700' : '#aaa';
+        } else {
+            status.innerText = '尚未登入 Google 群主帳號';
+            status.style.color = '#aaa';
+        }
+    }
+
+    async function cyberGoogleOwnerLogin() {
+        if (!window.ENABLE_FIREBASE_REALTIME) {
+            alert('請先啟用 Firebase Realtime，Google 群主登入才能生效。');
+            return;
+        }
+        try {
+            if (!cyberAuth || !cyberGoogleProvider) {
+                await cyberInitFirebaseRealtime();
+            }
+            if (!cyberAuth || !cyberGoogleProvider) {
+                alert('Firebase Auth 尚未初始化，請確認 Firebase 設定與網路連線。');
+                return;
+            }
+            const result = await cyberAuth.signInWithPopup(cyberGoogleProvider);
+            cyberFirebaseUser = result.user;
+            cyberIsFirebaseRoomOwner = !!(cyberFirebaseUser && cyberFirebaseUser.email === CYBER_OWNER_EMAIL);
+            cyberUpdateOwnerStatus();
+            if (cyberIsFirebaseRoomOwner) {
+                alert('群主登入成功：' + cyberFirebaseUser.email);
+            } else {
+                alert('此 Google 帳號不是群主：' + (cyberFirebaseUser?.email || '未知帳號'));
+            }
+        } catch (err) {
+            console.error('Google 群主登入失敗：', err);
+            alert('Google 登入失敗：' + (err.message || err));
+        }
+    }
+
+    async function cyberGoogleOwnerLogout() {
+        try {
+            if (cyberAuth) await cyberAuth.signOut();
+            cyberFirebaseUser = null;
+            cyberIsFirebaseRoomOwner = false;
+            cyberUpdateOwnerStatus();
+            alert('已登出群主模式');
+        } catch (err) {
+            console.error('Google 登出失敗：', err);
+            alert('Google 登出失敗：' + (err.message || err));
+        }
     }
 
     function cyberBecomeRoomOwner() {
-        const code = prompt('請輸入群主驗證碼：');
-        if (code === CYBER_OWNER_PASSCODE) {
-            localStorage.setItem('cyberRoomOwnerMode', 'true');
-            if (document.getElementById('chatNickInput')) document.getElementById('chatNickInput').value = CYBER_OWNER_NAME;
-            localStorage.setItem(CYBER_NICK_KEY, CYBER_OWNER_NAME);
-            alert('群主模式已啟動：你可以禁言、解除禁言、清空聊天室。');
-        } else {
-            alert('驗證碼錯誤，無法啟動群主模式。');
-        }
+        alert('正式版已取消 130 群主碼。請使用「Google 群主登入」，只有 ' + CYBER_OWNER_EMAIL + ' 可取得群主權限。');
     }
 
     function cyberGetMutedUsers() {
@@ -4972,7 +5023,7 @@
             alert('你已被群主禁言，暫時無法發言。');
             return;
         }
-        const item = { id: `${Date.now()}_${Math.random().toString(16).slice(2)}`, name, msg, time: Date.now() };
+        const item = { id: `${Date.now()}_${Math.random().toString(16).slice(2)}`, name, nick: name, msg, message: msg, time: Date.now() };
         if (cyberFirebaseReady && cyberDb) {
             cyberDb.ref(`${CYBER_ROOM_PATH}/chatMessages`).push(item);
         } else {
@@ -4985,7 +5036,7 @@
     }
 
     function cyberMuteUser() {
-        if (!cyberIsRoomOwner()) { alert('只有群主可以禁言。'); return; }
+        if (!cyberIsRoomOwner()) { alert('只有登入群主 Gmail 才能禁言。'); return; }
         const target = prompt('輸入要禁言的玩家暱稱：');
         if (!target) return;
         if (cyberFirebaseReady && cyberDb) {
@@ -5000,7 +5051,7 @@
     }
 
     function cyberUnmuteUser() {
-        if (!cyberIsRoomOwner()) { alert('只有群主可以解除禁言。'); return; }
+        if (!cyberIsRoomOwner()) { alert('只有登入群主 Gmail 才能解除禁言。'); return; }
         const target = prompt('輸入要解除禁言的玩家暱稱：');
         if (!target) return;
         if (cyberFirebaseReady && cyberDb) {
@@ -5015,7 +5066,7 @@
     }
 
     function cyberClearChat() {
-        if (!cyberIsRoomOwner()) { alert('只有群主可以清空聊天室。'); return; }
+        if (!cyberIsRoomOwner()) { alert('只有登入群主 Gmail 才能清空聊天室。'); return; }
         if (!confirm('確定要清空聊天室訊息？')) return;
         if (cyberFirebaseReady && cyberDb) {
             cyberDb.ref(`${CYBER_ROOM_PATH}/chatMessages`).remove();
@@ -5034,8 +5085,10 @@
             box.innerHTML = '<span style="color:#777;">尚無聊天訊息，第一位武者可以開始發言。</span>';
         } else {
             box.innerHTML = arr.map(m => {
-                const mutedTag = muted[m.name] ? '<span style="color:#ff3131; font-size:11px;">【已禁言】</span>' : '';
-                return `<div class="chat-row"><span class="name">${cyberEscapeHtml(m.name)}</span>${mutedTag}<span class="time">${cyberNowTime(m.time)}</span><br>${cyberEscapeHtml(m.msg)}</div>`;
+                const displayName = m.name || m.nick || '無名武者';
+                const displayMsg = (m.msg !== undefined) ? m.msg : (m.message || '');
+                const mutedTag = muted[displayName] ? '<span style="color:#ff3131; font-size:11px;">【已禁言】</span>' : '';
+                return `<div class="chat-row"><span class="name">${cyberEscapeHtml(displayName)}</span>${mutedTag}<span class="time">${cyberNowTime(m.time)}</span><br>${cyberEscapeHtml(displayMsg)}</div>`;
             }).join('');
         }
         box.scrollTop = box.scrollHeight;
@@ -5134,112 +5187,34 @@
         cyberArenaLog(`👑 ${name} 登上公開擂台，成為第一任擂主！`);
     }
 
-    function cyberPickArenaMove(attacker) {
-        // 擂台戰鬥過程只在本機畫面完整演算；Firebase 只同步短戰報，避免伺服器讀寫暴增。
-        const ult = ultimateSkills && ultimateSkills[attacker.name];
-        if (ult && Math.random() < 0.18) {
-            return `爆發大絕【${ult.name}】：${ult.desc}`;
-        }
-        if (Array.isArray(moves) && moves.length > 0) {
-            return moves[Math.floor(Math.random() * moves.length)];
-        }
-        return '縱身突進，兵器挾帶狂暴戰意直取敵方要害！';
-    }
-
-    function cyberArenaHpBar(name, hp, maxHp, color) {
-        const pct = Math.max(0, Math.min(100, Math.round((hp / maxHp) * 100)));
-        return `<div style="margin:4px 0 8px 0;"><span style="color:${color}; font-weight:bold;">${cyberEscapeHtml(name)}</span> HP ${Math.max(0, hp)}/${maxHp}<div style="height:8px; background:#222; border:1px solid #444; margin-top:3px;"><div style="height:100%; width:${pct}%; background:${color}; transition:width .3s;"></div></div></div>`;
-    }
-
     function cyberSimArenaDuel(champion, challenger) {
-        const aStats = (typeof parseCombatStats === 'function') ? parseCombatStats(champion) : { armorPen:0, dodgeBonus:0, lifesteal:0, blockChance:0, maxHpBonus:0, hpRegen:0 };
-        const bStats = (typeof parseCombatStats === 'function') ? parseCombatStats(challenger) : { armorPen:0, dodgeBonus:0, lifesteal:0, blockChance:0, maxHpBonus:0, hpRegen:0 };
-        const a = { ...champion, hp: 120 + Math.floor((champion.power || 1) / 4) + Math.floor(aStats.maxHpBonus || 0) };
-        const b = { ...challenger, hp: 120 + Math.floor((challenger.power || 1) / 4) + Math.floor(bStats.maxHpBonus || 0) };
+        const a = { ...champion, hp: 120 + Math.floor((champion.power || 1) / 4) };
+        const b = { ...challenger, hp: 120 + Math.floor((challenger.power || 1) / 4) };
         const maxA = a.hp, maxB = b.hp;
         const logs = [];
-        logs.push(`<div style="color:#00ffff; font-weight:bold; text-shadow:0 0 6px #00ffff;">⚔️ 公開擂台開戰：${cyberEscapeHtml(champion.name)} VS ${cyberEscapeHtml(challenger.name)}</div>`);
-        logs.push(`<div style="color:#aaa; font-size:12px;">本機顯示完整招式過程；Firebase 只同步短戰報與排行榜，節省讀寫流量。</div>`);
-        logs.push(cyberArenaHpBar(a.name, a.hp, maxA, '#00ff41') + cyberArenaHpBar(b.name, b.hp, maxB, '#ff3131'));
-
         let round = 1;
-        let lastHit = '';
-        let highestDamage = 0;
-        const duelTurns = [];
-
-        function strike(attacker, defender, atkStats, defStats, color) {
-            const powerGap = Math.max(-80, Math.min(80, (attacker.power || 1) - (defender.power || 1)));
-            const base = Math.max(4, Math.floor((attacker.power || 1) / 16) + Math.floor(Math.random() * 10));
-            const dodgeChance = Math.min(0.28, 0.04 + (defStats.dodgeBonus || 0) + Math.max(0, -powerGap) / 800);
-            const blockChance = Math.min(0.32, 0.05 + (defStats.blockChance || 0));
-            const critChance = Math.min(0.35, 0.08 + (attacker.power || 1) / 1600);
-            const moveText = cyberPickArenaMove(attacker);
-
-            if (Math.random() < dodgeChance) {
-                return `<div style="color:#aaa;">${cyberEscapeHtml(attacker.name)} ${cyberEscapeHtml(moveText)}<br>　　<span style="color:#66ccff;">${cyberEscapeHtml(defender.name)} 身形一晃，成功閃避！</span></div>`;
-            }
-
-            let dmg = base + Math.max(0, Math.floor(powerGap / 12));
-            const crit = Math.random() < critChance;
-            const block = Math.random() < blockChance;
-            const penBonus = Math.floor((atkStats.armorPen || 0) * 18);
-            dmg += penBonus;
-            if (crit) dmg = Math.floor(dmg * 1.75);
-            if (block) dmg = Math.max(2, Math.floor(dmg * 0.55));
-            defender.hp -= dmg;
-            highestDamage = Math.max(highestDamage, dmg);
-            lastHit = `${attacker.name} 對 ${defender.name} 造成 ${dmg} 傷害`;
-
-            let healLine = '';
-            const steal = Math.floor(dmg * (atkStats.lifesteal || 0));
-            const regen = Math.floor(atkStats.hpRegen || 0);
-            if ((steal + regen) > 0 && attacker.hp > 0) {
-                const heal = steal + regen;
-                const maxHp = attacker.name === a.name ? maxA : maxB;
-                attacker.hp = Math.min(maxHp, attacker.hp + heal);
-                healLine = `<br>　　<span style="color:#00ffaa;">${cyberEscapeHtml(attacker.name)} 觸發吸血/回復，恢復 ${heal} HP。</span>`;
-            }
-
-            return `<div style="color:${color};">${cyberEscapeHtml(attacker.name)} ${cyberEscapeHtml(moveText)}<br>　　造成 <b>${dmg}</b> 傷害${crit ? '｜<span style="color:#ffd700;">暴擊</span>' : ''}${block ? '｜<span style="color:#87ceeb;">被格擋減傷</span>' : ''}${healLine}</div>`;
-        }
-
         while (a.hp > 0 && b.hp > 0 && round <= 80) {
-            const roundLogs = [];
-            roundLogs.push(`<div style="border-top:1px solid #333; margin-top:6px; padding-top:6px; color:#ffd700; font-weight:bold;">第 ${round} 合</div>`);
-            roundLogs.push(strike(a, b, aStats, bStats, '#00ff41'));
-            if (b.hp <= 0) {
-                roundLogs.push(`<div style="color:#ff3131; font-weight:bold;">${cyberEscapeHtml(b.name)} 血量歸零，墜落擂台！</div>`);
-                duelTurns.push(roundLogs.join(''));
-                break;
-            }
-            roundLogs.push(strike(b, a, bStats, aStats, '#ff7777'));
-            if (a.hp <= 0) {
-                roundLogs.push(`<div style="color:#ff3131; font-weight:bold;">${cyberEscapeHtml(a.name)} 血量歸零，擂主易位！</div>`);
-                duelTurns.push(roundLogs.join(''));
-                break;
-            }
-            roundLogs.push(cyberArenaHpBar(a.name, a.hp, maxA, '#00ff41') + cyberArenaHpBar(b.name, b.hp, maxB, '#ff3131'));
-            duelTurns.push(roundLogs.join(''));
+            const atkA = Math.max(3, Math.floor((a.power || 1) / 18) + Math.floor(Math.random() * 9));
+            const atkB = Math.max(3, Math.floor((b.power || 1) / 18) + Math.floor(Math.random() * 9));
+            const critA = Math.random() < Math.min(0.32, (a.power || 1) / 1200);
+            const critB = Math.random() < Math.min(0.32, (b.power || 1) / 1200);
+            b.hp -= critA ? atkA * 2 : atkA;
+            if (b.hp <= 0) { logs.push(`第${round}合：${a.name} ${critA ? '爆發大絕' : '猛攻'}，${b.name} 倒地！`); break; }
+            a.hp -= critB ? atkB * 2 : atkB;
+            if (round % 3 === 1) logs.push(`第${round}合：${a.name} HP ${Math.max(0,a.hp)}/${maxA}，${b.name} HP ${Math.max(0,b.hp)}/${maxB}`);
             round++;
         }
-
-        let winner, loser, winnerHp;
+        let winner, loser;
         if (a.hp === b.hp) {
             winner = (a.power >= b.power) ? champion : challenger;
             loser = (winner.name === champion.name) ? challenger : champion;
-            winnerHp = Math.max(0, winner.name === champion.name ? a.hp : b.hp);
         } else if (a.hp > b.hp) {
-            winner = champion; loser = challenger; winnerHp = Math.max(0, a.hp);
+            winner = champion; loser = challenger;
         } else {
-            winner = challenger; loser = champion; winnerHp = Math.max(0, b.hp);
+            winner = challenger; loser = champion;
         }
-
-        logs.push(...duelTurns);
-        logs.push(`<div style="border-top:1px solid #ffd700; margin-top:8px; padding-top:8px; color:#ffd700; font-weight:bold; font-size:15px;">🏆 勝者：${cyberEscapeHtml(winner.name)}｜敗者：${cyberEscapeHtml(loser.name)}｜總回合：${round}｜勝者殘餘 HP：${winnerHp}</div>`);
-
-        const shortReport = `【公開擂台戰報】${winner.name} 以 ${round} 合擊敗 ${loser.name}，勝者留場；最高單擊 ${highestDamage} 傷害。`;
-        const battleLogPlain = `第${round}合決勝：${lastHit || '雙方激戰至最後一刻'}。勝者：${winner.name}。`;
-        return { winner, loser, logs, shortReport, battleLogPlain, rounds: round, highestDamage };
+        logs.push(`🏆 勝者：${winner.name}｜敗者：${loser.name}`);
+        return { winner, loser, logs };
     }
 
     function cyberChallengeArenaChampion() {
@@ -5268,14 +5243,14 @@
 
         const feed = document.getElementById('arenaBattleFeed');
         if (feed) {
-            feed.innerHTML = `<div style="color:#ffd700; font-weight:bold;">⚔️ ${cyberEscapeHtml(result.winner.name)} 的擂台戰報｜完整過程</div>` + result.logs.join('');
+            feed.innerHTML = `<div style="color:#ffd700; font-weight:bold;">⚔️ ${cyberEscapeHtml(state.champion.name)} 的擂台戰報</div>` + result.logs.map(x => `<div>${cyberEscapeHtml(x)}</div>`).join('');
             feed.scrollTop = feed.scrollHeight;
         }
         if (typeof battleLog !== 'undefined') {
-            battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold;">🌐${cyberEscapeHtml(result.shortReport)}</span><br><span style="color:#aaa;">${cyberEscapeHtml(result.battleLogPlain)}</span><br>`;
+            battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold;">🌐【公開擂台】${result.winner.name} 擊敗 ${result.loser.name}，勝者繼續留在擂台！敗者冷卻 5 分鐘。</span><br>`;
             battleLog.scrollTop = battleLog.scrollHeight;
         }
-        cyberSendSystemChat(result.shortReport + ' 敗者冷卻 5 分鐘。');
+        cyberSendSystemChat(`【公開擂台】${result.winner.name} 擊敗 ${result.loser.name}，勝者留場，敗者冷卻 5 分鐘。`);
     }
 
     function cyberSendSystemChat(msg) {
@@ -5350,8 +5325,16 @@
         try {
             await cyberLoadScript('https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js');
             await cyberLoadScript('https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js');
+            await cyberLoadScript('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js');
             if (!firebase.apps.length) firebase.initializeApp(window.CYBER_FIREBASE_CONFIG);
             cyberDb = firebase.database();
+            cyberAuth = firebase.auth();
+            cyberGoogleProvider = new firebase.auth.GoogleAuthProvider();
+            cyberAuth.onAuthStateChanged(user => {
+                cyberFirebaseUser = user || null;
+                cyberIsFirebaseRoomOwner = !!(user && user.email === CYBER_OWNER_EMAIL);
+                cyberUpdateOwnerStatus();
+            });
             cyberFirebaseReady = true;
             if (status) { status.textContent = 'Firebase：已連線，即時同步中'; status.className = 'firebase-on'; }
 
@@ -5377,6 +5360,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         cyberRefreshAllPublicWarroom();
+        cyberUpdateOwnerStatus();
         cyberInitFirebaseRealtime();
         const msgInput = document.getElementById('chatMessageInput');
         if (msgInput) msgInput.addEventListener('keydown', e => { if (e.key === 'Enter') cyberSendPublicChat(); });
