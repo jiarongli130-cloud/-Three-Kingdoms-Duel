@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三國武神演武沙盤 7.0－狂龍極限無雙・天下公頻擂台正式版</title>
+    <title>三國武神演武沙盤 7.0 - 狂龍極限無雙 (完全體 + RPG養成 + 銅雀紅顏 + 修羅弒神系統)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -186,7 +186,7 @@
 </head>
 <body>
 <div class="container" id="mainWarroom">
-    <h1>三國武神演武沙盤 7.0－狂龍極限無雙・天下公頻擂台正式版</h1>
+    <h1>三國武神演武沙盤 7.0 - 狂龍極限無雙</h1>
     
     <div class="controls">
         <div class="select-group">
@@ -338,9 +338,7 @@
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
             <input id="chatNickInput" placeholder="輸入聊天室暱稱 / 玩家名" style="flex:2; min-width:180px; border-color:#00ffff; color:#00ffff;">
             <button onclick="cyberSaveChatNick()" style="flex:1; min-width:100px; border-color:#00ffff; color:#00ffff;">保存暱稱</button>
-            <button onclick="cyberGoogleOwnerLogin()" style="flex:1; min-width:130px; border-color:#ffd700; color:#ffd700;">Google 群主登入</button>
-            <button onclick="cyberGoogleOwnerLogout()" style="flex:1; min-width:100px; border-color:#aaa; color:#aaa;">登出群主</button>
-            <span id="firebaseOwnerStatus" style="font-size:12px; color:#aaa; flex:2; min-width:220px;">尚未登入 Google 群主帳號</span>
+            <button onclick="cyberBecomeRoomOwner()" style="flex:1; min-width:100px; border-color:#ffd700; color:#ffd700;">群主模式</button>
             <span id="firebaseArenaStatus" class="firebase-off" style="font-size:12px; flex:1; min-width:160px;">Firebase：未啟用，本機模式</span>
         </div>
         <div class="public-warroom-grid">
@@ -3579,7 +3577,7 @@
             round++;
         }
 
-        if (!fighters[0].isDead) {
+        if (!fighters[0].isDead && fighters[0].hp > 0) {
             gainExp(fighters[0].name, 1000); 
 
             // 😈【修羅七誓】判定：【一龍弒十神】
@@ -4699,11 +4697,20 @@
 
         let dGen = activeRpgGeneral;
         let dStats = parseCombatStats(dGen);
-        let dActualPower = dGen.power; // 握有真理之筆的 99999+ 戰力
+
+        // 【正式平衡版】最後隱藏關卡不再強制必勝。
+        // 即使持有「什年的真理之筆」，本關也會套用試煉上限；該輸時仍會輸。
+        const GOD_TRIAL_POWER_CAP = 300;
+        const GOD_TRIAL_HP_CAP = 5000;
+        const GOD_TRIAL_REGEN_CAP = 25;
+        let dActualPower = Math.min(dGen.power, GOD_TRIAL_POWER_CAP);
+        let dTrialStats = { ...dStats, hpRegen: Math.min(dStats.hpRegen || 0, GOD_TRIAL_REGEN_CAP) };
+        let dTrialMaxHp = Math.min(100 + (dStats.maxHpBonus || 0), GOD_TRIAL_HP_CAP);
+        dTrialMaxHp = Math.max(dTrialMaxHp, 800); // 避免剛取得真理之筆卻沒有任何血量基礎時被瞬間秒殺
 
         let fighters = [];
-        // 真神降臨
-        fighters.push({ id: 'God', team: 'A', name: dGen.name, power: dGen.power, rank: dGen.rank, actualPower: dActualPower, stats: dStats, hp: 100 + dStats.maxHpBonus, maxHp: 100 + dStats.maxHpBonus, isDead: false, color: '#00ffff' });
+        // 真神降臨：使用試煉數值，不使用 99999 強制碾壓值
+        fighters.push({ id: 'God', team: 'A', name: dGen.name, power: dGen.power, rank: dGen.rank, actualPower: dActualPower, stats: dTrialStats, hp: dTrialMaxHp, maxHp: dTrialMaxHp, isDead: false, color: '#00ffff' });
 
         // 😈 拔除 !g.isHidden 限制，將蔣大器與毛宗崗強行拖入戰局！
         let enemies = generals.filter(g => g.name !== dGen.name);
@@ -4711,8 +4718,8 @@
             let p = g.name === "趙雲" ? g.power + 20 : g.power;
             let st = parseCombatStats(g);
             
-            // 賦予舊神超高血量作為最後的尊嚴
-            let eHp = (g.name === "蔣大器" || g.name === "毛宗崗") ? 99999 : (100 + st.maxHpBonus);
+            // 舊神仍有高血量，但不再使用 99999 鎖死勝負，讓最終戰存在真實敗北可能
+            let eHp = (g.name === "蔣大器" || g.name === "毛宗崗") ? 6000 : (100 + st.maxHpBonus);
             
             fighters.push({ id: 'E'+i, team: 'B', name: g.name, power: g.power, rank: g.rank, actualPower: p, stats: st, hp: eHp, maxHp: eHp, nineSunsUsed: false, isDead: false, color: '#ff3131' });
         });
@@ -4739,7 +4746,7 @@
         battleLog.innerHTML += `<div style="color:#ccc; text-align:center; margin-bottom: 15px; font-weight:bold;">
             <span style="color:#00ffff; font-size:18px;">${dGen.name}</span> 已成真神！現在，祂將孤身一人，面對這片沙盤中所有 ${enemies.length} 名武將（包含舊神蔣大器與毛宗崗）的聯手討伐！<br>
             「此方宇宙，唯我獨尊！」戰鬥開始！<br>
-            <span style="color:#ff8c00; font-size:12px;">(系統已開啟超光速推演引擎)</span>
+            <span style="color:#ff8c00; font-size:12px;">(正式平衡版：本關不再強制必勝，該輸時仍會輸)</span>
         </div><hr style="border-color:#00ffff;">`;
         battleLog.scrollTop = battleLog.scrollHeight;
         await new Promise(r => setTimeout(r, 2500));
@@ -4771,36 +4778,52 @@
             let atkColor = attacker.color;
             let defColor = defender.color;
 
-            // 真神降維打擊邏輯
+            // 真神試煉平衡邏輯：不再一擊強制刪除敵人，改為正常傷害與死亡判定
             if (attacker.id === 'God') {
+                let dmg = Math.floor(60 + attacker.actualPower * (0.45 + Math.random() * 0.35));
+
                 if (defender.name === "趙雲" && !defender.nineSunsUsed) {
                     defender.nineSunsUsed = true;
-                    battleLog.innerHTML += `<span style="color:#ff4500; font-weight:bold;">🔥 【天下第一的骨氣】趙雲於真神神威之下，極限爆發【九陽之火】，強行擋下了降維打擊！</span><br>`;
+                    dmg = Math.floor(dmg * 0.25);
+                    battleLog.innerHTML += `<span style="color:#ff4500; font-weight:bold;">🔥 【天下第一的骨氣】趙雲於真神神威之下，極限爆發【九陽之火】，硬扛大半傷害，只受到 ${dmg} 點傷害！</span><br>`;
                 } else if (defender.name === "蔣大器" || defender.name === "毛宗崗") {
-                    // 😈 舊神被抹殺時的專屬演出
-                    defender.hp = 0; defender.isDead = true;
-                    battleLog.innerHTML += `<span style="color:#ff00ff; font-weight:bold; font-size:16px;">🌌 【弒神之巔】<span style="color:${atkColor}">${attacker.name}</span> 揮舞真理之筆，舊日支配者 <span style="color:${defColor}">${defender.name}</span> 的權限被徹底粉碎，化為虛無！</span><br>`;
+                    dmg = Math.floor(dmg * 0.55);
+                    battleLog.innerHTML += `<span style="color:#ff00ff; font-weight:bold; font-size:16px;">🌌 【弒神試煉】<span style="color:${atkColor}">${attacker.name}</span> 揮舞真理之筆重創舊日支配者 <span style="color:${defColor}">${defender.name}</span>，造成 ${dmg} 點傷害！</span><br>`;
                     if(typeof playBossShakeSound === 'function') playBossShakeSound();
                     triggerShake();
-                } else {
-                    defender.hp = 0; defender.isDead = true;
-                    battleLog.innerHTML += `<span style="color:#00ffff;">⚡ 【真理抹殺】<span style="color:${atkColor}">${attacker.name}</span> 揮舞真理之筆，<span style="color:${defColor}">${defender.name}</span> 的代碼瞬間被強制刪除！</span><br>`;
+                } else if (Math.random() < 0.18) {
+                    dmg = Math.floor(dmg * 1.8);
+                    battleLog.innerHTML += `<span style="color:#00ffff;">⚡ 【真理重擊】<span style="color:${atkColor}">${attacker.name}</span> 以真理之筆打出暴擊，對 <span style="color:${defColor}">${defender.name}</span> 造成 ${dmg} 點傷害！</span><br>`;
                     if(typeof playCyberStrikeSound === 'function') playCyberStrikeSound();
+                } else {
+                    battleLog.innerHTML += `<span style="color:#00ffff;">⚡ 【真理斬擊】<span style="color:${atkColor}">${attacker.name}</span> 攻向 <span style="color:${defColor}">${defender.name}</span>，造成 ${dmg} 點傷害。</span><br>`;
                 }
+                defender.hp -= dmg;
             } else {
-                // 凡人與舊神的絕望抵抗
-                let dmg = Math.max(1, (attacker.actualPower * 0.1));
+                // 凡人與舊神的絕望抵抗：舊神仍很危險，但不再固定 9999 秒殺
+                let dmg = Math.max(1, Math.floor(attacker.actualPower * (0.08 + Math.random() * 0.08)));
                 
-                // 😈 舊神反撲，造成鉅額真實傷害
+                // 😈 舊神反撲，造成高額真實傷害，可能反殺真神
                 if (attacker.name === "蔣大器" || attacker.name === "毛宗崗") {
-                    dmg = 9999; 
-                    battleLog.innerHTML += `<span style="color:#ff0000; font-weight:bold;">⚠️ 【天道反撲】舊神 <span style="color:${atkColor}">${attacker.name}</span> 拼死釋放底層亂碼，對真神造成 ${dmg} 點鉅額傷害！</span><br>`;
+                    dmg = Math.floor(900 + Math.random() * 700); 
+                    battleLog.innerHTML += `<span style="color:#ff0000; font-weight:bold;">⚠️ 【天道反撲】舊神 <span style="color:${atkColor}">${attacker.name}</span> 拼死釋放底層亂碼，對真神造成 ${dmg} 點高額傷害！</span><br>`;
                     if(typeof playBossStrikeSound === 'function') playBossStrikeSound();
                     triggerShake();
                 } else if(Math.random() < 0.1) {
-                    battleLog.innerHTML += `<span style="color:#aaaaaa;">[逆神] <span style="color:${atkColor}">${attacker.name}</span> 拼死砍中真神，造成 ${Math.floor(dmg)} 點微弱傷害。</span><br>`;
+                    battleLog.innerHTML += `<span style="color:#aaaaaa;">[逆神] <span style="color:${atkColor}">${attacker.name}</span> 拼死砍中真神，造成 ${Math.floor(dmg)} 點傷害。</span><br>`;
                 }
                 defender.hp -= dmg;
+            }
+
+            // 正式死亡判定：HP 歸零就死亡，真神也不例外
+            if (defender.hp <= 0 && !defender.isDead) {
+                defender.hp = 0;
+                defender.isDead = true;
+                if (defender.id === 'God') {
+                    battleLog.innerHTML += `<span style="color:#ff3131; font-weight:bold; font-size:16px;">💀 【真神隕落】<span style="color:${defColor}">${defender.name}</span> 被全宇宙聯軍擊潰，最後隱藏關卡挑戰失敗！</span><br>`;
+                } else {
+                    battleLog.innerHTML += `<span style="color:#888;">☠️ <span style="color:${defColor}">${defender.name}</span> HP 歸零，退出最終戰。</span><br>`;
+                }
             }
 
             // UI 批量更新 (每 15 步更新一次，避免 DOM 渲染卡死瀏覽器)
@@ -4851,7 +4874,7 @@
     // 支援 localStorage 本機模式；貼入 Firebase 設定後可啟用即時同步。
     // ==============================================================
     const CYBER_OWNER_NAME = '李家榮';
-    const CYBER_OWNER_EMAIL = 'jiarongli130@gmail.com'; // 正式群主：只有此 Gmail 登入 Google 後才有管理權。
+    const CYBER_OWNER_PASSCODE = '130'; // 本機版簡易群主碼；真正公開網站請用 Firebase Auth + Rules 保護。
     const CYBER_COOLDOWN_MS = 5 * 60 * 1000;
     const CYBER_CHAT_KEY = 'publicChatMessages_v1';
     const CYBER_MUTED_KEY = 'publicChatMutedUsers_v1';
@@ -4873,11 +4896,7 @@
     measurementId: "G-H3YXWXJ4CL"
     };
     let cyberDb = null;
-    let cyberAuth = null;
-    let cyberGoogleProvider = null;
     let cyberFirebaseReady = false;
-    let cyberFirebaseUser = null;
-    let cyberIsFirebaseRoomOwner = false;
     let cyberRemoteChatMessages = [];
     let cyberRemoteMutedUsers = {};
     let cyberRemoteArenaState = null;
@@ -4919,64 +4938,19 @@
     }
 
     function cyberIsRoomOwner() {
-        return cyberIsFirebaseRoomOwner === true;
-    }
-
-    function cyberUpdateOwnerStatus() {
-        const status = document.getElementById('firebaseOwnerStatus');
-        if (!status) return;
-        if (cyberFirebaseUser) {
-            status.innerText = `目前登入：${cyberFirebaseUser.email}${cyberIsFirebaseRoomOwner ? '｜群主權限已啟用' : '｜一般帳號，無群主權限'}`;
-            status.style.color = cyberIsFirebaseRoomOwner ? '#ffd700' : '#aaa';
-        } else {
-            status.innerText = '尚未登入 Google 群主帳號';
-            status.style.color = '#aaa';
-        }
-    }
-
-    async function cyberGoogleOwnerLogin() {
-        if (!window.ENABLE_FIREBASE_REALTIME) {
-            alert('請先啟用 Firebase Realtime，Google 群主登入才能生效。');
-            return;
-        }
-        try {
-            if (!cyberAuth || !cyberGoogleProvider) {
-                await cyberInitFirebaseRealtime();
-            }
-            if (!cyberAuth || !cyberGoogleProvider) {
-                alert('Firebase Auth 尚未初始化，請確認 Firebase 設定與網路連線。');
-                return;
-            }
-            const result = await cyberAuth.signInWithPopup(cyberGoogleProvider);
-            cyberFirebaseUser = result.user;
-            cyberIsFirebaseRoomOwner = !!(cyberFirebaseUser && cyberFirebaseUser.email === CYBER_OWNER_EMAIL);
-            cyberUpdateOwnerStatus();
-            if (cyberIsFirebaseRoomOwner) {
-                alert('群主登入成功：' + cyberFirebaseUser.email);
-            } else {
-                alert('此 Google 帳號不是群主：' + (cyberFirebaseUser?.email || '未知帳號'));
-            }
-        } catch (err) {
-            console.error('Google 群主登入失敗：', err);
-            alert('Google 登入失敗：' + (err.message || err));
-        }
-    }
-
-    async function cyberGoogleOwnerLogout() {
-        try {
-            if (cyberAuth) await cyberAuth.signOut();
-            cyberFirebaseUser = null;
-            cyberIsFirebaseRoomOwner = false;
-            cyberUpdateOwnerStatus();
-            alert('已登出群主模式');
-        } catch (err) {
-            console.error('Google 登出失敗：', err);
-            alert('Google 登出失敗：' + (err.message || err));
-        }
+        return localStorage.getItem('cyberRoomOwnerMode') === 'true' || cyberGetNick() === CYBER_OWNER_NAME;
     }
 
     function cyberBecomeRoomOwner() {
-        alert('正式版已取消 130 群主碼。請使用「Google 群主登入」，只有 ' + CYBER_OWNER_EMAIL + ' 可取得群主權限。');
+        const code = prompt('請輸入群主驗證碼：');
+        if (code === CYBER_OWNER_PASSCODE) {
+            localStorage.setItem('cyberRoomOwnerMode', 'true');
+            if (document.getElementById('chatNickInput')) document.getElementById('chatNickInput').value = CYBER_OWNER_NAME;
+            localStorage.setItem(CYBER_NICK_KEY, CYBER_OWNER_NAME);
+            alert('群主模式已啟動：你可以禁言、解除禁言、清空聊天室。');
+        } else {
+            alert('驗證碼錯誤，無法啟動群主模式。');
+        }
     }
 
     function cyberGetMutedUsers() {
@@ -5023,7 +4997,7 @@
             alert('你已被群主禁言，暫時無法發言。');
             return;
         }
-        const item = { id: `${Date.now()}_${Math.random().toString(16).slice(2)}`, name, nick: name, msg, message: msg, time: Date.now() };
+        const item = { id: `${Date.now()}_${Math.random().toString(16).slice(2)}`, name, msg, time: Date.now() };
         if (cyberFirebaseReady && cyberDb) {
             cyberDb.ref(`${CYBER_ROOM_PATH}/chatMessages`).push(item);
         } else {
@@ -5036,7 +5010,7 @@
     }
 
     function cyberMuteUser() {
-        if (!cyberIsRoomOwner()) { alert('只有登入群主 Gmail 才能禁言。'); return; }
+        if (!cyberIsRoomOwner()) { alert('只有群主可以禁言。'); return; }
         const target = prompt('輸入要禁言的玩家暱稱：');
         if (!target) return;
         if (cyberFirebaseReady && cyberDb) {
@@ -5051,7 +5025,7 @@
     }
 
     function cyberUnmuteUser() {
-        if (!cyberIsRoomOwner()) { alert('只有登入群主 Gmail 才能解除禁言。'); return; }
+        if (!cyberIsRoomOwner()) { alert('只有群主可以解除禁言。'); return; }
         const target = prompt('輸入要解除禁言的玩家暱稱：');
         if (!target) return;
         if (cyberFirebaseReady && cyberDb) {
@@ -5066,7 +5040,7 @@
     }
 
     function cyberClearChat() {
-        if (!cyberIsRoomOwner()) { alert('只有登入群主 Gmail 才能清空聊天室。'); return; }
+        if (!cyberIsRoomOwner()) { alert('只有群主可以清空聊天室。'); return; }
         if (!confirm('確定要清空聊天室訊息？')) return;
         if (cyberFirebaseReady && cyberDb) {
             cyberDb.ref(`${CYBER_ROOM_PATH}/chatMessages`).remove();
@@ -5085,10 +5059,8 @@
             box.innerHTML = '<span style="color:#777;">尚無聊天訊息，第一位武者可以開始發言。</span>';
         } else {
             box.innerHTML = arr.map(m => {
-                const displayName = m.name || m.nick || '無名武者';
-                const displayMsg = (m.msg !== undefined) ? m.msg : (m.message || '');
-                const mutedTag = muted[displayName] ? '<span style="color:#ff3131; font-size:11px;">【已禁言】</span>' : '';
-                return `<div class="chat-row"><span class="name">${cyberEscapeHtml(displayName)}</span>${mutedTag}<span class="time">${cyberNowTime(m.time)}</span><br>${cyberEscapeHtml(displayMsg)}</div>`;
+                const mutedTag = muted[m.name] ? '<span style="color:#ff3131; font-size:11px;">【已禁言】</span>' : '';
+                return `<div class="chat-row"><span class="name">${cyberEscapeHtml(m.name)}</span>${mutedTag}<span class="time">${cyberNowTime(m.time)}</span><br>${cyberEscapeHtml(m.msg)}</div>`;
             }).join('');
         }
         box.scrollTop = box.scrollHeight;
@@ -5325,16 +5297,8 @@
         try {
             await cyberLoadScript('https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js');
             await cyberLoadScript('https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js');
-            await cyberLoadScript('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js');
             if (!firebase.apps.length) firebase.initializeApp(window.CYBER_FIREBASE_CONFIG);
             cyberDb = firebase.database();
-            cyberAuth = firebase.auth();
-            cyberGoogleProvider = new firebase.auth.GoogleAuthProvider();
-            cyberAuth.onAuthStateChanged(user => {
-                cyberFirebaseUser = user || null;
-                cyberIsFirebaseRoomOwner = !!(user && user.email === CYBER_OWNER_EMAIL);
-                cyberUpdateOwnerStatus();
-            });
             cyberFirebaseReady = true;
             if (status) { status.textContent = 'Firebase：已連線，即時同步中'; status.className = 'firebase-on'; }
 
@@ -5360,7 +5324,6 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         cyberRefreshAllPublicWarroom();
-        cyberUpdateOwnerStatus();
         cyberInitFirebaseRealtime();
         const msgInput = document.getElementById('chatMessageInput');
         if (msgInput) msgInput.addEventListener('keydown', e => { if (e.key === 'Enter') cyberSendPublicChat(); });
