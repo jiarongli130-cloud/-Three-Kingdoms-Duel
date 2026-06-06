@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三國武神演武沙盤 7.0－狂龍極限無雙・天下公頻擂台正式版</title>
+    <title>三國武神演武沙盤 7.0 - 狂龍極限無雙 (完全體 + RPG養成 + 銅雀紅顏 + 修羅弒神系統)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -175,6 +175,17 @@
         .chat-row { border-bottom: 1px solid #222; padding: 4px 0; word-break: break-word; }
         .chat-row .name { color: #ffd700; font-weight: bold; }
         .chat-row .time { color: #777; font-size: 11px; margin-left: 6px; }
+        .pinned-chat-card {
+            border: 1px solid #ffd700;
+            background: rgba(255, 215, 0, 0.08);
+            color: #fff7c0;
+            padding: 8px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.18);
+            word-break: break-word;
+        }
+        .pinned-chat-card .pin-title { color:#ffd700; font-weight:bold; text-shadow:0 0 6px #ffd700; }
         .arena-status-card { border: 1px solid #ffd700; background: rgba(255,215,0,0.06); padding: 8px; color: #ddd; margin-bottom: 8px; }
         .rank-row { padding: 5px 0; border-bottom: 1px solid #222; }
         .rank-top { color: #ffd700; font-weight: bold; text-shadow: 0 0 6px #ffd700; }
@@ -186,7 +197,7 @@
 </head>
 <body>
 <div class="container" id="mainWarroom">
-    <h1>三國武神演武沙盤 7.0－狂龍極限無雙・天下公頻擂台正式版</h1>
+    <h1>三國武神演武沙盤 7.0 - 狂龍極限無雙</h1>
     
     <div class="controls">
         <div class="select-group">
@@ -354,6 +365,8 @@
                 <div style="display:flex; gap:6px; margin-top:6px;">
                     <button onclick="cyberMuteUser()" style="flex:1; border-color:#ff3131; color:#ff3131; font-size:12px;">群主禁言</button>
                     <button onclick="cyberUnmuteUser()" style="flex:1; border-color:#ff8c00; color:#ff8c00; font-size:12px;">解除禁言</button>
+                    <button onclick="cyberPinChatMessage()" style="flex:1; border-color:#ffd700; color:#ffd700; font-size:12px;">置頂留言</button>
+                    <button onclick="cyberClearPinnedMessage()" style="flex:1; border-color:#999; color:#999; font-size:12px;">取消置頂</button>
                     <button onclick="cyberClearChat()" style="flex:1; border-color:#aaa; color:#aaa; font-size:12px;">清空聊天</button>
                 </div>
             </div>
@@ -4854,6 +4867,7 @@
     const CYBER_OWNER_EMAIL = 'jiarongli130@gmail.com'; // 正式群主：只有此 Gmail 登入 Google 後才有管理權。
     const CYBER_COOLDOWN_MS = 5 * 60 * 1000;
     const CYBER_CHAT_KEY = 'publicChatMessages_v1';
+    const CYBER_PINNED_KEY = 'publicChatPinnedMessage_v1';
     const CYBER_MUTED_KEY = 'publicChatMutedUsers_v1';
     const CYBER_ARENA_KEY = 'publicArenaState_v1';
     const CYBER_NICK_KEY = 'publicChatNick_v1';
@@ -4879,6 +4893,7 @@
     let cyberFirebaseUser = null;
     let cyberIsFirebaseRoomOwner = false;
     let cyberRemoteChatMessages = [];
+    let cyberRemotePinnedMessage = null;
     let cyberRemoteMutedUsers = {};
     let cyberRemoteArenaState = null;
 
@@ -4987,6 +5002,10 @@
         return cyberFirebaseReady ? (cyberRemoteChatMessages || []) : cyberReadJson(CYBER_CHAT_KEY, []);
     }
 
+    function cyberGetPinnedMessage() {
+        return cyberFirebaseReady ? (cyberRemotePinnedMessage || null) : cyberReadJson(CYBER_PINNED_KEY, null);
+    }
+
     function cyberGetDefaultArenaState() {
         return { champion: null, scores: {}, cooldowns: {}, roster: {}, lastUpdated: Date.now() };
     }
@@ -5076,15 +5095,54 @@
         }
     }
 
+    function cyberPinChatMessage() {
+        if (!cyberIsRoomOwner()) { alert('只有登入群主 Gmail 才能置頂留言。'); return; }
+        const oldPin = cyberGetPinnedMessage();
+        const defaultText = oldPin && (oldPin.message || oldPin.msg) ? (oldPin.message || oldPin.msg) : '';
+        const msg = prompt('輸入要置頂在聊天室最上方的留言／公告：', defaultText);
+        if (msg === null) return;
+        const message = msg.trim();
+        if (!message) { alert('置頂內容不能空白。'); return; }
+        if (message.length > 300) { alert('置頂留言最多 300 字。'); return; }
+        const item = { name: cyberGetNick(), nick: cyberGetNick(), message, msg: message, time: Date.now() };
+        if (cyberFirebaseReady && cyberDb) {
+            cyberDb.ref(`${CYBER_ROOM_PATH}/pinnedMessage`).set(item);
+        } else {
+            cyberWriteJson(CYBER_PINNED_KEY, item);
+            cyberRemotePinnedMessage = item;
+            cyberRefreshChatLog();
+        }
+        alert('聊天室置頂留言已更新。');
+    }
+
+    function cyberClearPinnedMessage() {
+        if (!cyberIsRoomOwner()) { alert('只有登入群主 Gmail 才能取消置頂。'); return; }
+        if (!confirm('確定取消目前置頂留言？')) return;
+        if (cyberFirebaseReady && cyberDb) {
+            cyberDb.ref(`${CYBER_ROOM_PATH}/pinnedMessage`).remove();
+        } else {
+            cyberWriteJson(CYBER_PINNED_KEY, null);
+            cyberRemotePinnedMessage = null;
+            cyberRefreshChatLog();
+        }
+    }
+
     function cyberRefreshChatLog() {
         const box = document.getElementById('publicChatLog');
         if (!box) return;
         const muted = cyberGetMutedUsers();
+        const pinned = cyberGetPinnedMessage();
         const arr = cyberGetChatMessages().slice(-100);
+        let pinnedHtml = '';
+        if (pinned && (pinned.message || pinned.msg)) {
+            const pinName = pinned.name || pinned.nick || '群主';
+            const pinMsg = pinned.message || pinned.msg || '';
+            pinnedHtml = `<div class="pinned-chat-card"><div class="pin-title">📌 群主置頂留言</div><span class="name">${cyberEscapeHtml(pinName)}</span><span class="time">${cyberNowTime(pinned.time)}</span><br>${cyberEscapeHtml(pinMsg)}</div>`;
+        }
         if (arr.length === 0) {
-            box.innerHTML = '<span style="color:#777;">尚無聊天訊息，第一位武者可以開始發言。</span>';
+            box.innerHTML = pinnedHtml + '<span style="color:#777;">尚無聊天訊息，第一位武者可以開始發言。</span>';
         } else {
-            box.innerHTML = arr.map(m => {
+            box.innerHTML = pinnedHtml + arr.map(m => {
                 const displayName = m.name || m.nick || '無名武者';
                 const displayMsg = (m.msg !== undefined) ? m.msg : (m.message || '');
                 const mutedTag = muted[displayName] ? '<span style="color:#ff3131; font-size:11px;">【已禁言】</span>' : '';
@@ -5345,6 +5403,10 @@
             });
             cyberDb.ref(`${CYBER_ROOM_PATH}/mutedUsers`).on('value', snap => {
                 cyberRemoteMutedUsers = snap.val() || {};
+                cyberRefreshChatLog();
+            });
+            cyberDb.ref(`${CYBER_ROOM_PATH}/pinnedMessage`).on('value', snap => {
+                cyberRemotePinnedMessage = snap.val() || null;
                 cyberRefreshChatLog();
             });
             cyberDb.ref(`${CYBER_ROOM_PATH}/arenaState`).on('value', snap => {
