@@ -549,12 +549,14 @@
                     <input id="chatMessageInput" placeholder="輸入訊息，按 Enter 也能送出" style="flex:3; border-color:#00ff41;">
                     <button onclick="cyberSendPublicChat()" style="flex:1; border-color:#00ff41; color:#00ff41;">送出</button>
                 </div>
-                <div style="display:flex; gap:6px; margin-top:6px;">
-                    <button onclick="cyberMuteUser()" style="flex:1; border-color:#ff3131; color:#ff3131; font-size:12px;">群主禁言</button>
-                    <button onclick="cyberUnmuteUser()" style="flex:1; border-color:#ff8c00; color:#ff8c00; font-size:12px;">解除禁言</button>
-                    <button onclick="cyberPinChatMessage()" style="flex:1; border-color:#ffd700; color:#ffd700; font-size:12px;">置頂留言</button>
-                    <button onclick="cyberClearPinnedMessage()" style="flex:1; border-color:#999; color:#999; font-size:12px;">取消置頂</button>
-                    <button onclick="cyberClearChat()" style="flex:1; border-color:#aaa; color:#aaa; font-size:12px;">清空聊天</button>
+                <div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">
+                    <button onclick="cyberMuteUser()" style="flex:1; min-width:90px; border-color:#ff3131; color:#ff3131; font-size:12px;">禁言暱稱</button>
+                    <button onclick="cyberMuteIpTag()" style="flex:1; min-width:90px; border-color:#ff0066; color:#ff0066; font-size:12px;">禁言IP/裝置</button>
+                    <button onclick="cyberUnmuteTarget()" style="flex:1; min-width:90px; border-color:#ff8c00; color:#ff8c00; font-size:12px;">解除禁言</button>
+                    <button onclick="cyberToggleGlobalChatMute()" style="flex:1; min-width:110px; border-color:#ff0000; color:#ff0000; font-size:12px;">全聊天室禁言</button>
+                    <button onclick="cyberPinChatMessage()" style="flex:1; min-width:90px; border-color:#ffd700; color:#ffd700; font-size:12px;">置頂留言</button>
+                    <button onclick="cyberClearPinnedMessage()" style="flex:1; min-width:90px; border-color:#999; color:#999; font-size:12px;">取消置頂</button>
+                    <button onclick="cyberClearChat()" style="flex:1; min-width:90px; border-color:#aaa; color:#aaa; font-size:12px;">清空聊天</button>
                 </div>
             </div>
             <div class="public-warroom-box">
@@ -5185,6 +5187,60 @@
         return cyberFirebaseReady ? (cyberRemoteMutedUsers || {}) : cyberReadJson(CYBER_MUTED_KEY, {});
     }
 
+    function cyberSafeMuteKey(type, value) {
+        return `${type}_${btoa(unescape(encodeURIComponent(String(value || ''))))
+            .replaceAll('+', '-')
+            .replaceAll('/', '_')
+            .replaceAll('=', '')}`;
+    }
+
+    function cyberGetClientIpTag() {
+        let tag = localStorage.getItem('cyberClientIpTag_v1');
+        if (!tag) {
+            tag = 'device_' + Math.random().toString(16).slice(2) + '_' + Date.now();
+            localStorage.setItem('cyberClientIpTag_v1', tag);
+        }
+        return tag;
+    }
+
+    function cyberGetGlobalChatMuted() {
+        const muted = cyberGetMutedUsers();
+        return muted.__globalChatMuted === true;
+    }
+
+    function cyberGetMuteReason() {
+        const name = cyberGetNick();
+        const ipTag = cyberGetClientIpTag();
+        const muted = cyberGetMutedUsers();
+
+        if (muted.__globalChatMuted === true) {
+            return '目前全聊天室禁言中，只有擂台戰報與群主系統訊息可顯示。';
+        }
+
+        if (muted[cyberSafeMuteKey('nick', name)] === true || muted[name] === true) {
+            return '你的暱稱已被群主禁言，暫時無法發言。';
+        }
+
+        if (muted[cyberSafeMuteKey('ip', ipTag)] === true) {
+            return '你的 IP/裝置標記已被群主禁言，暫時無法發言。';
+        }
+
+        return '';
+    }
+
+    function cyberSetMutedValue(key, val) {
+        if (cyberFirebaseReady && cyberDb) {
+            return cyberDb.ref(`${CYBER_ROOM_PATH}/mutedUsers/${key}`).set(val);
+        }
+
+        const muted = cyberGetMutedUsers();
+        muted[key] = val;
+        cyberWriteJson(CYBER_MUTED_KEY, muted);
+        cyberRemoteMutedUsers = muted;
+        cyberRefreshChatLog();
+        return Promise.resolve();
+    }
+
     function cyberGetChatMessages() {
         return cyberFirebaseReady ? (cyberRemoteChatMessages || []) : cyberReadJson(CYBER_CHAT_KEY, []);
     }
@@ -5216,20 +5272,40 @@
 
     function cyberIsMuted(name) {
         const muted = cyberGetMutedUsers();
-        return muted[name] === true;
+        const ipTag = cyberGetClientIpTag();
+
+        return muted.__globalChatMuted === true ||
+               muted[name] === true ||
+               muted[cyberSafeMuteKey('nick', name)] === true ||
+               muted[cyberSafeMuteKey('ip', ipTag)] === true;
     }
 
     function cyberSendPublicChat() {
         const input = document.getElementById('chatMessageInput');
         if (!input) return;
+
         const name = cyberGetNick();
+        const ipTag = cyberGetClientIpTag();
         const msg = input.value.trim();
+
         if (!msg) return;
-        if (cyberIsMuted(name)) {
-            alert('你已被群主禁言，暫時無法發言。');
+
+        const muteReason = cyberGetMuteReason();
+        if (muteReason) {
+            alert(muteReason);
             return;
         }
-        const item = { id: `${Date.now()}_${Math.random().toString(16).slice(2)}`, name, nick: name, msg, message: msg, time: Date.now() };
+
+        const item = {
+            id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
+            name,
+            nick: name,
+            ipTag,
+            msg,
+            message: msg,
+            time: Date.now()
+        };
+
         if (cyberFirebaseReady && cyberDb) {
             cyberDb.ref(`${CYBER_ROOM_PATH}/chatMessages`).push(item);
         } else {
@@ -5238,37 +5314,113 @@
             cyberWriteJson(CYBER_CHAT_KEY, arr.slice(-120));
             cyberRefreshChatLog();
         }
+
         input.value = '';
     }
 
     function cyberMuteUser() {
-        if (!cyberIsRoomOwner()) { alert('只有登入群主 Gmail 才能禁言。'); return; }
+        if (!cyberIsRoomOwner()) {
+            alert('只有登入群主 Gmail 才能禁言。');
+            return;
+        }
+
         const target = prompt('輸入要禁言的玩家暱稱：');
         if (!target) return;
-        if (cyberFirebaseReady && cyberDb) {
-            cyberDb.ref(`${CYBER_ROOM_PATH}/mutedUsers/${target}`).set(true);
-        } else {
-            const muted = cyberGetMutedUsers();
-            muted[target] = true;
-            cyberWriteJson(CYBER_MUTED_KEY, muted);
-            cyberRefreshChatLog();
-        }
-        alert(`已禁言：${target}`);
+
+        const name = target.trim();
+        if (!name) return;
+
+        cyberSetMutedValue(cyberSafeMuteKey('nick', name), true).then(() => {
+            alert(`已禁言暱稱：${name}`);
+        });
     }
 
-    function cyberUnmuteUser() {
-        if (!cyberIsRoomOwner()) { alert('只有登入群主 Gmail 才能解除禁言。'); return; }
-        const target = prompt('輸入要解除禁言的玩家暱稱：');
-        if (!target) return;
-        if (cyberFirebaseReady && cyberDb) {
-            cyberDb.ref(`${CYBER_ROOM_PATH}/mutedUsers/${target}`).set(false);
-        } else {
-            const muted = cyberGetMutedUsers();
-            muted[target] = false;
-            cyberWriteJson(CYBER_MUTED_KEY, muted);
-            cyberRefreshChatLog();
+    function cyberMuteIpTag() {
+        if (!cyberIsRoomOwner()) {
+            alert('只有登入群主 Gmail 才能禁言 IP/裝置。');
+            return;
         }
-        alert(`已解除禁言：${target}`);
+
+        const target = prompt(
+            '輸入要禁言的 IP/裝置標記。\n\n提示：玩家發言後，聊天室訊息資料會帶有 ipTag 欄位。\n若要禁目前這台裝置，可輸入：' + cyberGetClientIpTag(),
+            cyberGetClientIpTag()
+        );
+
+        if (!target) return;
+
+        const ipTag = target.trim();
+        if (!ipTag) return;
+
+        cyberSetMutedValue(cyberSafeMuteKey('ip', ipTag), true).then(() => {
+            alert(`已禁言 IP/裝置標記：${ipTag}`);
+        });
+    }
+
+    function cyberUnmuteTarget() {
+        if (!cyberIsRoomOwner()) {
+            alert('只有登入群主 Gmail 才能解除禁言。');
+            return;
+        }
+
+        const type = prompt('解除哪一種禁言？輸入：1=暱稱，2=IP/裝置，3=全聊天室');
+        if (!type) return;
+
+        if (type.trim() === '1') {
+            const target = prompt('輸入要解除禁言的玩家暱稱：');
+            if (!target) return;
+
+            const name = target.trim();
+            cyberSetMutedValue(cyberSafeMuteKey('nick', name), false).then(() => {
+                alert(`已解除暱稱禁言：${name}`);
+            });
+            return;
+        }
+
+        if (type.trim() === '2') {
+            const target = prompt('輸入要解除禁言的 IP/裝置標記：');
+            if (!target) return;
+
+            const ipTag = target.trim();
+            cyberSetMutedValue(cyberSafeMuteKey('ip', ipTag), false).then(() => {
+                alert(`已解除 IP/裝置禁言：${ipTag}`);
+            });
+            return;
+        }
+
+        if (type.trim() === '3') {
+            cyberSetMutedValue('__globalChatMuted', false).then(() => {
+                alert('已解除全聊天室禁言。');
+            });
+            return;
+        }
+
+        alert('輸入錯誤，請輸入 1、2 或 3。');
+    }
+
+    function cyberToggleGlobalChatMute() {
+        if (!cyberIsRoomOwner()) {
+            alert('只有登入群主 Gmail 才能切換全聊天室禁言。');
+            return;
+        }
+
+        const nowMuted = cyberGetGlobalChatMuted();
+        const next = !nowMuted;
+
+        const msg = next
+            ? '確定開啟全聊天室禁言？普通玩家不能發言，但擂台戰報仍會顯示。'
+            : '確定解除全聊天室禁言？';
+
+        if (!confirm(msg)) return;
+
+        cyberSetMutedValue('__globalChatMuted', next).then(() => {
+            alert(next ? '已開啟全聊天室禁言。擂台戰報不受影響。' : '已解除全聊天室禁言。');
+            cyberRefreshChatLog();
+        });
+    }
+
+    /* 舊函式保留，避免舊按鈕或舊代碼呼叫出錯 */
+    function cyberUnmuteUser() {
+        cyberUnmuteTarget();
     }
 
     function cyberClearChat() {
