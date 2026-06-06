@@ -5498,16 +5498,39 @@
         cyberSendSystemChat(`【公開擂台】${result.winner.name} 擊敗 ${result.loser.name}，勝者留場，敗者冷卻 5 分鐘。`);
     }
 
-    function cyberSendSystemChat(msg) {
-        const item = { id: `${Date.now()}_system`, name: '擂台系統', msg, time: Date.now() };
-        if (cyberFirebaseReady && cyberDb) cyberDb.ref(`${CYBER_ROOM_PATH}/chatMessages`).push(item);
-        else {
-            const arr = cyberGetChatMessages();
-            arr.push(item);
-            cyberWriteJson(CYBER_CHAT_KEY, arr.slice(-120));
-            cyberRefreshChatLog();
-        }
+function cyberSendSystemChat(msg) {
+    const now = Date.now();
+
+    // 同時保留 name/msg 與 nick/message，確保本機模式與 Firebase 規則都吃得到
+    const item = {
+        id: `${now}_system`,
+        name: '擂台系統',
+        nick: '擂台系統',
+        msg: msg,
+        message: msg,
+        time: now
+    };
+
+    if (cyberFirebaseReady && cyberDb) {
+        cyberDb.ref(`${CYBER_ROOM_PATH}/chatMessages`).push(item)
+            .then(() => {
+                cyberRefreshChatLog();
+            })
+            .catch(err => {
+                console.warn('擂台系統訊息寫入 Firebase 失敗，改寫入本機聊天室：', err);
+
+                const arr = cyberGetChatMessages();
+                arr.push(item);
+                cyberWriteJson(CYBER_CHAT_KEY, arr.slice(-120));
+                cyberRefreshChatLog();
+            });
+    } else {
+        const arr = cyberGetChatMessages();
+        arr.push(item);
+        cyberWriteJson(CYBER_CHAT_KEY, arr.slice(-120));
+        cyberRefreshChatLog();
     }
+}
 
     function cyberArenaLog(msg) {
         const feed = document.getElementById('arenaBattleFeed');
