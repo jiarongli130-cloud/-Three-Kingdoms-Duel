@@ -1528,6 +1528,29 @@
     const masterSkillSet = new Set(Object.values(masterSkillMap));
     const skillPool = Object.keys(skillDict).filter(skillName => !masterSkillSet.has(skillName));
 
+    // 【技能欄位分流保護】
+    // gen.skills = 常規覺醒技能欄
+    // gen.masteredSkills = 拜師學藝技能欄
+    // 舊存檔若曾把師承技能塞進 skills，這裡會自動搬回 masteredSkills。
+    function normalizeRpgSkillBuckets(gen) {
+        if (!gen || !gen.isRPG) return gen;
+        if (!Array.isArray(gen.skills)) gen.skills = [];
+        if (!Array.isArray(gen.masteredSkills)) gen.masteredSkills = [];
+
+        const normalSkills = [];
+        gen.skills.forEach(skill => {
+            if (masterSkillSet.has(skill)) {
+                if (!gen.masteredSkills.includes(skill)) gen.masteredSkills.push(skill);
+            } else if (!normalSkills.includes(skill)) {
+                normalSkills.push(skill);
+            }
+        });
+
+        gen.skills = normalSkills;
+        gen.masteredSkills = [...new Set(gen.masteredSkills.filter(skill => masterSkillSet.has(skill)))];
+        return gen;
+    }
+
     // 【50件武神兵器譜 + 15件紅顏伴侶 + 終極神賞】 植入底層標籤
     const itemDatabase = [
         // 🌸 銅雀春深：紅顏伴侶 (新增 15 位)
@@ -1640,9 +1663,15 @@
     // 將武將的神兵、技能、紅顏伴侶轉換為動態戰鬥變數
     function parseCombatStats(gen) {
         let stats = { armorPen: 0, dodgeBonus: 0, lifesteal: 0, blockChance: 0, maxHpBonus: 0, hpRegen: 0, revives: [] };
-        
-        if (gen.isRPG && gen.skills) {
-            gen.skills.forEach(skill => {
+
+        if (gen && gen.isRPG) normalizeRpgSkillBuckets(gen);
+
+        if (gen.isRPG) {
+            // 戰鬥效果同時讀取：常規技能欄 + 拜師學藝技能欄。
+            // 但 UI 顯示仍分成兩欄，不再混在「已習得技能」。
+            const allCombatSkills = [...new Set([...(gen.skills || []), ...(gen.masteredSkills || [])])];
+
+            allCombatSkills.forEach(skill => {
                 let effect = skillEffects[skill];
                 if (effect) {
                     if (effect.lifesteal) stats.lifesteal += effect.lifesteal;
@@ -1653,7 +1682,7 @@
                 }
             });
         }
-        
+
         // 讀取神兵行囊 (50格)，含支援裝備加成HP與多次復活判定
         if (gen.inventory) {
             gen.inventory.forEach(item => {
@@ -2576,7 +2605,10 @@
 
     function renderRpgPanel(gen) {
         activeRpgGeneral = gen;
-        if (activeRpgGeneral && activeRpgGeneral.isRPG) loadAsuraAchievements(activeRpgGeneral);
+        if (activeRpgGeneral && activeRpgGeneral.isRPG) {
+            normalizeRpgSkillBuckets(activeRpgGeneral);
+            loadAsuraAchievements(activeRpgGeneral);
+        }
         document.getElementById('rpgPanel').style.display = "block";
         
         let statsObj = parseCombatStats(gen);
@@ -2600,9 +2632,11 @@
                 }).join("、");
             }
 
-            let skillsHtml = gen.skills.map(s => 
+            // 已習得技能只顯示「常規技能」，拜師學藝技能只顯示在拜師學藝欄位。
+            const normalSkillList = (gen.skills || []).filter(s => !masterSkillSet.has(s));
+            let skillsHtml = normalSkillList.length > 0 ? normalSkillList.map(s => 
                 `<span class="tooltip" style="color:#00ffff;">${s}<span class="tooltiptext"><span class="title">${s}</span>${skillDict[s]}</span></span>`
-            ).join("、");
+            ).join("、") : "尚未覺醒常規技能";
 
             if (typeof gen.rpgShareCount === 'undefined') gen.rpgShareCount = 0;
             if (typeof gen.rpgSharePower === 'undefined') gen.rpgSharePower = 0;
@@ -4762,7 +4796,8 @@
         if (!activeRpgGeneral.masteredSkills) activeRpgGeneral.masteredSkills = [];
         if (typeof activeRpgGeneral.masterBattleCount === 'undefined') activeRpgGeneral.masterBattleCount = 0;
 
-        const hasSkill = activeRpgGeneral.skills.includes(skillName);
+        normalizeRpgSkillBuckets(activeRpgGeneral);
+        const hasSkill = activeRpgGeneral.masteredSkills.includes(skillName);
         const traineePower = activeRpgGeneral.power;
         const masterPower = master.power;
         const winChance = Math.max(8, Math.min(85, 45 + (traineePower - masterPower) * 0.45));
@@ -4788,10 +4823,10 @@
         gainExp(activeRpgGeneral.name, expGain);
 
         if (!hasSkill && (traineeWins || activeRpgGeneral.masteries[masterName] >= 60)) {
-            activeRpgGeneral.skills.push(skillName);
-            activeRpgGeneral.masteredSkills.push(skillName);
+            // 師承技能只進入拜師學藝欄位 masteredSkills，不再放入已習得技能欄 skills。
+            if (!activeRpgGeneral.masteredSkills.includes(skillName)) activeRpgGeneral.masteredSkills.push(skillName);
             activeRpgGeneral.skillPoints += 1;
-            battleLog.innerHTML += `<span style="color:#ffffff; font-weight:bold; font-size:18px; text-shadow:0 0 12px #ffd700;">🌟【師承覺醒】${activeRpgGeneral.name} 領悟 ${masterName} 真傳：專屬技能【${skillName}】！額外獲得 1 點技能點！</span><br>`;
+            battleLog.innerHTML += `<span style="color:#ffffff; font-weight:bold; font-size:18px; text-shadow:0 0 12px #ffd700;">🌟【師承覺醒】${activeRpgGeneral.name} 領悟 ${masterName} 真傳：專屬技能【${skillName}】！此技能已收錄於【拜師學藝】欄位，額外獲得 1 點技能點！</span><br>`;
         } else if (hasSkill) {
             battleLog.innerHTML += `<span style="color:#aaa;">📜【溫故知新】已掌握【${skillName}】，本次切磋轉為純經驗修煉。</span><br>`;
         } else {
@@ -4800,6 +4835,7 @@
         }
 
         // 靜默封存，不彈出保存提示，避免每次拜師都打斷流程。
+        normalizeRpgSkillBuckets(activeRpgGeneral);
         let savedData = JSON.parse(localStorage.getItem('rpgGenerals')) || {};
         savedData[activeRpgGeneral.name] = activeRpgGeneral;
         localStorage.setItem('rpgGenerals', JSON.stringify(savedData));
