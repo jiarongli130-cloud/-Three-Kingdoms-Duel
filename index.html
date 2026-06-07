@@ -465,6 +465,75 @@
         }
         @media (max-width: 760px) { .wargame-grid { grid-template-columns: 1fr; } }
 
+
+        /* ==============================================================
+           🏷️ 稱號系統＋擂台連勝獎勵 強化版
+           ============================================================== */
+        .title-rarity-common {
+            border-color:#00ffff !important;
+            color:#00ffff !important;
+            text-shadow:0 0 5px #00ffff !important;
+        }
+        .title-rarity-rare {
+            border-color:#00ff41 !important;
+            color:#00ff41 !important;
+            text-shadow:0 0 7px #00ff41 !important;
+            background:rgba(0,255,65,0.08) !important;
+        }
+        .title-rarity-epic {
+            border-color:#c084ff !important;
+            color:#c084ff !important;
+            text-shadow:0 0 8px #8a2be2 !important;
+            background:rgba(138,43,226,0.10) !important;
+        }
+        .title-rarity-legend {
+            border-color:#ffd700 !important;
+            color:#ffd700 !important;
+            text-shadow:0 0 10px #ffd700, 0 0 18px #ff8c00 !important;
+            background:rgba(255,215,0,0.12) !important;
+        }
+        .title-rarity-myth {
+            border-color:#ff3131 !important;
+            color:#fff !important;
+            text-shadow:0 0 8px #ff3131, 0 0 18px #ff00ff, 0 0 28px #ffd700 !important;
+            background:linear-gradient(90deg, rgba(255,49,49,0.18), rgba(138,43,226,0.16), rgba(255,215,0,0.14)) !important;
+            animation:no1FrameGlow 1s ease-in-out infinite alternate;
+        }
+        .streak-reward-table {
+            border:1px solid #333;
+            background:rgba(0,0,0,0.45);
+            padding:8px;
+            margin-top:8px;
+            border-radius:6px;
+        }
+        .streak-reward-row {
+            border-bottom:1px solid #222;
+            padding:5px 0;
+            color:#ddd;
+            font-size:13px;
+        }
+        .streak-reward-row.done {
+            color:#00ff41;
+            text-shadow:0 0 5px #00ff41;
+            font-weight:bold;
+        }
+        .streak-stage-label {
+            display:inline-block;
+            border:1px solid #ffd700;
+            color:#ffd700;
+            border-radius:5px;
+            padding:1px 6px;
+            margin-left:4px;
+            font-size:12px;
+            text-shadow:0 0 6px #ffd700;
+            background:rgba(255,215,0,0.08);
+        }
+        .arena-streak-3 { color:#00ffff; text-shadow:0 0 5px #00ffff; }
+        .arena-streak-5 { color:#00ff41; text-shadow:0 0 6px #00ff41; }
+        .arena-streak-10 { color:#ffd700; text-shadow:0 0 8px #ffd700; }
+        .arena-streak-20 { color:#ff8c00; text-shadow:0 0 10px #ff8c00; }
+        .arena-streak-50 { color:#fff; text-shadow:0 0 8px #ff3131, 0 0 18px #ffd700; animation:no1SparklePulse .9s ease-in-out infinite alternate; }
+
         .firebase-off { color: #aaa; }
         .firebase-on { color: #00ff41; text-shadow: 0 0 5px #00ff41; }
         @media (max-width: 760px) { .public-warroom-grid { grid-template-columns: 1fr; } }
@@ -5937,8 +6006,9 @@ function cyberRefreshArenaUI() {
                     <div class="arena-champion-meta">
                         武力 ${cyberEscapeHtml(state.champion.power)} ｜ ${cyberEscapeHtml(state.champion.rank || '自創武將')}
                     </div>
-                    <div class="arena-champion-meta streak-glow">
+                    <div class="arena-champion-meta streak-glow ${cyberGetStreakClass(((state.scores || {})[state.champion.name] || {}).currentStreak || 0)}">
                         目前連勝 ${((state.scores || {})[state.champion.name] || {}).currentStreak || 0}｜最高連勝 ${((state.scores || {})[state.champion.name] || {}).bestStreak || 0}
+                        ${cyberGetStreakStage(((state.scores || {})[state.champion.name] || {}).currentStreak || 0) ? `<span class="streak-stage-label">${cyberGetStreakStage(((state.scores || {})[state.champion.name] || {}).currentStreak || 0).streak}連賞</span>` : ''}
                     </div>
                     <div style="font-size:12px; color:#bbb; margin-top:6px;">
                         勝者繼續留場，直到被下一位挑戰者擊敗。
@@ -5968,7 +6038,7 @@ function cyberRefreshArenaUI() {
                 return `
                     <div class="rank-row rank-no1-skin">
                         <span class="rank-no1-text">
-                            🏆 第 ${idx + 1} 名｜${cyberEscapeHtml(cyberGetHeroTitlePrefix(p.name))}${cyberEscapeHtml(p.name)}｜積分 ${p.score || 0}｜勝 ${p.win || 0}｜敗 ${p.lose || 0}｜連勝 ${p.currentStreak || 0}｜最高 ${p.bestStreak || 0}｜出戰 ${p.fights || 0}${cdText}
+                            🏆 第 ${idx + 1} 名｜${cyberEscapeHtml(cyberGetHeroTitlePrefix(p.name))}${cyberEscapeHtml(p.name)}｜積分 ${p.score || 0}｜勝 ${p.win || 0}｜敗 ${p.lose || 0}｜連勝 <span class="${cyberGetStreakClass(p.currentStreak || 0)}">${p.currentStreak || 0}</span>｜最高 ${p.bestStreak || 0}｜出戰 ${p.fights || 0}${cdText}
                         </span>
                         ${isChampion ? '<span class="rank-champion-badge">｜⚔️ 現任擂主</span>' : ''}
                     </div>
@@ -5981,7 +6051,7 @@ function cyberRefreshArenaUI() {
                 <div class="${cls}">
                     第 ${idx + 1} 名｜${cyberEscapeHtml(cyberGetHeroTitlePrefix(p.name))}${cyberEscapeHtml(p.name)}
                     ${isChampion ? '<span class="rank-champion-badge">｜⚔️ 現任擂主</span>' : ''}
-                    ｜積分 ${p.score || 0}｜勝 ${p.win || 0}｜敗 ${p.lose || 0}｜連勝 ${p.currentStreak || 0}｜最高 ${p.bestStreak || 0}｜出戰 ${p.fights || 0}${cdText}
+                    ｜積分 ${p.score || 0}｜勝 ${p.win || 0}｜敗 ${p.lose || 0}｜連勝 <span class="${cyberGetStreakClass(p.currentStreak || 0)}">${p.currentStreak || 0}</span>｜最高 ${p.bestStreak || 0}｜出戰 ${p.fights || 0}${cdText}
                 </div>
             `;
         }).join('') : '<span style="color:#777;">尚無擂台排名，第一場戰鬥後自動建立。</span>';
@@ -6000,16 +6070,69 @@ function cyberRefreshArenaUI() {
     const CYBER_LEGEND_HALL_KEY = 'cyberLegendHall_v1';
 
     const CYBER_TITLE_CATALOG = {
-        "初登擂台": "第一次參與公開擂台。",
-        "十勝武者": "公開擂台累計勝利 10 場。",
-        "百戰修羅": "公開擂台累計出戰 100 場。",
-        "萬人敵": "公開擂台最高連勝達 10 場。",
-        "不敗擂主": "公開擂台最高連勝達 20 場。",
-        "弒師者": "拜師切磋中擊敗任一師傅。",
-        "師門百鍊": "拜師切磋累計 100 次。",
-        "弒魔先鋒": "世界 Boss 單日累計傷害達 3000。",
-        "封神留名": "名字進入封神榜紀錄館。"
+        "初登擂台": { desc: "第一次參與公開擂台。", rarity: "common" },
+        "三連武者": { desc: "公開擂台目前連勝達 3 場。", rarity: "common" },
+        "五連豪傑": { desc: "公開擂台目前連勝達 5 場。", rarity: "rare" },
+        "十勝武者": { desc: "公開擂台累計勝利 10 場。", rarity: "rare" },
+        "百戰修羅": { desc: "公開擂台累計出戰 100 場。", rarity: "epic" },
+        "萬人敵": { desc: "公開擂台最高連勝達 10 場。", rarity: "epic" },
+        "不敗擂主": { desc: "公開擂台最高連勝達 20 場。", rarity: "legend" },
+        "天下擂王": { desc: "公開擂台最高連勝達 50 場。", rarity: "myth" },
+        "弒師者": { desc: "拜師切磋中擊敗任一師傅。", rarity: "epic" },
+        "師門百鍊": { desc: "拜師切磋累計 100 次。", rarity: "legend" },
+        "弒魔先鋒": { desc: "世界 Boss 單日累計傷害達 3000。", rarity: "epic" },
+        "封神留名": { desc: "名字進入封神榜紀錄館。", rarity: "legend" }
     };
+
+    const CYBER_STREAK_REWARDS = [
+        { streak: 3, title: "三連武者", label: "小連勝公告＋稱號【三連武者】", bonusScore: 1 },
+        { streak: 5, title: "五連豪傑", label: "連勝光環＋稱號【五連豪傑】", bonusScore: 2 },
+        { streak: 10, title: "萬人敵", label: "全頻公告＋稱號【萬人敵】", bonusScore: 5 },
+        { streak: 20, title: "不敗擂主", label: "封神榜留名＋稱號【不敗擂主】", bonusScore: 10 },
+        { streak: 50, title: "天下擂王", label: "神話級封神紀錄＋稱號【天下擂王】", bonusScore: 30 }
+    ];
+
+    function cyberGetTitleInfo(title) {
+        const raw = CYBER_TITLE_CATALOG[title];
+        if (!raw) return { desc: "", rarity: "common" };
+        return typeof raw === 'string' ? { desc: raw, rarity: "common" } : raw;
+    }
+
+    function cyberGetTitleClass(title) {
+        return `title-rarity-${cyberGetTitleInfo(title).rarity || 'common'}`;
+    }
+
+    function cyberGetStreakStage(streak) {
+        let stage = null;
+        CYBER_STREAK_REWARDS.forEach(r => {
+            if (streak >= r.streak) stage = r;
+        });
+        return stage;
+    }
+
+    function cyberGetStreakClass(streak) {
+        if (streak >= 50) return 'arena-streak-50';
+        if (streak >= 20) return 'arena-streak-20';
+        if (streak >= 10) return 'arena-streak-10';
+        if (streak >= 5) return 'arena-streak-5';
+        if (streak >= 3) return 'arena-streak-3';
+        return '';
+    }
+
+    function cyberApplyStreakReward(name, scoreObj) {
+        if (!name || !scoreObj) return;
+        if (!scoreObj.claimedStreakRewards) scoreObj.claimedStreakRewards = {};
+
+        CYBER_STREAK_REWARDS.forEach(r => {
+            if ((scoreObj.currentStreak || 0) >= r.streak && !scoreObj.claimedStreakRewards[r.streak]) {
+                scoreObj.claimedStreakRewards[r.streak] = true;
+                scoreObj.score = (scoreObj.score || 0) + (r.bonusScore || 0);
+                cyberAwardTitle(name, r.title, true);
+                cyberAddLegendRecord('擂台連勝獎勵', `${name} 達成 ${r.streak} 連勝，獲得 ${r.label}，額外積分 +${r.bonusScore || 0}`, r.streak);
+                cyberSendSystemChat(`【擂台連勝獎勵】${name} 達成 ${r.streak} 連勝，獲得 ${r.label}，額外積分 +${r.bonusScore || 0}！`);
+            }
+        });
+    }
 
     function cyberTodayKey() {
         const d = new Date();
@@ -6295,8 +6418,12 @@ function cyberRefreshArenaUI() {
         if ((scoreObj.fights || 0) >= 1) cyberAwardTitle(name, '初登擂台', true);
         if ((scoreObj.win || 0) >= 10) cyberAwardTitle(name, '十勝武者', true);
         if ((scoreObj.fights || 0) >= 100) cyberAwardTitle(name, '百戰修羅', true);
+        if ((scoreObj.bestStreak || 0) >= 3) cyberAwardTitle(name, '三連武者', true);
+        if ((scoreObj.bestStreak || 0) >= 5) cyberAwardTitle(name, '五連豪傑', true);
         if ((scoreObj.bestStreak || 0) >= 10) cyberAwardTitle(name, '萬人敵', true);
         if ((scoreObj.bestStreak || 0) >= 20) cyberAwardTitle(name, '不敗擂主', true);
+        if ((scoreObj.bestStreak || 0) >= 50) cyberAwardTitle(name, '天下擂王', true);
+        cyberApplyStreakReward(name, scoreObj);
     }
 
     function cyberUpdateTitleAchievementsFromMaster(name, wonMaster = false) {
@@ -6339,15 +6466,34 @@ function cyberRefreshArenaUI() {
         const titleSel = document.getElementById('titleSelect');
         if (titleBox) {
             const titles = heroMeta.titles || [];
+            const currentTitleHtml = heroMeta.currentTitle
+                ? `<span class="title-chip current ${cyberGetTitleClass(heroMeta.currentTitle)}">【${cyberEscapeHtml(heroMeta.currentTitle)}】</span><br><span style="color:#aaa; font-size:12px;">${cyberEscapeHtml(cyberGetTitleInfo(heroMeta.currentTitle).desc)}</span>`
+                : '尚未裝備稱號';
+
             titleBox.innerHTML = `
                 <div class="title-row">目前武將：<span style="color:#00ff41; font-weight:bold;">${cyberEscapeHtml(name)}</span></div>
-                <div class="title-row">目前稱號：${heroMeta.currentTitle ? `<span class="title-chip current">【${cyberEscapeHtml(heroMeta.currentTitle)}】</span>` : '尚未裝備稱號'}</div>
-                <div class="title-row">${titles.length ? titles.map(t => `<span class="title-chip ${t === heroMeta.currentTitle ? 'current' : ''}">【${cyberEscapeHtml(t)}】</span>`).join('') : '尚未取得稱號。可透過擂台、拜師、世界 Boss 取得。'}</div>
+                <div class="title-row">目前稱號：${currentTitleHtml}</div>
+                <div class="title-row">
+                    ${titles.length ? titles.map(t => {
+                        const info = cyberGetTitleInfo(t);
+                        return `<span class="title-chip ${cyberGetTitleClass(t)} ${t === heroMeta.currentTitle ? 'current' : ''}" title="${cyberEscapeHtml(info.desc)}">【${cyberEscapeHtml(t)}】</span>`;
+                    }).join('') : '尚未取得稱號。可透過擂台、拜師、世界 Boss 取得。'}
+                </div>
+                <div class="streak-reward-table">
+                    <strong style="color:#ffd700;">擂台連勝獎勵表</strong>
+                    ${CYBER_STREAK_REWARDS.map(r => {
+                        const done = (heroMeta.bestStreak || 0) >= r.streak;
+                        return `<div class="streak-reward-row ${done ? 'done' : ''}">${done ? '✅' : '⬜'} ${r.streak} 連勝｜${cyberEscapeHtml(r.label)}｜額外積分 +${r.bonusScore}</div>`;
+                    }).join('')}
+                </div>
             `;
         }
         if (titleSel) {
             titleSel.innerHTML = '';
-            (heroMeta.titles || []).forEach(t => titleSel.add(new Option(`【${t}】${CYBER_TITLE_CATALOG[t] || ''}`, t)));
+            (heroMeta.titles || []).forEach(t => {
+                const info = cyberGetTitleInfo(t);
+                titleSel.add(new Option(`【${t}】${info.desc}`, t));
+            });
             if (heroMeta.currentTitle && [...titleSel.options].some(o => o.value === heroMeta.currentTitle)) titleSel.value = heroMeta.currentTitle;
         }
 
