@@ -534,6 +534,85 @@
         .arena-streak-20 { color:#ff8c00; text-shadow:0 0 10px #ff8c00; }
         .arena-streak-50 { color:#fff; text-shadow:0 0 8px #ff3131, 0 0 18px #ffd700; animation:no1SparklePulse .9s ease-in-out infinite alternate; }
 
+
+        /* ==============================================================
+           🏯 門派軍團＋血仇復仇＋奇遇事件 三大玩法
+           ============================================================== */
+        .faction-war-panel {
+            border: 2px solid #00bfff;
+            padding: 15px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, rgba(0,191,255,0.12), rgba(255,215,0,0.06), rgba(255,49,49,0.05));
+            box-shadow: 0 0 18px rgba(0,191,255,0.18);
+            display: block;
+            margin-bottom: 20px;
+        }
+        .faction-war-panel h3 {
+            margin: 0 0 8px 0;
+            color: #00bfff;
+            text-shadow: 0 0 8px #00bfff;
+        }
+        .faction-war-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 14px;
+        }
+        .faction-war-box {
+            border: 1px solid #333;
+            background: rgba(0,0,0,0.68);
+            padding: 10px;
+            border-radius: 6px;
+            min-height: 165px;
+        }
+        .faction-war-box h4 {
+            margin: 0 0 8px 0;
+            color: #ffd700;
+            text-shadow: 0 0 5px rgba(255,215,0,0.45);
+        }
+        .faction-row, .revenge-row, .adventure-row {
+            border-bottom: 1px solid #222;
+            padding: 6px 0;
+            color: #ddd;
+            font-size: 13px;
+            line-height: 1.55;
+            word-break: break-word;
+        }
+        .faction-tag {
+            display:inline-block;
+            border:1px solid #00bfff;
+            color:#00bfff;
+            border-radius:999px;
+            padding:2px 8px;
+            margin:2px;
+            font-size:12px;
+            background:rgba(0,191,255,0.08);
+            text-shadow:0 0 5px #00bfff;
+        }
+        .faction-tag.shu { border-color:#00ff41; color:#00ff41; text-shadow:0 0 6px #00ff41; background:rgba(0,255,65,0.08); }
+        .faction-tag.wei { border-color:#4da6ff; color:#4da6ff; text-shadow:0 0 6px #4da6ff; background:rgba(77,166,255,0.08); }
+        .faction-tag.wu { border-color:#ff4d4d; color:#ff4d4d; text-shadow:0 0 6px #ff4d4d; background:rgba(255,77,77,0.08); }
+        .faction-tag.qx { border-color:#ffd700; color:#ffd700; text-shadow:0 0 6px #ffd700; background:rgba(255,215,0,0.08); }
+        .faction-tag.asura { border-color:#ff00ff; color:#ff00ff; text-shadow:0 0 7px #ff00ff; background:rgba(255,0,255,0.08); }
+        .revenge-hot {
+            color:#ff3131;
+            font-weight:bold;
+            text-shadow:0 0 6px #ff3131;
+        }
+        .revenge-ready {
+            color:#ffd700;
+            font-weight:bold;
+            text-shadow:0 0 8px #ffd700;
+        }
+        .adventure-card {
+            border:1px solid #8a2be2;
+            border-radius:6px;
+            padding:8px;
+            margin-top:6px;
+            background:linear-gradient(135deg, rgba(138,43,226,0.13), rgba(0,255,255,0.06));
+            box-shadow:0 0 10px rgba(138,43,226,0.18);
+        }
+        @media (max-width: 900px) { .faction-war-grid { grid-template-columns: 1fr; } }
+
         .firebase-off { color: #aaa; }
         .firebase-on { color: #00ff41; text-shadow: 0 0 5px #00ff41; }
         @media (max-width: 760px) { .public-warroom-grid { grid-template-columns: 1fr; } }
@@ -768,6 +847,36 @@
                 <h4>🏛️ 封神榜紀錄館</h4>
                 <div id="legendHallBoard" style="max-height:260px; overflow-y:auto;">封神榜載入中...</div>
                 <button onclick="cyberRefreshEnhancedGameUI()" style="margin-top:8px; border-color:#8a2be2; color:#c084ff;">刷新紀錄館</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 門派軍團＋復仇＋奇遇事件系統 -->
+    <div class="controls faction-war-panel" id="factionWarPanel">
+        <h3>🏯 門派軍團・血仇復仇・江湖奇遇系統</h3>
+        <p style="font-size:12px; color:#aaa; margin:0 0 12px 0;">
+            自創武將可加入軍團，擂台勝敗會累積軍團積分；敗給對手會結下血仇，再次擊敗可觸發復仇獎勵；戰鬥、拜師、Boss 後有機率觸發奇遇。
+        </p>
+        <div class="faction-war-grid">
+            <div class="faction-war-box">
+                <h4>🏯 門派 / 軍團</h4>
+                <div id="factionMyBoard">軍團資料載入中...</div>
+                <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+                    <select id="factionSelect" style="flex:2; min-width:180px; border-color:#00bfff; color:#00bfff;"></select>
+                    <button onclick="cyberJoinSelectedFaction()" style="flex:1; min-width:100px; border-color:#ffd700; color:#ffd700;">加入軍團</button>
+                </div>
+                <div id="factionRankBoard" style="max-height:180px; overflow-y:auto; margin-top:8px;">軍團排行榜載入中...</div>
+            </div>
+            <div class="faction-war-box">
+                <h4>🩸 血仇 / 復仇</h4>
+                <div id="revengeBoard">復仇資料載入中...</div>
+                <button onclick="cyberRefreshThreeSystemsUI()" style="margin-top:8px; border-color:#ff3131; color:#ff3131;">刷新血仇榜</button>
+            </div>
+            <div class="faction-war-box">
+                <h4>🌌 江湖奇遇</h4>
+                <div id="adventureBoard">奇遇資料載入中...</div>
+                <button onclick="cyberTryAdventure('manual')" style="margin-top:8px; border-color:#8a2be2; color:#c084ff;">試試今日運勢</button>
             </div>
         </div>
     </div>
@@ -5034,6 +5143,7 @@
         gainExp(activeRpgGeneral.name, expGain);
         cyberDailyAdd('masterTrain', 1, activeRpgGeneral.name);
         cyberUpdateTitleAchievementsFromMaster(activeRpgGeneral.name, traineeWins);
+        cyberTryAdventure('master', activeRpgGeneral.name);
 
         if (!hasSkill && (traineeWins || activeRpgGeneral.masteries[masterName] >= 60)) {
             // 師承技能只進入拜師學藝欄位 masteredSkills，不再放入已習得技能欄 skills。
@@ -5863,14 +5973,27 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         cyberUpdateTitleAchievementsFromArena(name, s);
         cyberSaveArenaState(state);
         cyberArenaLog(`👑 ${name} 登上公開擂台，成為第一任擂主！`);
+        cyberAddFactionResult(name, 'win', 1);
+        cyberTryAdventure('battle', name);
         cyberRefreshEnhancedGameUI();
+        cyberRefreshThreeSystemsUI();
     }
 
     function cyberSimArenaDuel(champion, challenger) {
         const a = { ...champion, hp: 120 + Math.floor((champion.power || 1) / 4) };
         const b = { ...challenger, hp: 120 + Math.floor((challenger.power || 1) / 4) };
+
+        // 復仇戰力加成：若其中一方對另一方有血仇，怨氣會轉成臨時武力加成。
+        // 最高約 +15% 武力，只影響這場公開擂台，不會永久改武力。
+        const revengeBoostA = cyberGetRevengeBoost(a.name, b.name);
+        const revengeBoostB = cyberGetRevengeBoost(b.name, a.name);
+        if (revengeBoostA > 0) a.power = Math.floor((a.power || 1) * (1 + revengeBoostA));
+        if (revengeBoostB > 0) b.power = Math.floor((b.power || 1) * (1 + revengeBoostB));
+
         const maxA = a.hp, maxB = b.hp;
         const logs = [];
+        if (revengeBoostA > 0) logs.push(`🩸【血仇加成】${a.name} 怨氣燃燒，本場臨時武力 +${Math.round(revengeBoostA * 100)}%！`);
+        if (revengeBoostB > 0) logs.push(`🩸【血仇加成】${b.name} 怨氣燃燒，本場臨時武力 +${Math.round(revengeBoostB * 100)}%！`);
         let round = 1;
         while (a.hp > 0 && b.hp > 0 && round <= 80) {
             const atkA = Math.max(3, Math.floor((a.power || 1) / 18) + Math.floor(Math.random() * 9));
@@ -5936,6 +6059,13 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         cyberDailyAdd('arenaFight', 1, result.loser.name);
         cyberUpdateTitleAchievementsFromArena(result.winner.name, winScore);
         cyberUpdateTitleAchievementsFromArena(result.loser.name, loseScore);
+
+        // 門派軍團積分、血仇復仇、奇遇事件。
+        cyberAddFactionResult(result.winner.name, 'win', 3);
+        cyberAddFactionResult(result.loser.name, 'lose', 1);
+        cyberRecordArenaRevengeResult(result.winner.name, result.loser.name);
+        cyberTryAdventure('battle', result.winner.name);
+        cyberTryAdventure('battle', result.loser.name);
 
         state.cooldowns[result.loser.name] = Date.now() + CYBER_COOLDOWN_MS;
         state.champion = result.winner.name === challenger.name ? challenger : state.champion;
@@ -6003,6 +6133,7 @@ function cyberRefreshArenaUI() {
                 <div class="arena-champion-skin">
                     <div class="arena-champion-title">👑 目前擂台主 👑</div>
                     <div class="arena-champion-name">${cyberEscapeHtml(cyberGetHeroTitlePrefix(state.champion.name))}${cyberEscapeHtml(state.champion.name)}</div>
+                    <div>${cyberGetHeroFactionTag(state.champion.name)}</div>
                     <div class="arena-champion-meta">
                         武力 ${cyberEscapeHtml(state.champion.power)} ｜ ${cyberEscapeHtml(state.champion.rank || '自創武將')}
                     </div>
@@ -6038,7 +6169,7 @@ function cyberRefreshArenaUI() {
                 return `
                     <div class="rank-row rank-no1-skin">
                         <span class="rank-no1-text">
-                            🏆 第 ${idx + 1} 名｜${cyberEscapeHtml(cyberGetHeroTitlePrefix(p.name))}${cyberEscapeHtml(p.name)}｜積分 ${p.score || 0}｜勝 ${p.win || 0}｜敗 ${p.lose || 0}｜連勝 <span class="${cyberGetStreakClass(p.currentStreak || 0)}">${p.currentStreak || 0}</span>｜最高 ${p.bestStreak || 0}｜出戰 ${p.fights || 0}${cdText}
+                            🏆 第 ${idx + 1} 名｜${cyberEscapeHtml(cyberGetHeroTitlePrefix(p.name))}${cyberEscapeHtml(p.name)} ${cyberGetHeroFactionTag(p.name)}｜積分 ${p.score || 0}｜勝 ${p.win || 0}｜敗 ${p.lose || 0}｜連勝 <span class="${cyberGetStreakClass(p.currentStreak || 0)}">${p.currentStreak || 0}</span>｜最高 ${p.bestStreak || 0}｜出戰 ${p.fights || 0}${cdText}
                         </span>
                         ${isChampion ? '<span class="rank-champion-badge">｜⚔️ 現任擂主</span>' : ''}
                     </div>
@@ -6049,7 +6180,7 @@ function cyberRefreshArenaUI() {
 
             return `
                 <div class="${cls}">
-                    第 ${idx + 1} 名｜${cyberEscapeHtml(cyberGetHeroTitlePrefix(p.name))}${cyberEscapeHtml(p.name)}
+                    第 ${idx + 1} 名｜${cyberEscapeHtml(cyberGetHeroTitlePrefix(p.name))}${cyberEscapeHtml(p.name)} ${cyberGetHeroFactionTag(p.name)}
                     ${isChampion ? '<span class="rank-champion-badge">｜⚔️ 現任擂主</span>' : ''}
                     ｜積分 ${p.score || 0}｜勝 ${p.win || 0}｜敗 ${p.lose || 0}｜連勝 <span class="${cyberGetStreakClass(p.currentStreak || 0)}">${p.currentStreak || 0}</span>｜最高 ${p.bestStreak || 0}｜出戰 ${p.fights || 0}${cdText}
                 </div>
@@ -6081,7 +6212,9 @@ function cyberRefreshArenaUI() {
         "弒師者": { desc: "拜師切磋中擊敗任一師傅。", rarity: "epic" },
         "師門百鍊": { desc: "拜師切磋累計 100 次。", rarity: "legend" },
         "弒魔先鋒": { desc: "世界 Boss 單日累計傷害達 3000。", rarity: "epic" },
-        "封神留名": { desc: "名字進入封神榜紀錄館。", rarity: "legend" }
+        "封神留名": { desc: "名字進入封神榜紀錄館。", rarity: "legend" },
+        "雪恥者": { desc: "復仇戰中擊敗宿敵，洗去血仇。", rarity: "epic" },
+        "奇遇之人": { desc: "觸發修羅入夢等稀有江湖奇遇。", rarity: "rare" }
     };
 
     const CYBER_STREAK_REWARDS = [
@@ -6378,6 +6511,8 @@ function cyberRefreshArenaUI() {
         cyberSaveGameMeta(meta);
 
         cyberDailyAdd('bossDamage', damage, name);
+        cyberAddFactionResult(name, 'boss', Math.floor(damage / 100));
+        cyberTryAdventure('boss', name);
 
         if (state.damageBoard[name] >= 3000) cyberAwardTitle(name, '弒魔先鋒', true);
 
@@ -6525,12 +6660,327 @@ function cyberRefreshArenaUI() {
         }
     }
 
+
+    // ==============================================================
+    // 🏯 門派軍團＋血仇復仇＋奇遇事件系統
+    // ==============================================================
+    const CYBER_FACTION_KEY = 'cyberFactionWar_v1';
+    const CYBER_REVENGE_KEY = 'cyberRevengeLedger_v1';
+    const CYBER_ADVENTURE_KEY = 'cyberAdventureLog_v1';
+    const CYBER_ADVENTURE_COOLDOWN_KEY = 'cyberAdventureCooldown_v1';
+
+    const CYBER_FACTIONS = {
+        shu: { name: '蜀漢龍營', icon: '🐉', cls: 'shu', desc: '忠義龍魂，擅長守擂與長期連勝。' },
+        wei: { name: '曹魏虎營', icon: '🐯', cls: 'wei', desc: '霸府虎威，擅長排行榜積分累積。' },
+        wu: { name: '東吳鳳營', icon: '🔥', cls: 'wu', desc: '江東烈鳳，擅長復仇與反擊。' },
+        qx: { name: '群雄魔營', icon: '⚔️', cls: 'qx', desc: '亂世群雄，擅長奇遇爆發。' },
+        asura: { name: '修羅殿', icon: '😈', cls: 'asura', desc: '修羅惡業，擅長世界 Boss 傷害。' }
+    };
+
+    function cyberGetFactionState() {
+        const state = cyberReadJson(CYBER_FACTION_KEY, { heroes: {}, factions: {} });
+        if (!state.heroes) state.heroes = {};
+        if (!state.factions) state.factions = {};
+        Object.keys(CYBER_FACTIONS).forEach(fid => {
+            if (!state.factions[fid]) {
+                state.factions[fid] = { score: 0, wins: 0, losses: 0, fights: 0, members: 0, bossDamage: 0, revengeWins: 0 };
+            }
+        });
+        return state;
+    }
+
+    function cyberSaveFactionState(state) {
+        cyberWriteJson(CYBER_FACTION_KEY, state);
+    }
+
+    function cyberEnsureFactionOptions() {
+        const sel = document.getElementById('factionSelect');
+        if (!sel) return;
+        const current = sel.value;
+        sel.innerHTML = '';
+        Object.entries(CYBER_FACTIONS).forEach(([fid, f]) => {
+            sel.add(new Option(`${f.icon} ${f.name}｜${f.desc}`, fid));
+        });
+        if ([...sel.options].some(o => o.value === current)) sel.value = current;
+    }
+
+    function cyberGetHeroFaction(name) {
+        const state = cyberGetFactionState();
+        return state.heroes[name] || '';
+    }
+
+    function cyberGetHeroFactionTag(name) {
+        const fid = cyberGetHeroFaction(name);
+        const f = CYBER_FACTIONS[fid];
+        if (!f) return '';
+        return `<span class="faction-tag ${f.cls}">${f.icon}${cyberEscapeHtml(f.name)}</span>`;
+    }
+
+    function cyberJoinSelectedFaction() {
+        const name = cyberGetActiveHeroName();
+        const sel = document.getElementById('factionSelect');
+        if (!name || !sel || !sel.value) { alert('請先選定自創武將並選擇軍團。'); return; }
+
+        const state = cyberGetFactionState();
+        const oldFaction = state.heroes[name];
+        state.heroes[name] = sel.value;
+
+        // 重算成員數，避免重複加入灌水。
+        Object.keys(state.factions).forEach(fid => state.factions[fid].members = 0);
+        Object.values(state.heroes).forEach(fid => {
+            if (state.factions[fid]) state.factions[fid].members += 1;
+        });
+
+        cyberSaveFactionState(state);
+        const f = CYBER_FACTIONS[sel.value];
+        cyberAddLegendRecord('軍團', `${name} 加入 ${f.name}`, 6);
+        cyberSendSystemChat(`【軍團入盟】${name} 加入 ${f.icon}${f.name}！`);
+        alert(`${name} 已加入 ${f.name}！`);
+        cyberRefreshThreeSystemsUI();
+        cyberRefreshArenaUI();
+    }
+
+    function cyberAddFactionResult(name, resultType, scoreDelta = 0) {
+        if (!name) return;
+        const state = cyberGetFactionState();
+        const fid = state.heroes[name];
+        if (!fid || !state.factions[fid]) return;
+
+        const f = state.factions[fid];
+        f.score = (f.score || 0) + scoreDelta;
+        f.fights = (f.fights || 0) + 1;
+        if (resultType === 'win') f.wins = (f.wins || 0) + 1;
+        if (resultType === 'lose') f.losses = (f.losses || 0) + 1;
+        if (resultType === 'revenge') f.revengeWins = (f.revengeWins || 0) + 1;
+        if (resultType === 'boss') f.bossDamage = (f.bossDamage || 0) + scoreDelta;
+
+        cyberSaveFactionState(state);
+    }
+
+    function cyberGetRevengeLedger() {
+        const ledger = cyberReadJson(CYBER_REVENGE_KEY, { heroes: {} });
+        if (!ledger.heroes) ledger.heroes = {};
+        return ledger;
+    }
+
+    function cyberSaveRevengeLedger(ledger) {
+        cyberWriteJson(CYBER_REVENGE_KEY, ledger);
+    }
+
+    function cyberEnsureRevengeHero(ledger, name) {
+        if (!ledger.heroes[name]) ledger.heroes[name] = { enemies: {}, revengeWins: 0, revengeLosses: 0 };
+        if (!ledger.heroes[name].enemies) ledger.heroes[name].enemies = {};
+        return ledger.heroes[name];
+    }
+
+    function cyberRecordArenaRevengeResult(winnerName, loserName) {
+        if (!winnerName || !loserName || winnerName === loserName) return;
+
+        const ledger = cyberGetRevengeLedger();
+        const winner = cyberEnsureRevengeHero(ledger, winnerName);
+        const loser = cyberEnsureRevengeHero(ledger, loserName);
+
+        // 敗者對勝者產生血仇。
+        if (!loser.enemies[winnerName]) {
+            loser.enemies[winnerName] = { hate: 0, losses: 0, revengeWins: 0, lastLost: 0 };
+        }
+        loser.enemies[winnerName].hate = Math.min(9, (loser.enemies[winnerName].hate || 0) + 1);
+        loser.enemies[winnerName].losses = (loser.enemies[winnerName].losses || 0) + 1;
+        loser.enemies[winnerName].lastLost = Date.now();
+
+        // 如果勝者原本對敗者有仇，這場就是復仇成功。
+        let revengeSuccess = false;
+        if (winner.enemies[loserName] && (winner.enemies[loserName].hate || 0) > 0) {
+            revengeSuccess = true;
+            const hate = winner.enemies[loserName].hate || 1;
+            winner.enemies[loserName].revengeWins = (winner.enemies[loserName].revengeWins || 0) + 1;
+            winner.enemies[loserName].hate = 0;
+            winner.revengeWins = (winner.revengeWins || 0) + 1;
+
+            cyberAwardTitle(winnerName, '雪恥者', true);
+            cyberAddFactionResult(winnerName, 'revenge', 4 + hate);
+            cyberAddLegendRecord('復仇', `${winnerName} 擊敗宿敵 ${loserName}，復仇成功，洗去 ${hate} 層怨氣`, 20 + hate);
+            cyberSendSystemChat(`【復仇成功】${winnerName} 擊敗宿敵 ${loserName}，血仇已雪！`);
+        }
+
+        cyberSaveRevengeLedger(ledger);
+        return revengeSuccess;
+    }
+
+    function cyberGetRevengeBoost(attackerName, defenderName) {
+        const ledger = cyberGetRevengeLedger();
+        const h = ledger.heroes && ledger.heroes[attackerName];
+        const enemy = h && h.enemies ? h.enemies[defenderName] : null;
+        if (!enemy || !enemy.hate) return 0;
+        // 怨氣越高，復仇戰越容易爆發，最多 15% 額外機率。
+        return Math.min(0.15, enemy.hate * 0.03);
+    }
+
+    function cyberGetAdventureLog() {
+        const arr = cyberReadJson(CYBER_ADVENTURE_KEY, []);
+        return Array.isArray(arr) ? arr : [];
+    }
+
+    function cyberSaveAdventureLog(arr) {
+        cyberWriteJson(CYBER_ADVENTURE_KEY, arr.slice(0, 80));
+    }
+
+    function cyberLogAdventure(name, title, desc) {
+        const arr = cyberGetAdventureLog();
+        arr.unshift({ id: `${Date.now()}_${Math.random().toString(16).slice(2)}`, name, title, desc, time: Date.now() });
+        cyberSaveAdventureLog(arr);
+    }
+
+    function cyberApplyAdventureReward(hero, reward) {
+        if (!hero || !hero.isRPG || !reward) return '';
+        let msg = [];
+
+        if (reward.stat) {
+            hero.statPoints = (hero.statPoints || 0) + reward.stat;
+            msg.push(`武力點 +${reward.stat}`);
+        }
+        if (reward.skill) {
+            hero.skillPoints = (hero.skillPoints || 0) + reward.skill;
+            msg.push(`技能點 +${reward.skill}`);
+        }
+        if (reward.power) {
+            hero.power = (hero.power || 1) + reward.power;
+            msg.push(`武力 +${reward.power}`);
+        }
+        if (reward.masterProgress && hero.masteries) {
+            const masterNames = Object.keys(masterSkillMap || {});
+            const m = masterNames[Math.floor(Math.random() * masterNames.length)];
+            hero.masteries[m] = (hero.masteries[m] || 0) + reward.masterProgress;
+            msg.push(`${m} 拜師進度 +${reward.masterProgress}`);
+        }
+        if (reward.item && typeof giveRandomItem === 'function') {
+            // 避免直接呼叫 giveRandomItem 彈太多提示；只給一點保底武力點代替。
+            hero.statPoints = (hero.statPoints || 0) + 2;
+            msg.push('奇遇寶物折算武力點 +2');
+        }
+        if (reward.title) {
+            cyberAwardTitle(hero.name, reward.title, true);
+            msg.push(`稱號【${reward.title}】`);
+        }
+
+        let savedData = JSON.parse(localStorage.getItem('rpgGenerals')) || {};
+        savedData[hero.name] = hero;
+        localStorage.setItem('rpgGenerals', JSON.stringify(savedData));
+        return msg.join('、');
+    }
+
+    function cyberTryAdventure(context = 'battle', heroName = cyberGetActiveHeroName()) {
+        const hero = generals.find(g => g.name === heroName) || activeRpgGeneral;
+        if (!hero || !hero.isRPG) {
+            if (context === 'manual') alert('請先選定或喚醒一名自創武將。');
+            return false;
+        }
+
+        const cooldowns = cyberReadJson(CYBER_ADVENTURE_COOLDOWN_KEY, {});
+        const key = `${hero.name}_${context}`;
+        const now = Date.now();
+
+        // 手動試運勢每天一次，其餘戰鬥觸發不使用長冷卻。
+        if (context === 'manual') {
+            const today = cyberTodayKey();
+            if (cooldowns[key] === today) {
+                alert('今日已經試過運勢了，明日再來！戰鬥、拜師、Boss 仍可能觸發奇遇。');
+                return false;
+            }
+            cooldowns[key] = today;
+            cyberWriteJson(CYBER_ADVENTURE_COOLDOWN_KEY, cooldowns);
+        }
+
+        const factionId = cyberGetHeroFaction(hero.name);
+        const factionBonus = factionId === 'qx' ? 0.08 : 0;
+        const baseChance = context === 'manual' ? 1 : (context === 'boss' ? 0.28 : context === 'master' ? 0.22 : 0.18);
+        if (Math.random() > baseChance + factionBonus) {
+            if (context === 'manual') alert('今日風平浪靜，暫無奇遇。');
+            return false;
+        }
+
+        const events = [
+            { title: '山中遇仙', desc: '雲霧中有老仙指點一招，心法豁然開朗。', reward: { skill: 1 } },
+            { title: '破廟得訣', desc: '殘破古廟中藏有半卷兵書，武道根基更穩。', reward: { stat: 3 } },
+            { title: '天雷淬體', desc: '雷霆入體，筋骨轟鳴，武力短時間暴漲。', reward: { power: 5 } },
+            { title: '夢中拜將', desc: '夢見古之名將演武，拜師進度大增。', reward: { masterProgress: 5 } },
+            { title: '神女賜福', desc: '花影月下，神女送來護身靈光。', reward: { stat: 1, skill: 1 } },
+            { title: '修羅入夢', desc: '血色夢境逼出殺性，若能承受便更進一步。', reward: { power: 3, title: '奇遇之人' } }
+        ];
+
+        const ev = events[Math.floor(Math.random() * events.length)];
+        const rewardText = cyberApplyAdventureReward(hero, ev.reward);
+        const fullMsg = `【奇遇事件】${hero.name} 觸發「${ev.title}」：${ev.desc} 獎勵：${rewardText || '氣運提升'}`;
+
+        cyberLogAdventure(hero.name, ev.title, `${ev.desc}｜${rewardText}`);
+        cyberAddLegendRecord('奇遇', `${hero.name} 觸發「${ev.title}」`, 8);
+        cyberSendSystemChat(fullMsg);
+
+        if (typeof battleLog !== 'undefined') {
+            battleLog.innerHTML += `<br><span style="color:#c084ff; font-weight:bold; text-shadow:0 0 8px #8a2be2;">${cyberEscapeHtml(fullMsg)}</span><br>`;
+            battleLog.scrollTop = battleLog.scrollHeight;
+        }
+        renderRpgPanel(hero);
+        updateDropdowns();
+        cyberRefreshThreeSystemsUI();
+        return true;
+    }
+
+    function cyberRefreshThreeSystemsUI() {
+        cyberEnsureFactionOptions();
+
+        const name = cyberGetActiveHeroName();
+        const factionState = cyberGetFactionState();
+        const fid = factionState.heroes[name] || '';
+        const f = CYBER_FACTIONS[fid];
+
+        const myBoard = document.getElementById('factionMyBoard');
+        if (myBoard) {
+            myBoard.innerHTML = `
+                <div class="faction-row">目前武將：<span style="color:#00ff41; font-weight:bold;">${cyberEscapeHtml(name)}</span></div>
+                <div class="faction-row">所屬軍團：${f ? `<span class="faction-tag ${f.cls}">${f.icon}${cyberEscapeHtml(f.name)}</span><br><span style="color:#aaa;">${cyberEscapeHtml(f.desc)}</span>` : '尚未加入軍團'}</div>
+            `;
+        }
+
+        const rankBoard = document.getElementById('factionRankBoard');
+        if (rankBoard) {
+            const rows = Object.entries(factionState.factions || {}).map(([id, v]) => ({ id, ...v })).sort((a,b)=>(b.score||0)-(a.score||0));
+            rankBoard.innerHTML = rows.map((r, idx) => {
+                const ff = CYBER_FACTIONS[r.id];
+                return `<div class="faction-row">#${idx+1} <span class="faction-tag ${ff.cls}">${ff.icon}${cyberEscapeHtml(ff.name)}</span><br>軍團分 ${r.score || 0}｜勝 ${r.wins || 0}｜敗 ${r.losses || 0}｜復仇 ${r.revengeWins || 0}｜成員 ${r.members || 0}</div>`;
+            }).join('');
+        }
+
+        const revengeBox = document.getElementById('revengeBoard');
+        if (revengeBox) {
+            const ledger = cyberGetRevengeLedger();
+            const h = ledger.heroes && ledger.heroes[name];
+            const enemies = h && h.enemies ? Object.entries(h.enemies).filter(([_, v]) => (v.hate || 0) > 0).sort((a,b)=>(b[1].hate||0)-(a[1].hate||0)) : [];
+            revengeBox.innerHTML = `
+                <div class="revenge-row">目前武將：<span style="color:#00ff41; font-weight:bold;">${cyberEscapeHtml(name)}</span></div>
+                <div class="revenge-row">復仇成功：<span class="revenge-ready">${h ? (h.revengeWins || 0) : 0}</span> 次</div>
+                ${enemies.length ? enemies.slice(0,8).map(([enemy, v]) => `<div class="revenge-row">宿敵：<span class="revenge-hot">${cyberEscapeHtml(enemy)}</span><br>怨氣 ${v.hate || 0}｜敗北 ${v.losses || 0} 次｜復仇加成 +${Math.round(cyberGetRevengeBoost(name, enemy)*100)}%</div>`).join('') : '<div class="revenge-row">目前沒有血仇。輸給擂台對手後會自動記錄。</div>'}
+            `;
+        }
+
+        const advBox = document.getElementById('adventureBoard');
+        if (advBox) {
+            const logs = cyberGetAdventureLog().slice(0, 8);
+            advBox.innerHTML = logs.length ? logs.map(x => {
+                const d = new Date(x.time || Date.now());
+                const stamp = `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+                return `<div class="adventure-row"><span style="color:#c084ff; font-weight:bold;">${cyberEscapeHtml(x.title)}</span>｜${cyberEscapeHtml(x.name)}<br>${cyberEscapeHtml(x.desc || '')}<br><span style="color:#777;">${stamp}</span></div>`;
+            }).join('') : '<div class="adventure-row">尚無奇遇紀錄。戰鬥、拜師、Boss 後有機率觸發。</div>';
+        }
+    }
+
     function cyberRefreshAllPublicWarroom() {
         const nickInput = document.getElementById('chatNickInput');
         if (nickInput && !nickInput.value) nickInput.value = localStorage.getItem(CYBER_NICK_KEY) || CYBER_OWNER_NAME;
         cyberRefreshChatLog();
         cyberRefreshArenaUI();
         if (typeof cyberRefreshEnhancedGameUI === 'function') cyberRefreshEnhancedGameUI();
+        if (typeof cyberRefreshThreeSystemsUI === 'function') cyberRefreshThreeSystemsUI();
     }
 
     function cyberLoadScript(src) {
@@ -6604,6 +7054,7 @@ function cyberRefreshArenaUI() {
         setInterval(cyberRefreshArenaUI, 1000);
         setInterval(cyberRefreshArenaSelect, 3000);
         setInterval(cyberRefreshEnhancedGameUI, 3000);
+        setInterval(cyberRefreshThreeSystemsUI, 3000);
     });
 
 </script>
