@@ -973,24 +973,6 @@
         }
         @media (max-width: 900px) { .family-romance-grid { grid-template-columns: 1fr; } }
 
-
-        /* ==============================================================
-           ⚔️ 亂入強敵・家族危機系統
-           ============================================================== */
-        .ambush-crisis-panel{border:2px solid #ff3131;padding:15px;border-radius:8px;background:linear-gradient(135deg,rgba(255,49,49,.14),rgba(255,215,0,.06),rgba(138,43,226,.08));box-shadow:0 0 22px rgba(255,49,49,.22);display:block;margin-bottom:20px}
-        .ambush-crisis-panel h3{margin:0 0 8px 0;color:#ff3131;text-shadow:0 0 8px #ff3131}
-        .ambush-crisis-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-        .ambush-crisis-box{border:1px solid #333;background:rgba(0,0,0,.74);padding:10px;border-radius:6px;min-height:190px}
-        .ambush-crisis-box h4{margin:0 0 8px 0;color:#ffd700;text-shadow:0 0 5px rgba(255,215,0,.55)}
-        .ambush-row,.crisis-row{border-bottom:1px solid #222;padding:6px 0;color:#ddd;font-size:13px;line-height:1.55;word-break:break-word}
-        .ambush-enemy{color:#ff3131;font-weight:bold;text-shadow:0 0 7px #ff3131}
-        .ambush-danger{color:#ffd700;font-weight:bold;text-shadow:0 0 7px #ffd700}
-        .captive-tag{display:inline-block;border:1px solid #ff69b4;color:#ffb6d9;border-radius:999px;padding:2px 8px;margin:2px;font-size:12px;background:rgba(255,105,180,.10);text-shadow:0 0 5px #ff69b4}
-        .ambush-log{max-height:260px;overflow-y:auto;background:#050505;border:1px solid #333;padding:8px;color:#ddd;font-size:13px;line-height:1.55;box-sizing:border-box}
-        .ambush-victory{color:#00ff41;font-weight:bold;text-shadow:0 0 6px #00ff41}
-        .ambush-defeat{color:#ff3131;font-weight:bold;text-shadow:0 0 6px #ff3131}
-        @media(max-width:900px){.ambush-crisis-grid{grid-template-columns:1fr}}
-
         .firebase-off { color: #aaa; }
         .firebase-on { color: #00ff41; text-shadow: 0 0 5px #00ff41; }
         @media (max-width: 760px) { .public-warroom-grid { grid-template-columns: 1fr; } }
@@ -1091,6 +1073,24 @@
             <button onclick="loadSpecificRpgGeneral()" style="border-color: #1e90ff; color: #1e90ff; flex: 1;">📂 喚醒</button>
             <button onclick="saveActiveRpgGeneral()" style="border-color: #32cd32; color: #32cd32; flex: 1;">💾 封存(依單挑選定)</button>
             <button onclick="deleteSpecificRpgGeneral()" style="border-color: #a52a2a; color: #ff3131; flex: 1;">🗑️ 徹底抹殺</button>
+        </div>
+
+        <!-- 自創武將登陸後：主動遭遇敵人單挑系統 -->
+        <div style="border:1px solid #ff3131; padding:10px; background:rgba(255,49,49,0.06); margin-top:5px; border-radius:5px;">
+            <div style="color:#ff3131; font-weight:bold; text-shadow:0 0 5px #ff3131; margin-bottom:5px;">⚠️ 自創武將登陸後・主動遭遇敵人</div>
+            <div style="font-size:12px; color:#ccc; margin-bottom:8px;">確認命格或喚醒自創武將後，有機率遭遇同級～高 3 級的敵人主動單挑；戰鬥會直接在上方 VS 單挑介面進行。</div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+                <label style="color:#ffd700; font-size:12px; min-width:90px;">遭遇機率：</label>
+                <select id="activeEncounterRateSelect" onchange="saveActiveEncounterRate()" style="flex:1; min-width:130px; border-color:#ff3131; color:#ff3131; background:#000;">
+                    <option value="none">無</option>
+                    <option value="rare">極少</option>
+                    <option value="low">少</option>
+                    <option value="mid" selected>中</option>
+                    <option value="high">多</option>
+                    <option value="veryHigh">頻繁</option>
+                </select>
+                <button onclick="forceActiveEnemyEncounter()" style="flex:1; min-width:130px; border-color:#ff8c00; color:#ff8c00; font-size:12px;">🔥 手動觸發來犯</button>
+            </div>
         </div>
 
         <div id="rpgPanel" style="display: none; border: 1px solid #ffd700; padding: 10px; background: #222; margin-top: 10px; width: 100%; box-sizing: border-box;">
@@ -1502,40 +1502,6 @@
 
     <div id="battleLog">系統待命中...請選擇將領並按下發動，或舉辦賽事。</div>
     <div class="chart-container"><canvas id="hpChart"></canvas></div>
-
-    <!-- 亂入強敵・家族危機系統 -->
-    <div class="controls ambush-crisis-panel" id="ambushCrisisPanel">
-        <h3>⚔️ 亂入強敵・家族危機系統</h3>
-        <p style="font-size:12px;color:#aaa;margin:0 0 12px 0;">自創武將登陸或喚醒時，可能遭遇同等級或高 3 級內的強敵主動挑戰。勝利可得獎勵；戰敗可能觸發「家族危機」，紅顏/家眷被擄為人質，需要營救或贖回。此系統為遊戲式襲擊與營救玩法，不含露骨內容。</p>
-        <div class="ambush-crisis-grid">
-            <div class="ambush-crisis-box">
-                <h4>🎲 亂入機率設定 / 主動挑戰</h4>
-                <div id="ambushSettingBoard">亂入設定載入中...</div>
-                <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
-                    <select id="ambushRateSelect" style="flex:1;min-width:130px;border-color:#ff3131;color:#ff3131;">
-                        <option value="">一定要選</option><option value="very_low">極少</option><option value="low">少</option><option value="medium">中</option><option value="high">多</option><option value="very_high">頻繁</option><option value="always">一定</option>
-                    </select>
-                    <button onclick="cyberSaveAmbushRate()" style="flex:1;min-width:110px;border-color:#ffd700;color:#ffd700;">保存機率</button>
-                    <button onclick="cyberManualAmbushCheck()" style="flex:1;min-width:120px;border-color:#ff3131;color:#ff3131;">手動巡邏</button>
-                </div>
-                <div id="ambushCurrentEnemyBoard" style="margin-top:8px;">目前沒有亂入敵人。</div>
-            </div>
-            <div class="ambush-crisis-box">
-                <h4>🛡️ 家族危機 / 營救人質</h4>
-                <div id="familyCrisisBoard">家族危機資料載入中...</div>
-                <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
-                    <select id="captiveSelect" style="flex:2;min-width:180px;border-color:#ff69b4;color:#ff69b4;"></select>
-                    <button onclick="cyberRescueSelectedCaptive()" style="flex:1;min-width:100px;border-color:#00ff41;color:#00ff41;">營救</button>
-                    <button onclick="cyberRedeemSelectedCaptive()" style="flex:1;min-width:100px;border-color:#ffd700;color:#ffd700;">贖回</button>
-                </div>
-            </div>
-        </div>
-        <div class="ambush-crisis-box" style="margin-top:14px;width:100%;">
-            <h4>📜 亂入戰鬥紀錄</h4>
-            <div id="ambushBattleLog" class="ambush-log">亂入戰鬥紀錄待命中...</div>
-        </div>
-    </div>
-
     <div class="footer">什年工作室《三國演義武力超百科》授權終端 // 支援軍團自選與神蹟系統 // 內建暗黑RPG養成、行囊管理與銅雀深宮招親系統<br>
     <span style="color:#8b0000; font-weight:bold;">⚠️ 隱藏協議：【修羅七誓與弒神之戰】已加載</span></div>
 </div>
@@ -3244,6 +3210,115 @@
     let activeRpgGeneral = null;
 
     // ==============================================================
+    // ⚠️ 自創武將登陸後：主動遭遇敵人單挑系統
+    // ==============================================================
+    const ACTIVE_ENCOUNTER_RATE_KEY = 'activeEnemyEncounterRate_v1';
+    const ACTIVE_ENCOUNTER_RATES = {
+        none: { label: '無', chance: 0 },
+        rare: { label: '極少', chance: 0.05 },
+        low: { label: '少', chance: 0.12 },
+        mid: { label: '中', chance: 0.25 },
+        high: { label: '多', chance: 0.45 },
+        veryHigh: { label: '頻繁', chance: 0.70 }
+    };
+
+    function initActiveEncounterRateSelect() {
+        const sel = document.getElementById('activeEncounterRateSelect');
+        if (!sel) return;
+        const saved = localStorage.getItem(ACTIVE_ENCOUNTER_RATE_KEY) || 'mid';
+        sel.value = ACTIVE_ENCOUNTER_RATES[saved] ? saved : 'mid';
+    }
+
+    function saveActiveEncounterRate() {
+        const sel = document.getElementById('activeEncounterRateSelect');
+        if (!sel) return;
+        localStorage.setItem(ACTIVE_ENCOUNTER_RATE_KEY, sel.value);
+        const rate = ACTIVE_ENCOUNTER_RATES[sel.value] || ACTIVE_ENCOUNTER_RATES.mid;
+        battleLog.innerHTML += `<br><span style="color:#ff8c00; font-weight:bold;">⚠️【來犯機率調整】自創武將登陸後主動遭遇敵人的機率已設為：${rate.label}。</span><br>`;
+        battleLog.scrollTop = battleLog.scrollHeight;
+    }
+
+    function getActiveEncounterRate() {
+        const sel = document.getElementById('activeEncounterRateSelect');
+        const key = (sel && sel.value) || localStorage.getItem(ACTIVE_ENCOUNTER_RATE_KEY) || 'mid';
+        return ACTIVE_ENCOUNTER_RATES[key] || ACTIVE_ENCOUNTER_RATES.mid;
+    }
+
+    function isSelfCreatedGeneralForEncounter(gen) {
+        return !!(gen && (gen.isRPG || gen.inventory !== undefined) && !gen.isActiveEncounterEnemy);
+    }
+
+    function createActiveEncounterEnemy(hero) {
+        const gap = Math.floor(Math.random() * 4); // 同級～高 3 級
+        const heroLevel = hero && hero.isRPG ? (hero.level || 1) : 1;
+        const enemyLevel = heroLevel + gap;
+        const basePool = generals.filter(g => g && !g.isHidden && !g.isActiveEncounterEnemy && g.name !== hero.name);
+        const base = basePool.length ? basePool[Math.floor(Math.random() * basePool.length)] : { name: '無名刺客', power: 1, skills: [], rank: '暗影流' };
+        const scale = 1 + gap * 0.08 + Math.random() * 0.06;
+        const heroPower = Math.max(1, hero.power || 1);
+        const basePower = Math.max(heroPower, base.power || 1);
+        const enemyPower = Math.max(1, Math.floor(Math.max(heroPower, basePower * 0.85) * scale + gap * 10));
+        const copiedSkills = Array.isArray(base.skills) ? [...base.skills].slice(0, 4) : [];
+        return {
+            name: `來犯敵將・${base.name}影武者 LV.${enemyLevel}`,
+            power: enemyPower,
+            rank: `主動來犯者｜${gap === 0 ? '同級' : '高 ' + gap + ' 級'}｜原型：${base.name}`,
+            skills: copiedSkills,
+            inventory: [],
+            harem: [],
+            level: enemyLevel,
+            isActiveEncounterEnemy: true
+        };
+    }
+
+    function clearOldActiveEncounterEnemies() {
+        for (let i = generals.length - 1; i >= 0; i--) {
+            if (generals[i] && generals[i].isActiveEncounterEnemy) generals.splice(i, 1);
+        }
+    }
+
+    function triggerActiveEnemyEncounter(hero, forced = false) {
+        if (!isSelfCreatedGeneralForEncounter(hero)) return false;
+        const rate = getActiveEncounterRate();
+        if (!forced && Math.random() >= rate.chance) {
+            battleLog.innerHTML += `<br><span style="color:#777;">⚠️【風聲鶴唳】${hero.name} 登陸沙盤，四野殺氣浮動；本次未遭遇主動來犯者。（目前機率：${rate.label}）</span><br>`;
+            battleLog.scrollTop = battleLog.scrollHeight;
+            return false;
+        }
+
+        clearOldActiveEncounterEnemies();
+        const enemy = createActiveEncounterEnemy(hero);
+        generals.push(enemy);
+        updateDropdowns();
+
+        const heroIndex = generals.findIndex(g => g === hero || (g && g.name === hero.name && !g.isActiveEncounterEnemy));
+        const enemyIndex = generals.findIndex(g => g === enemy);
+        if (heroIndex < 0 || enemyIndex < 0) return false;
+
+        p1Select.value = heroIndex;
+        p2Select.value = enemyIndex;
+        checkRpgPanel();
+        battleLog.innerHTML = `<h2 style="color:#ff3131; text-align:center; text-shadow:0 0 10px #ff3131;">⚠️ 主動遭遇戰爆發！</h2>` +
+            `<div style="color:#ddd; text-align:center; font-weight:bold; margin-bottom:10px;">${hero.name} 剛登陸沙盤，遭遇 <span style="color:#ff3131;">${enemy.name}</span> 主動單挑！<br>敵人等級：LV.${enemy.level}｜敵人武力：${enemy.power}｜機率設定：${rate.label}</div>`;
+        battleLog.scrollTop = battleLog.scrollHeight;
+        setTimeout(() => startDuel(false), 250);
+        return true;
+    }
+
+    function tryActiveEnemyEncounter(hero, source = 'login') {
+        setTimeout(() => triggerActiveEnemyEncounter(hero, false), 350);
+    }
+
+    function forceActiveEnemyEncounter() {
+        const hero = activeRpgGeneral || (p1Select && generals[p1Select.value]);
+        if (!isSelfCreatedGeneralForEncounter(hero)) {
+            alert('請先確認、喚醒，或在單挑我軍選定一名自創武將。');
+            return;
+        }
+        triggerActiveEnemyEncounter(hero, true);
+    }
+
+    // ==============================================================
     // 😈 【修羅七誓】業障監控系統：每位自創武將獨立保存
     // ==============================================================
     function getAsuraStorageKey(gen = activeRpgGeneral) {
@@ -3404,9 +3479,11 @@
         }
         
         battleLog.scrollTop = battleLog.scrollHeight;
+        const landedRpgGeneral = currentRpgDraft;
         document.getElementById('rpgPreview').style.display = "none";
         document.getElementById('rpgName').value = '';
         currentRpgDraft = null;
+        tryActiveEnemyEncounter(landedRpgGeneral, 'confirm');
     }
 
     function gainExp(generalName, expAmount, silent = false) {
@@ -3461,7 +3538,6 @@
         if (activeRpgGeneral && activeRpgGeneral.isRPG) {
             normalizeRpgSkillBuckets(activeRpgGeneral);
             loadAsuraAchievements(activeRpgGeneral);
-            if (typeof cyberCheckAmbushOnLogin === 'function') setTimeout(() => cyberCheckAmbushOnLogin(activeRpgGeneral.name, false), 250);
         }
         document.getElementById('rpgPanel').style.display = "block";
         
@@ -3722,8 +3798,7 @@
         battleLog.innerHTML += `<br><span style="color:#1e90ff; font-weight:bold;">📂 【時空召喚】成功讀取自創武將 ${gen.name} 降臨沙盤！</span><br>`;
         battleLog.scrollTop = battleLog.scrollHeight;
         cyberRefreshEnhancedGameUI();
-        if (typeof cyberRefreshAmbushCrisisUI === 'function') cyberRefreshAmbushCrisisUI();
-        if (typeof cyberCheckAmbushOnLogin === 'function') setTimeout(() => cyberCheckAmbushOnLogin(gen.name, false), 400);
+        tryActiveEnemyEncounter(gen, 'load');
     }
 
     function deleteSpecificRpgGeneral() {
@@ -3816,6 +3891,7 @@
     
     updateDropdowns();
     populateSavedGenerals();
+    initActiveEncounterRateSelect();
 
     function randomize() {
         let maxIdx = p1Select.options.length;
@@ -6612,7 +6688,7 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         loseScore.currentStreak = 0;
 
         if ([3,5,10,20,50].includes(winScore.currentStreak)) {
-            cyberSendArenaChat(`【擂台連勝】${result.winner.name} 達成 ${winScore.currentStreak} 連勝！`);
+            cyberSendSystemChat(`【擂台連勝】${result.winner.name} 達成 ${winScore.currentStreak} 連勝！`);
             cyberAddLegendRecord('擂台連勝', `${result.winner.name} 達成 ${winScore.currentStreak} 連勝`, winScore.currentStreak);
         }
 
@@ -6657,73 +6733,47 @@ box.innerHTML = pinnedHtml + arr.map(m => {
             battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold;">🌐【公開擂台】${result.winner.name} 擊敗 ${result.loser.name}，勝者繼續留在擂台！敗者冷卻 5 分鐘。</span><br>`;
             battleLog.scrollTop = battleLog.scrollHeight;
         }
-        cyberSendArenaChat(`【公開擂台】${result.winner.name} 擊敗 ${result.loser.name}，勝者留場，敗者冷卻 5 分鐘。`);
+        cyberSendSystemChat(`【公開擂台】${result.winner.name} 擊敗 ${result.loser.name}，勝者留場，敗者冷卻 5 分鐘。`);
     }
 
-// ==============================================================
-    // 【天下公頻節流規則】
-    // 天下公頻聊天室只保留：
-    // 1. 玩家手動聊天 cyberSendPublicChat()
-    // 2. 擂台賽消息 cyberSendArenaChat()
-    //
-    // 其他系統公告仍可進 battleLog / 封神榜 / 各系統面板，
-    // 但不再寫入 chatMessages，避免刷屏與消耗 Firebase 流量。
-    // ==============================================================
-    function cyberWritePublicChatMessage(item, fallbackLabel = '系統訊息') {
-        if (cyberFirebaseReady && cyberDb) {
-            cyberDb.ref(`${CYBER_ROOM_PATH}/chatMessages`).push(item)
-                .then(() => {
-                    cyberRefreshChatLog();
-                })
-                .catch(err => {
-                    console.warn(`${fallbackLabel}寫入 Firebase 失敗，改寫入本機聊天室：`, err);
+function cyberSendSystemChat(msg) {
+    const now = Date.now();
 
-                    const arr = cyberGetChatMessages();
-                    arr.push(item);
-                    cyberWriteJson(CYBER_CHAT_KEY, arr.slice(-120));
-                    cyberRefreshChatLog();
-                });
-        } else {
-            const arr = cyberGetChatMessages();
-            arr.push(item);
-            cyberWriteJson(CYBER_CHAT_KEY, arr.slice(-120));
-            cyberRefreshChatLog();
-        }
+    // 同時保留 name/msg 與 nick/message，確保本機模式與 Firebase 規則都吃得到
+    const item = {
+        id: `${now}_system`,
+        name: '擂台系統',
+        nick: '擂台系統',
+        msg: msg,
+        message: msg,
+        time: now
+    };
+
+    if (cyberFirebaseReady && cyberDb) {
+        cyberDb.ref(`${CYBER_ROOM_PATH}/chatMessages`).push(item)
+            .then(() => {
+                cyberRefreshChatLog();
+            })
+            .catch(err => {
+                console.warn('擂台系統訊息寫入 Firebase 失敗，改寫入本機聊天室：', err);
+
+                const arr = cyberGetChatMessages();
+                arr.push(item);
+                cyberWriteJson(CYBER_CHAT_KEY, arr.slice(-120));
+                cyberRefreshChatLog();
+            });
+    } else {
+        const arr = cyberGetChatMessages();
+        arr.push(item);
+        cyberWriteJson(CYBER_CHAT_KEY, arr.slice(-120));
+        cyberRefreshChatLog();
     }
-
-    function cyberSendArenaChat(msg) {
-        const now = Date.now();
-
-        // 擂台戰報豁免全聊天室禁言，但只限擂台賽消息使用此函式。
-        const item = {
-            id: `${now}_arena_system`,
-            name: '擂台系統',
-            nick: '擂台系統',
-            msg: msg,
-            message: msg,
-            type: 'arena',
-            arenaReport: true,
-            time: now
-        };
-
-        cyberWritePublicChatMessage(item, '擂台戰報');
-    }
-
-    function cyberSendSystemChat(msg) {
-        // 非擂台系統公告不再進天下公頻 / Firebase chatMessages。
-        // 保留到主戰鬥紀錄，讓本機玩家仍看得到系統事件，不影響各面板與封神榜。
-        if (typeof battleLog !== 'undefined' && battleLog) {
-            battleLog.innerHTML += `<br><span style="color:#888; font-weight:bold;">【系統紀錄】${cyberEscapeHtml(msg)}</span><br>`;
-            battleLog.scrollTop = battleLog.scrollHeight;
-        } else {
-            console.log('[系統紀錄]', msg);
-        }
-    }
+}
 
     function cyberArenaLog(msg) {
         const feed = document.getElementById('arenaBattleFeed');
         if (feed) feed.innerHTML = cyberEscapeHtml(msg);
-        cyberSendArenaChat(msg);
+        cyberSendSystemChat(msg);
     }
 
 function cyberRefreshArenaUI() {
@@ -6877,7 +6927,7 @@ function cyberRefreshArenaUI() {
                 scoreObj.score = (scoreObj.score || 0) + (r.bonusScore || 0);
                 cyberAwardTitle(name, r.title, true);
                 cyberAddLegendRecord('擂台連勝獎勵', `${name} 達成 ${r.streak} 連勝，獲得 ${r.label}，額外積分 +${r.bonusScore || 0}`, r.streak);
-                cyberSendArenaChat(`【擂台連勝獎勵】${name} 達成 ${r.streak} 連勝，獲得 ${r.label}，額外積分 +${r.bonusScore || 0}！`);
+                cyberSendSystemChat(`【擂台連勝獎勵】${name} 達成 ${r.streak} 連勝，獲得 ${r.label}，額外積分 +${r.bonusScore || 0}！`);
             }
         });
     }
@@ -8955,233 +9005,6 @@ function cyberRefreshArenaUI() {
         if (bonus.title) cyberAwardTitle(heroName, bonus.title, true);
     }
 
-
-    // ==============================================================
-    // ⚔️ 亂入強敵・家族危機系統
-    // ==============================================================
-    const CYBER_AMBUSH_KEY = 'cyberAmbushCrisisState_v1';
-    const CYBER_AMBUSH_RATE_TABLE = {
-        "": { label:"未選擇", chance:0 },
-        very_low:{ label:"極少", chance:.05 },
-        low:{ label:"少", chance:.12 },
-        medium:{ label:"中", chance:.25 },
-        high:{ label:"多", chance:.42 },
-        very_high:{ label:"頻繁", chance:.65 },
-        always:{ label:"一定", chance:1 }
-    };
-    const CYBER_AMBUSH_ENEMY_TITLES = ['流寇首領','山越猛將','黑山死士','修羅刺客','羌胡悍將','暗榜殺手','銅雀劫將','亂世梟徒','魔化校尉','血旗軍主','夜襲騎督','逆命武魁'];
-
-    function cyberGetAmbushState(){
-        const s = cyberReadJson(CYBER_AMBUSH_KEY,{heroes:{},logs:[]});
-        if(!s.heroes) s.heroes={};
-        if(!Array.isArray(s.logs)) s.logs=[];
-        return s;
-    }
-    function cyberSaveAmbushState(s){ cyberWriteJson(CYBER_AMBUSH_KEY,s); }
-    function cyberEnsureAmbushHero(name){
-        const s=cyberGetAmbushState();
-        if(!s.heroes[name]) s.heroes[name]={rate:'',lastCheck:0,activeEnemy:null,captives:[],wins:0,losses:0,rescued:0};
-        if(!Array.isArray(s.heroes[name].captives)) s.heroes[name].captives=[];
-        cyberSaveAmbushState(s);
-        return s.heroes[name];
-    }
-    function cyberAmbushHeroLevel(hero){
-        if(!hero) return 1;
-        return Math.max(1,Number(hero.level||hero.lv||Math.floor((hero.power||1)/100)||1));
-    }
-    function cyberGenerateAmbushEnemy(hero){
-        const heroLv=cyberAmbushHeroLevel(hero);
-        const lv=heroLv+Math.floor(Math.random()*4);
-        const title=CYBER_AMBUSH_ENEMY_TITLES[Math.floor(Math.random()*CYBER_AMBUSH_ENEMY_TITLES.length)];
-        const factor=.88+Math.random()*.28;
-        const power=Math.max(1,Math.floor(((hero.power||1)+(lv-heroLv)*90)*factor));
-        return {id:`${Date.now()}_${Math.random().toString(16).slice(2)}`,name:`${title}・Lv.${lv}`,title,level:lv,power,hp:150+lv*25,createdAt:Date.now(),motive:Math.random()<.5?'奪取武名':'襲擊家族'};
-    }
-    function cyberSaveAmbushRate(){
-        const heroName=cyberGetActiveHeroName();
-        const hero=generals.find(g=>g.name===heroName)||activeRpgGeneral;
-        if(!hero||!hero.isRPG){alert('請先選定或喚醒一名自創武將。');return;}
-        const sel=document.getElementById('ambushRateSelect');
-        const value=sel?sel.value:'';
-        if(!value){alert('請選擇亂入機率：極少、少、中、多、頻繁、一定。');return;}
-        const s=cyberGetAmbushState();
-        if(!s.heroes[heroName]) s.heroes[heroName]={rate:'',lastCheck:0,activeEnemy:null,captives:[],wins:0,losses:0,rescued:0};
-        s.heroes[heroName].rate=value;
-        cyberSaveAmbushState(s);
-        cyberAddAmbushLog(heroName,`已設定亂入機率為【${CYBER_AMBUSH_RATE_TABLE[value].label}】。`);
-        cyberRefreshAmbushCrisisUI();
-    }
-    function cyberAddAmbushLog(heroName,msg,cls=''){
-        const s=cyberGetAmbushState();
-        const item={id:`${Date.now()}_${Math.random().toString(16).slice(2)}`,heroName,msg,cls,time:Date.now()};
-        s.logs.unshift(item); s.logs=s.logs.slice(0,80); cyberSaveAmbushState(s);
-        const box=document.getElementById('ambushBattleLog');
-        if(box){ const d=new Date(item.time); const stamp=`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; box.innerHTML=`<div class="${cls}">[${stamp}] ${cyberEscapeHtml(msg)}</div>`+(box.innerHTML||''); }
-        if(typeof battleLog!=='undefined'&&battleLog){ battleLog.innerHTML+=`<br><span style="color:#ff8c00;font-weight:bold;">【亂入事件】${cyberEscapeHtml(msg)}</span><br>`; battleLog.scrollTop=battleLog.scrollHeight; }
-    }
-    function cyberManualAmbushCheck(){ cyberCheckAmbushOnLogin(cyberGetActiveHeroName(),true); }
-    function cyberCheckAmbushOnLogin(heroName=cyberGetActiveHeroName(),manual=false){
-        const hero=generals.find(g=>g.name===heroName)||activeRpgGeneral;
-        if(!hero||!hero.isRPG) return false;
-        const s=cyberGetAmbushState();
-        if(!s.heroes[heroName]) s.heroes[heroName]={rate:'',lastCheck:0,activeEnemy:null,captives:[],wins:0,losses:0,rescued:0};
-        const h=s.heroes[heroName];
-        if(!h.rate){ cyberSaveAmbushState(s); cyberRefreshAmbushCrisisUI(); if(manual) alert('請先在底部面板選擇亂入機率。'); return false; }
-        if(h.activeEnemy){ cyberSaveAmbushState(s); cyberRefreshAmbushCrisisUI(); if(manual) alert('已有亂入敵人，請先處理目前戰鬥。'); return false; }
-        if(!manual && Date.now()-(h.lastCheck||0)<60000){ cyberSaveAmbushState(s); return false; }
-        h.lastCheck=Date.now();
-        const rate=CYBER_AMBUSH_RATE_TABLE[h.rate]||CYBER_AMBUSH_RATE_TABLE[""];
-        if(Math.random()<=rate.chance){
-            h.activeEnemy=cyberGenerateAmbushEnemy(hero);
-            cyberSaveAmbushState(s);
-            cyberAddAmbushLog(heroName,`⚠️ ${h.activeEnemy.name} 主動亂入！戰力 ${h.activeEnemy.power}，目標：${h.activeEnemy.motive}。`,'ambush-danger');
-            cyberRefreshAmbushCrisisUI();
-            cyberRunAmbushBattle(heroName);
-            return true;
-        }
-        cyberSaveAmbushState(s); cyberRefreshAmbushCrisisUI();
-        if(manual) cyberAddAmbushLog(heroName,`巡邏無事。這次沒有強敵亂入。（機率：${rate.label}）`);
-        return false;
-    }
-    function cyberRunAmbushBattle(heroName=cyberGetActiveHeroName()){
-        const hero=generals.find(g=>g.name===heroName)||activeRpgGeneral;
-        if(!hero||!hero.isRPG) return;
-        const s=cyberGetAmbushState(); const h=s.heroes[heroName];
-        if(!h||!h.activeEnemy) return;
-        const enemy=h.activeEnemy;
-        let heroHp=180+cyberAmbushHeroLevel(hero)*30, enemyHp=enemy.hp||180;
-        const logs=[`⚔️【亂入強敵】${heroName} VS ${enemy.name}｜敵人Lv.${enemy.level}｜敵戰力${enemy.power}`];
-        let round=1;
-        while(heroHp>0&&enemyHp>0&&round<=18){
-            const hd=Math.max(5,Math.floor((hero.power||1)*(.18+Math.random()*.22)-enemy.level*2));
-            const ed=Math.max(5,Math.floor((enemy.power||1)*(.16+Math.random()*.23)-cyberAmbushHeroLevel(hero)));
-            enemyHp-=hd; logs.push(`第${round}回合：${heroName} 反擊亂入者，造成 ${hd} 傷害。`);
-            if(enemyHp<=0) break;
-            heroHp-=ed; logs.push(`第${round}回合：${enemy.name} 突襲猛攻，造成 ${ed} 傷害。`);
-            round++;
-        }
-        const win=enemyHp<=0||(heroHp>enemyHp&&round>18);
-        if(win){
-            h.wins=(h.wins||0)+1; h.activeEnemy=null; cyberSaveAmbushState(s);
-            cyberGrantAmbushVictoryReward(heroName,hero,enemy);
-            logs.push(`✅【亂入勝利】${heroName} 擊退 ${enemy.name}，守住家族與武名！`);
-            cyberAddAmbushLog(heroName,logs.join('<br>'),'ambush-victory');
-        }else{
-            h.losses=(h.losses||0)+1; h.activeEnemy=null; cyberSaveAmbushState(s);
-            logs.push(`❌【亂入敗北】${heroName} 被 ${enemy.name} 擊敗，家族危機爆發！`);
-            cyberHandleAmbushDefeat(heroName,hero,enemy);
-            cyberAddAmbushLog(heroName,logs.join('<br>'),'ambush-defeat');
-        }
-        cyberRefreshAmbushCrisisUI();
-        if(typeof cyberRefreshEnhancedGameUI==='function') cyberRefreshEnhancedGameUI();
-        if(typeof cyberRefreshFamilyRomanceUI==='function') cyberRefreshFamilyRomanceUI();
-    }
-    function cyberGrantAmbushVictoryReward(heroName,hero,enemy){
-        const gap=Math.max(0,(enemy.level||1)-cyberAmbushHeroLevel(hero));
-        const coins=20+gap*15+Math.floor(Math.random()*21), seals=3+gap*2, stat=1+(gap>=2?1:0);
-        if(typeof cyberAddCoins==='function') cyberAddCoins(heroName,coins,'擊退亂入強敵');
-        if(typeof cyberAddShuraSeals==='function') cyberAddShuraSeals(heroName,seals);
-        hero.statPoints=(hero.statPoints||0)+stat;
-        let saved=JSON.parse(localStorage.getItem('rpgGenerals'))||{}; saved[hero.name]=hero; localStorage.setItem('rpgGenerals',JSON.stringify(saved));
-        if(enemy.level>=cyberAmbushHeroLevel(hero)+3) cyberAwardTitle(heroName,'越級破敵者',true);
-        cyberAwardTitle(heroName,'護家武神',true);
-        if(typeof cyberAddLegendRecord==='function') cyberAddLegendRecord('亂入強敵',`${heroName} 擊退 ${enemy.name}，獲得武神幣 +${coins}、修羅印 +${seals}`,20+gap*10);
-        cyberAddAmbushLog(heroName,`🎁 勝利獎勵：武神幣 +${coins}、修羅印 +${seals}、武力點 +${stat}。`,'ambush-victory');
-    }
-    function cyberGetCapturableFamilyMembers(heroName){
-        const fam=(typeof cyberEnsureFamilyHero==='function')?cyberEnsureFamilyHero(heroName):null;
-        if(!fam) return [];
-        const spouses=Object.values(fam.spouses||{}).map(sp=>({type:'spouse',name:sp.name,role:sp.role,label:`${cyberFamilyRoleText?cyberFamilyRoleText(sp.role):'紅顏'}｜${sp.name}`}));
-        const children=(fam.children||[]).map(c=>({type:'child',id:c.id,name:c.name,role:'child',label:`子嗣｜${c.name}`}));
-        return [...spouses,...children];
-    }
-    function cyberHandleAmbushDefeat(heroName,hero,enemy){
-        const s=cyberGetAmbushState();
-        if(!s.heroes[heroName]) s.heroes[heroName]={rate:'',lastCheck:0,activeEnemy:null,captives:[],wins:0,losses:0,rescued:0};
-        const h=s.heroes[heroName], cand=cyberGetCapturableFamilyMembers(heroName);
-        if(!cand.length){
-            cyberAddAmbushLog(heroName,`家族尚無可被擄走的成員，${enemy.name} 只劫走資源。`,'ambush-defeat');
-            if(typeof cyberAddCoins==='function') cyberAddCoins(heroName,-Math.min(50,(cyberEnsureCoinHero(heroName).coins||0)),'亂入敗北損失');
-            cyberSaveAmbushState(s); return;
-        }
-        const pick=cand[Math.floor(Math.random()*cand.length)];
-        const captive={id:`${Date.now()}_${Math.random().toString(16).slice(2)}`,name:pick.name,type:pick.type,role:pick.role,label:pick.label,enemyName:enemy.name,enemyPower:enemy.power,enemyLevel:enemy.level,capturedAt:Date.now(),ransom:80+(enemy.level||1)*15};
-        if(!h.captives.some(c=>c.name===captive.name&&c.type===captive.type)) h.captives.push(captive);
-        cyberSaveAmbushState(s);
-        cyberAwardTitle(heroName,'家族危機',true);
-        if(typeof cyberAddLegendRecord==='function') cyberAddLegendRecord('家族危機',`${heroName} 戰敗，${captive.label} 被 ${enemy.name} 擄為人質，等待營救`,12);
-        cyberAddAmbushLog(heroName,`🚨【家族危機】${captive.label} 被 ${enemy.name} 擄走！可在底部面板進行營救或贖回。`,'ambush-defeat');
-    }
-    function cyberGetSelectedCaptive(heroName){
-        const sel=document.getElementById('captiveSelect'), id=sel?sel.value:'';
-        const s=cyberGetAmbushState(), h=s.heroes[heroName];
-        if(!h||!Array.isArray(h.captives)) return {state:s,h,captive:null,idx:-1};
-        const idx=h.captives.findIndex(c=>c.id===id);
-        return {state:s,h,captive:idx>=0?h.captives[idx]:null,idx};
-    }
-    function cyberRescueSelectedCaptive(){
-        const heroName=cyberGetActiveHeroName(), hero=generals.find(g=>g.name===heroName)||activeRpgGeneral;
-        if(!hero||!hero.isRPG){alert('請先選定或喚醒一名自創武將。');return;}
-        const {state,h,captive,idx}=cyberGetSelectedCaptive(heroName);
-        if(!captive){alert('目前沒有選定的人質。');return;}
-        const chance=Math.max(.12,Math.min(.88,(hero.power||1)/((hero.power||1)+(captive.enemyPower||hero.power||1))));
-        if(Math.random()<chance){
-            h.captives.splice(idx,1); h.rescued=(h.rescued||0)+1; state.heroes[heroName]=h; cyberSaveAmbushState(state);
-            hero.statPoints=(hero.statPoints||0)+1;
-            let saved=JSON.parse(localStorage.getItem('rpgGenerals'))||{}; saved[hero.name]=hero; localStorage.setItem('rpgGenerals',JSON.stringify(saved));
-            cyberAwardTitle(heroName,'救眷英雄',true);
-            if(typeof cyberAddCoins==='function') cyberAddCoins(heroName,30,'營救家眷成功');
-            if(typeof cyberAddLegendRecord==='function') cyberAddLegendRecord('營救家眷',`${heroName} 成功救回 ${captive.label}`,30);
-            cyberAddAmbushLog(heroName,`✅【營救成功】${heroName} 擊退 ${captive.enemyName}，救回 ${captive.label}！`,'ambush-victory');
-        }else{
-            if(typeof cyberAddCoins==='function') cyberAddCoins(heroName,-Math.min(30,(cyberEnsureCoinHero(heroName).coins||0)),'營救失敗損失');
-            cyberAddAmbushLog(heroName,`❌【營救失敗】${heroName} 突入敵營未果，${captive.label} 仍被扣押。`,'ambush-defeat');
-        }
-        cyberRefreshAmbushCrisisUI();
-    }
-    function cyberRedeemSelectedCaptive(){
-        const heroName=cyberGetActiveHeroName(), hero=generals.find(g=>g.name===heroName)||activeRpgGeneral;
-        if(!hero||!hero.isRPG){alert('請先選定或喚醒一名自創武將。');return;}
-        const {state,h,captive,idx}=cyberGetSelectedCaptive(heroName);
-        if(!captive){alert('目前沒有選定的人質。');return;}
-        if(typeof cyberEnsureCoinHero!=='function'){alert('武神幣系統不存在，無法贖回。');return;}
-        const coin=cyberEnsureCoinHero(heroName);
-        if((coin.coins||0)<captive.ransom){alert(`武神幣不足，贖回需要 ${captive.ransom}，目前只有 ${coin.coins||0}。`);return;}
-        cyberAddCoins(heroName,-captive.ransom,'贖回家眷');
-        h.captives.splice(idx,1); h.rescued=(h.rescued||0)+1; state.heroes[heroName]=h; cyberSaveAmbushState(state);
-        cyberAddAmbushLog(heroName,`💰【贖回成功】${heroName} 花費 ${captive.ransom} 武神幣，救回 ${captive.label}。`,'ambush-victory');
-        if(typeof cyberAddLegendRecord==='function') cyberAddLegendRecord('家族贖回',`${heroName} 贖回 ${captive.label}`,10);
-        cyberRefreshAmbushCrisisUI();
-    }
-    function cyberRefreshAmbushCrisisUI(){
-        const heroName=cyberGetActiveHeroName();
-        const h=cyberEnsureAmbushHero(heroName), rate=CYBER_AMBUSH_RATE_TABLE[h.rate||""];
-        const sel=document.getElementById('ambushRateSelect'); if(sel) sel.value=h.rate||'';
-        const setting=document.getElementById('ambushSettingBoard');
-        if(setting) setting.innerHTML=`<div class="ambush-row">目前武將：<span style="color:#00ff41;font-weight:bold;">${cyberEscapeHtml(heroName)}</span></div><div class="ambush-row">亂入機率：<span class="ambush-danger">${cyberEscapeHtml(rate.label)}</span>｜勝 ${h.wins||0}｜敗 ${h.losses||0}｜營救 ${h.rescued||0}</div><div class="ambush-row">敵人等級為自創武將同級～高 3 級；勝利有獎勵，敗北可能觸發家族危機。</div>`;
-        const enemyBox=document.getElementById('ambushCurrentEnemyBoard');
-        if(enemyBox){
-            enemyBox.innerHTML=h.activeEnemy?`<div class="ambush-row"><span class="ambush-enemy">目前亂入：${cyberEscapeHtml(h.activeEnemy.name)}</span></div><div class="ambush-row">Lv.${h.activeEnemy.level}｜戰力 ${h.activeEnemy.power}｜目標：${cyberEscapeHtml(h.activeEnemy.motive)}</div><button onclick="cyberRunAmbushBattle()" style="border-color:#ff3131;color:#ff3131;margin-top:6px;">迎戰亂入強敵</button>`:`<div class="ambush-row">目前沒有亂入敵人。自創武將登陸/喚醒或手動巡邏時會檢查。</div>`;
-        }
-        const crisis=document.getElementById('familyCrisisBoard');
-        if(crisis){
-            const caps=h.captives||[];
-            crisis.innerHTML=`<div class="crisis-row">被擄家眷：<span class="ambush-danger">${caps.length}</span></div>`+(caps.length?caps.map(c=>`<div class="crisis-row"><span class="captive-tag">${cyberEscapeHtml(c.label)}</span><br>擄走者：<span class="ambush-enemy">${cyberEscapeHtml(c.enemyName)}</span>｜敵戰力 ${c.enemyPower}｜贖回 ${c.ransom} 武神幣</div>`).join(''):'<div class="crisis-row">目前沒有家族危機。</div>');
-        }
-        const capSel=document.getElementById('captiveSelect');
-        if(capSel){
-            const cur=capSel.value; capSel.innerHTML='';
-            (h.captives||[]).forEach(c=>capSel.add(new Option(`${c.label}｜${c.enemyName}｜贖回${c.ransom}`,c.id)));
-            if([...capSel.options].some(o=>o.value===cur)) capSel.value=cur;
-        }
-        const logBox=document.getElementById('ambushBattleLog');
-        if(logBox){
-            const s=cyberGetAmbushState();
-            const logs=(s.logs||[]).filter(x=>!heroName||x.heroName===heroName).slice(0,30);
-            logBox.innerHTML=logs.length?logs.map(x=>{const d=new Date(x.time||Date.now());const stamp=`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;return `<div class="${x.cls||''}">[${stamp}] ${cyberEscapeHtml(x.msg)}</div>`;}).join(''):'亂入戰鬥紀錄待命中...';
-        }
-    }
-
     function cyberRefreshAllPublicWarroom() {
         const nickInput = document.getElementById('chatNickInput');
         if (nickInput && !nickInput.value) nickInput.value = localStorage.getItem(CYBER_NICK_KEY) || CYBER_OWNER_NAME;
@@ -9193,7 +9016,6 @@ function cyberRefreshArenaUI() {
         if (typeof cyberRefreshSocialEconomyUI === 'function') cyberRefreshSocialEconomyUI();
         if (typeof cyberRefreshDestinyBondUI === 'function') cyberRefreshDestinyBondUI();
         if (typeof cyberRefreshFamilyRomanceUI === 'function') cyberRefreshFamilyRomanceUI();
-        if (typeof cyberRefreshAmbushCrisisUI === 'function') cyberRefreshAmbushCrisisUI();
     }
 
     function cyberLoadScript(src) {
@@ -9272,7 +9094,6 @@ function cyberRefreshArenaUI() {
         setInterval(cyberRefreshSocialEconomyUI, 3000);
         setInterval(cyberRefreshDestinyBondUI, 3000);
         setInterval(cyberRefreshFamilyRomanceUI, 3000);
-        setInterval(cyberRefreshAmbushCrisisUI, 3000);
     });
 
 </script>
