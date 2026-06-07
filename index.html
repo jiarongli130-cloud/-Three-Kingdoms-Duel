@@ -613,6 +613,91 @@
         }
         @media (max-width: 900px) { .faction-war-grid { grid-template-columns: 1fr; } }
 
+
+        /* ==============================================================
+           🏆 賽季制＋劇情副本＋神兵重鑄 三大進階玩法
+           ============================================================== */
+        .advanced-game-panel {
+            border: 2px solid #ffd700;
+            padding: 15px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, rgba(255,215,0,0.11), rgba(138,43,226,0.10), rgba(0,255,255,0.05));
+            box-shadow: 0 0 20px rgba(255,215,0,0.18);
+            display: block;
+            margin-bottom: 20px;
+        }
+        .advanced-game-panel h3 {
+            margin: 0 0 8px 0;
+            color: #ffd700;
+            text-shadow: 0 0 8px #ffd700;
+        }
+        .advanced-game-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 14px;
+        }
+        .advanced-game-box {
+            border: 1px solid #333;
+            background: rgba(0,0,0,0.70);
+            padding: 10px;
+            border-radius: 6px;
+            min-height: 180px;
+        }
+        .advanced-game-box h4 {
+            margin: 0 0 8px 0;
+            color: #00ffff;
+            text-shadow: 0 0 5px rgba(0,255,255,0.55);
+        }
+        .season-row, .chapter-row, .forge-row {
+            border-bottom: 1px solid #222;
+            padding: 6px 0;
+            color: #ddd;
+            font-size: 13px;
+            line-height: 1.55;
+            word-break: break-word;
+        }
+        .season-badge {
+            display:inline-block;
+            border:1px solid #ffd700;
+            color:#ffd700;
+            border-radius:999px;
+            padding:2px 8px;
+            margin:2px;
+            font-size:12px;
+            background:rgba(255,215,0,0.08);
+            text-shadow:0 0 6px #ffd700;
+        }
+        .chapter-clear {
+            color:#00ff41;
+            font-weight:bold;
+            text-shadow:0 0 6px #00ff41;
+        }
+        .chapter-locked {
+            color:#777;
+        }
+        .chapter-boss {
+            color:#ff3131;
+            font-weight:bold;
+            text-shadow:0 0 6px #ff3131;
+        }
+        .forge-stat {
+            display:inline-block;
+            border:1px solid #8a2be2;
+            color:#c084ff;
+            border-radius:5px;
+            padding:2px 6px;
+            margin:2px;
+            font-size:12px;
+            background:rgba(138,43,226,0.08);
+            text-shadow:0 0 5px #8a2be2;
+        }
+        .forge-item-name {
+            color:#ffd700;
+            font-weight:bold;
+            text-shadow:0 0 7px #ffd700;
+        }
+        @media (max-width: 900px) { .advanced-game-grid { grid-template-columns: 1fr; } }
+
         .firebase-off { color: #aaa; }
         .firebase-on { color: #00ff41; text-shadow: 0 0 5px #00ff41; }
         @media (max-width: 760px) { .public-warroom-grid { grid-template-columns: 1fr; } }
@@ -877,6 +962,38 @@
                 <h4>🌌 江湖奇遇</h4>
                 <div id="adventureBoard">奇遇資料載入中...</div>
                 <button onclick="cyberTryAdventure('manual')" style="margin-top:8px; border-color:#8a2be2; color:#c084ff;">試試今日運勢</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 賽季制＋劇情副本＋神兵重鑄系統 -->
+    <div class="controls advanced-game-panel" id="advancedGamePanel">
+        <h3>🏆 賽季霸業・三國武神傳・神兵重鑄系統</h3>
+        <p style="font-size:12px; color:#aaa; margin:0 0 12px 0;">
+            新增長期目標：每週賽季排行、章節劇情挑戰、修羅印重鑄神兵。這三個系統會與擂台、稱號、封神榜、世界 Boss 互相連動。
+        </p>
+        <div class="advanced-game-grid">
+            <div class="advanced-game-box">
+                <h4>🏆 賽季制</h4>
+                <div id="seasonBoard">賽季資料載入中...</div>
+                <button onclick="cyberClaimSeasonReward()" style="margin-top:8px; border-color:#ffd700; color:#ffd700;">領取賽季階段獎勵</button>
+            </div>
+            <div class="advanced-game-box">
+                <h4>📖 三國武神傳・劇情副本</h4>
+                <div id="chapterBoard">劇情副本載入中...</div>
+                <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+                    <select id="chapterSelect" style="flex:2; min-width:180px; border-color:#00ffff; color:#00ffff;"></select>
+                    <button onclick="cyberChallengeSelectedChapter()" style="flex:1; min-width:110px; border-color:#ff3131; color:#ff3131;">挑戰章節</button>
+                </div>
+            </div>
+            <div class="advanced-game-box">
+                <h4>🛠️ 神兵重鑄</h4>
+                <div id="forgeBoard">神兵重鑄載入中...</div>
+                <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+                    <select id="forgeItemSelect" style="flex:2; min-width:180px; border-color:#8a2be2; color:#c084ff;"></select>
+                    <button onclick="cyberReforgeSelectedItem()" style="flex:1; min-width:110px; border-color:#ffd700; color:#ffd700;">重鑄神兵</button>
+                </div>
             </div>
         </div>
     </div>
@@ -5974,6 +6091,7 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         cyberSaveArenaState(state);
         cyberArenaLog(`👑 ${name} 登上公開擂台，成為第一任擂主！`);
         cyberAddFactionResult(name, 'win', 1);
+        cyberSeasonAdd(name, 'arenaEnter', 3);
         cyberTryAdventure('battle', name);
         cyberRefreshEnhancedGameUI();
         cyberRefreshThreeSystemsUI();
@@ -6063,6 +6181,8 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         // 門派軍團積分、血仇復仇、奇遇事件。
         cyberAddFactionResult(result.winner.name, 'win', 3);
         cyberAddFactionResult(result.loser.name, 'lose', 1);
+        cyberSeasonAdd(result.winner.name, 'arenaWin', 10);
+        cyberSeasonAdd(result.loser.name, 'arenaLose', 2);
         cyberRecordArenaRevengeResult(result.winner.name, result.loser.name);
         cyberTryAdventure('battle', result.winner.name);
         cyberTryAdventure('battle', result.loser.name);
@@ -6214,8 +6334,20 @@ function cyberRefreshArenaUI() {
         "弒魔先鋒": { desc: "世界 Boss 單日累計傷害達 3000。", rarity: "epic" },
         "封神留名": { desc: "名字進入封神榜紀錄館。", rarity: "legend" },
         "雪恥者": { desc: "復仇戰中擊敗宿敵，洗去血仇。", rarity: "epic" },
-        "奇遇之人": { desc: "觸發修羅入夢等稀有江湖奇遇。", rarity: "rare" }
+        "奇遇之人": { desc: "觸發修羅入夢等稀有江湖奇遇。", rarity: "rare" },
+        "亂世初破者": { desc: "通關劇情副本第一章「黃巾亂世」。", rarity: "common" },
+        "虎牢試煉者": { desc: "通關劇情副本第二章「虎牢問鼎」。", rarity: "rare" },
+        "長坂突圍者": { desc: "通關劇情副本第三章「長坂龍吟」。", rarity: "epic" },
+        "威震江東者": { desc: "通關劇情副本第四章「合肥威震」。", rarity: "epic" },
+        "定軍破陣者": { desc: "通關劇情副本第五章「定軍斬將」。", rarity: "legend" },
+        "修羅入門者": { desc: "通關劇情副本第六章「修羅七誓」。", rarity: "legend" },
+        "弒神終局者": { desc: "通關劇情副本第七章「弒神終局」。", rarity: "myth" },
+        "三國武神傳說": { desc: "完成三國武神傳全部章節。", rarity: "myth" },
+        "賽季新銳": { desc: "賽季積分達 50 分。", rarity: "rare" },
+        "賽季豪傑": { desc: "賽季積分達 150 分。", rarity: "epic" },
+        "本季武神": { desc: "賽季積分達 300 分。", rarity: "legend" },
     };
+
 
     const CYBER_STREAK_REWARDS = [
         { streak: 3, title: "三連武者", label: "小連勝公告＋稱號【三連武者】", bonusScore: 1 },
@@ -6512,6 +6644,8 @@ function cyberRefreshArenaUI() {
 
         cyberDailyAdd('bossDamage', damage, name);
         cyberAddFactionResult(name, 'boss', Math.floor(damage / 100));
+        cyberSeasonAdd(name, 'bossDamage', Math.floor(damage / 100));
+        cyberAddShuraSeals(name, Math.max(1, Math.floor(damage / 500)));
         cyberTryAdventure('boss', name);
 
         if (state.damageBoard[name] >= 3000) cyberAwardTitle(name, '弒魔先鋒', true);
@@ -6974,6 +7108,349 @@ function cyberRefreshArenaUI() {
         }
     }
 
+
+    // ==============================================================
+    // 🏆 賽季制＋劇情副本＋神兵重鑄系統
+    // ==============================================================
+    const CYBER_SEASON_KEY = 'cyberSeasonState_v1';
+    const CYBER_CHAPTER_KEY = 'cyberChapterProgress_v1';
+    const CYBER_FORGE_KEY = 'cyberForgeState_v1';
+
+    const CYBER_CHAPTERS = [
+        { id:'yellow_turban', name:'第一章：黃巾亂世', boss:'張角幻影', power:90, rewardTitle:'亂世初破者', rewardSeal:12, desc:'初入亂世，斬破黃巾妖霧。' },
+        { id:'hulao', name:'第二章：虎牢問鼎', boss:'虎牢呂布幻影', power:140, rewardTitle:'虎牢試煉者', rewardSeal:18, desc:'面對虎牢鬼神，驗證真正武勇。' },
+        { id:'changban', name:'第三章：長坂龍吟', boss:'曹軍十面圍殺', power:220, rewardTitle:'長坂突圍者', rewardSeal:26, desc:'萬軍之中逆行突圍，見證龍膽。' },
+        { id:'hefei', name:'第四章：合肥威震', boss:'張遼八百死士', power:320, rewardTitle:'威震江東者', rewardSeal:36, desc:'合肥殺聲震天，破陣者名動天下。' },
+        { id:'dingjun', name:'第五章：定軍斬將', boss:'夏侯淵戰魂', power:450, rewardTitle:'定軍破陣者', rewardSeal:48, desc:'老將刀鳴，定軍山上斬斷宿命。' },
+        { id:'asura_oath', name:'第六章：修羅七誓', boss:'七誓修羅門', power:650, rewardTitle:'修羅入門者', rewardSeal:65, desc:'七大誓約化成修羅門，非霸者不得入。' },
+        { id:'god_end', name:'第七章：弒神終局', boss:'棄天帝劉協・神之滅', power:900, rewardTitle:'弒神終局者', rewardSeal:100, desc:'最終神敵降臨，勝者封神。' }
+    ];
+
+    const CYBER_FORGE_AFFIXES = [
+        { key:'atkPct', name:'攻擊', min:3, max:12, unit:'%' },
+        { key:'bossPct', name:'Boss傷害', min:5, max:18, unit:'%' },
+        { key:'arenaScore', name:'擂台積分', min:1, max:3, unit:'' },
+        { key:'lifesteal', name:'吸血', min:2, max:8, unit:'%' },
+        { key:'dodge', name:'閃避', min:1, max:6, unit:'%' },
+        { key:'masterBoost', name:'拜師進度', min:1, max:5, unit:'' }
+    ];
+
+    function cyberGetSeasonId() {
+        const now = new Date();
+        const onejan = new Date(now.getFullYear(), 0, 1);
+        const week = Math.ceil((((now - onejan) / 86400000) + onejan.getDay() + 1) / 7);
+        return `${now.getFullYear()}-W${String(week).padStart(2,'0')}`;
+    }
+
+    function cyberGetSeasonState() {
+        const sid = cyberGetSeasonId();
+        let state = cyberReadJson(CYBER_SEASON_KEY, null);
+        if (!state || state.seasonId !== sid) {
+            state = { seasonId: sid, heroes: {}, claimed: {}, startTime: Date.now() };
+            cyberWriteJson(CYBER_SEASON_KEY, state);
+        }
+        if (!state.heroes) state.heroes = {};
+        if (!state.claimed) state.claimed = {};
+        return state;
+    }
+
+    function cyberSaveSeasonState(state) {
+        cyberWriteJson(CYBER_SEASON_KEY, state);
+    }
+
+    function cyberEnsureSeasonHero(name) {
+        const state = cyberGetSeasonState();
+        if (!state.heroes[name]) {
+            state.heroes[name] = { score:0, arenaWins:0, bossDamage:0, chapters:0, reforges:0 };
+            cyberSaveSeasonState(state);
+        }
+        return state.heroes[name];
+    }
+
+    function cyberSeasonAdd(name, type, amount = 1) {
+        if (!name) return;
+        const state = cyberGetSeasonState();
+        if (!state.heroes[name]) state.heroes[name] = { score:0, arenaWins:0, bossDamage:0, chapters:0, reforges:0 };
+        const h = state.heroes[name];
+        h.score = (h.score || 0) + amount;
+        if (type === 'arenaWin') h.arenaWins = (h.arenaWins || 0) + 1;
+        if (type === 'bossDamage') h.bossDamage = (h.bossDamage || 0) + amount;
+        if (type === 'chapter') h.chapters = (h.chapters || 0) + 1;
+        if (type === 'reforge') h.reforges = (h.reforges || 0) + 1;
+        cyberSaveSeasonState(state);
+    }
+
+    function cyberGetChapterProgress() {
+        const p = cyberReadJson(CYBER_CHAPTER_KEY, { heroes: {} });
+        if (!p.heroes) p.heroes = {};
+        return p;
+    }
+
+    function cyberSaveChapterProgress(p) {
+        cyberWriteJson(CYBER_CHAPTER_KEY, p);
+    }
+
+    function cyberEnsureChapterHero(name) {
+        const p = cyberGetChapterProgress();
+        if (!p.heroes[name]) p.heroes[name] = { cleared: {}, highest: 0 };
+        if (!p.heroes[name].cleared) p.heroes[name].cleared = {};
+        cyberSaveChapterProgress(p);
+        return p.heroes[name];
+    }
+
+    function cyberGetForgeState() {
+        const s = cyberReadJson(CYBER_FORGE_KEY, { heroes: {} });
+        if (!s.heroes) s.heroes = {};
+        return s;
+    }
+
+    function cyberSaveForgeState(s) {
+        cyberWriteJson(CYBER_FORGE_KEY, s);
+    }
+
+    function cyberEnsureForgeHero(name) {
+        const s = cyberGetForgeState();
+        if (!s.heroes[name]) s.heroes[name] = { seals: 0, items: {}, totalReforges: 0 };
+        if (!s.heroes[name].items) s.heroes[name].items = {};
+        cyberSaveForgeState(s);
+        return s.heroes[name];
+    }
+
+    function cyberAddShuraSeals(name, amount) {
+        const s = cyberGetForgeState();
+        if (!s.heroes[name]) s.heroes[name] = { seals: 0, items: {}, totalReforges: 0 };
+        s.heroes[name].seals = (s.heroes[name].seals || 0) + amount;
+        cyberSaveForgeState(s);
+    }
+
+    function cyberGetRpgHeroInventory(hero) {
+        if (!hero) return [];
+        const inv = hero.inventory || hero.items || hero.weapons || hero.bag || [];
+        if (Array.isArray(inv) && inv.length) return inv;
+        // 若舊版自創武將沒有行囊陣列，提供虛擬神兵槽，避免功能不能玩。
+        return ['龍膽亮銀槍', '青釭劍', '丈八蛇矛', '青龍偃月刀', '方天畫戟'];
+    }
+
+    function cyberGetForgeItemKey(item) {
+        if (typeof item === 'string') return item;
+        return item.name || item.title || JSON.stringify(item).slice(0,30);
+    }
+
+    function cyberRollForgeAffixes() {
+        const pool = [...CYBER_FORGE_AFFIXES].sort(() => Math.random() - 0.5).slice(0, 2);
+        return pool.map(a => ({
+            key: a.key,
+            name: a.name,
+            value: Math.floor(a.min + Math.random() * (a.max - a.min + 1)),
+            unit: a.unit
+        }));
+    }
+
+    function cyberFormatAffixes(affixes) {
+        return (affixes || []).map(a => `<span class="forge-stat">${cyberEscapeHtml(a.name)} +${a.value}${cyberEscapeHtml(a.unit || '')}</span>`).join('');
+    }
+
+    function cyberReforgeSelectedItem() {
+        const name = cyberGetActiveHeroName();
+        const hero = generals.find(g => g.name === name) || activeRpgGeneral;
+        if (!hero || !hero.isRPG) { alert('請先選定或喚醒一名自創武將。'); return; }
+
+        const sel = document.getElementById('forgeItemSelect');
+        if (!sel || !sel.value) { alert('請先選擇要重鑄的神兵。'); return; }
+
+        const state = cyberGetForgeState();
+        if (!state.heroes[name]) state.heroes[name] = { seals: 0, items: {}, totalReforges: 0 };
+        const h = state.heroes[name];
+
+        const cost = 10 + Math.floor((h.totalReforges || 0) / 5) * 5;
+        if ((h.seals || 0) < cost) {
+            alert(`修羅印不足！本次重鑄需要 ${cost} 枚，目前只有 ${h.seals || 0} 枚。可打世界Boss、劇情副本、賽季獎勵取得。`);
+            return;
+        }
+
+        h.seals -= cost;
+        h.totalReforges = (h.totalReforges || 0) + 1;
+        h.items[sel.value] = {
+            name: sel.value,
+            affixes: cyberRollForgeAffixes(),
+            updatedAt: Date.now()
+        };
+        cyberSaveForgeState(state);
+
+        cyberSeasonAdd(name, 'reforge', 8);
+        cyberAddLegendRecord('神兵重鑄', `${name} 重鑄神兵「${sel.value}」`, 10);
+        cyberSendSystemChat(`【神兵重鑄】${name} 消耗 ${cost} 枚修羅印，重鑄「${sel.value}」成功！`);
+        cyberRefreshAdvancedSystemsUI();
+        cyberRefreshEnhancedGameUI();
+    }
+
+    function cyberChallengeSelectedChapter() {
+        const name = cyberGetActiveHeroName();
+        const hero = generals.find(g => g.name === name) || activeRpgGeneral;
+        const sel = document.getElementById('chapterSelect');
+        if (!hero || !hero.isRPG) { alert('請先選定或喚醒一名自創武將。'); return; }
+        if (!sel || !sel.value) { alert('請選擇要挑戰的章節。'); return; }
+
+        const chapter = CYBER_CHAPTERS.find(c => c.id === sel.value);
+        if (!chapter) return;
+
+        const progress = cyberGetChapterProgress();
+        if (!progress.heroes[name]) progress.heroes[name] = { cleared: {}, highest: 0 };
+        const hp = progress.heroes[name];
+
+        const idx = CYBER_CHAPTERS.findIndex(c => c.id === chapter.id);
+        if (idx > 0 && !hp.cleared[CYBER_CHAPTERS[idx - 1].id]) {
+            alert('前一章尚未通關，不能挑戰此章。');
+            return;
+        }
+
+        const forge = cyberEnsureForgeHero(name);
+        const forgePower = Object.values(forge.items || {}).reduce((sum, item) => {
+            return sum + (item.affixes || []).reduce((s, a) => s + (a.key === 'atkPct' ? a.value : 0), 0);
+        }, 0);
+        const effectivePower = (hero.power || 1) + Math.floor((hero.power || 1) * forgePower / 100);
+        const chance = Math.max(0.08, Math.min(0.92, effectivePower / (effectivePower + chapter.power)));
+        const win = Math.random() < chance;
+
+        const log = `📖【${chapter.name}】${name} 挑戰 ${chapter.boss}：${win ? '通關成功' : '挑戰失敗'}！勝率約 ${Math.round(chance*100)}%`;
+        if (typeof battleLog !== 'undefined') {
+            battleLog.innerHTML += `<br><span style="color:${win ? '#00ff41' : '#ff3131'}; font-weight:bold;">${cyberEscapeHtml(log)}</span><br>`;
+            battleLog.scrollTop = battleLog.scrollHeight;
+        }
+
+        if (win) {
+            hp.cleared[chapter.id] = true;
+            hp.highest = Math.max(hp.highest || 0, idx + 1);
+            cyberSaveChapterProgress(progress);
+
+            cyberAwardTitle(name, chapter.rewardTitle, true);
+            cyberAddShuraSeals(name, chapter.rewardSeal);
+            cyberSeasonAdd(name, 'chapter', 20 + idx * 5);
+            cyberAddLegendRecord('劇情副本', `${name} 通關「${chapter.name}」，擊破 ${chapter.boss}`, 20 + idx * 5);
+            cyberSendSystemChat(`【劇情通關】${name} 通關「${chapter.name}」，獲得稱號【${chapter.rewardTitle}】與修羅印 +${chapter.rewardSeal}！`);
+            if (idx === CYBER_CHAPTERS.length - 1) {
+                cyberAwardTitle(name, '三國武神傳說', true);
+                cyberSendSystemChat(`【傳說誕生】${name} 完成三國武神傳全章節，封為【三國武神傳說】！`);
+            }
+        } else {
+            cyberAddShuraSeals(name, Math.max(2, Math.floor(chapter.rewardSeal / 5)));
+            cyberSendSystemChat(`【劇情挑戰】${name} 挑戰「${chapter.name}」失敗，但獲得修羅印安慰獎。`);
+        }
+
+        cyberTryAdventure('battle', name);
+        cyberRefreshAdvancedSystemsUI();
+        cyberRefreshEnhancedGameUI();
+        cyberRefreshThreeSystemsUI();
+    }
+
+    function cyberClaimSeasonReward() {
+        const name = cyberGetActiveHeroName();
+        const hero = generals.find(g => g.name === name) || activeRpgGeneral;
+        if (!hero || !hero.isRPG) { alert('請先選定或喚醒一名自創武將。'); return; }
+
+        const state = cyberGetSeasonState();
+        const h = cyberEnsureSeasonHero(name);
+        const milestones = [
+            { score: 50, seals: 20, title: '賽季新銳' },
+            { score: 150, seals: 45, title: '賽季豪傑' },
+            { score: 300, seals: 90, title: '本季武神' }
+        ];
+
+        let claimedAny = false;
+        if (!state.claimed[name]) state.claimed[name] = {};
+        milestones.forEach(m => {
+            if ((h.score || 0) >= m.score && !state.claimed[name][m.score]) {
+                state.claimed[name][m.score] = true;
+                cyberAddShuraSeals(name, m.seals);
+                cyberAwardTitle(name, m.title, true);
+                cyberAddLegendRecord('賽季獎勵', `${name} 達成賽季 ${m.score} 分，取得【${m.title}】與修羅印 +${m.seals}`, m.score);
+                claimedAny = true;
+            }
+        });
+        cyberSaveSeasonState(state);
+
+        if (claimedAny) {
+            cyberSendSystemChat(`【賽季獎勵】${name} 領取賽季階段獎勵！`);
+            alert('已領取可領取的賽季獎勵！');
+        } else {
+            alert('目前沒有可領取的賽季階段獎勵。');
+        }
+        cyberRefreshAdvancedSystemsUI();
+        cyberRefreshEnhancedGameUI();
+    }
+
+    function cyberRefreshAdvancedSystemsUI() {
+        const name = cyberGetActiveHeroName();
+        const hero = generals.find(g => g.name === name) || activeRpgGeneral;
+
+        // 賽季制
+        const seasonBox = document.getElementById('seasonBoard');
+        if (seasonBox) {
+            const season = cyberGetSeasonState();
+            const rows = Object.entries(season.heroes || {}).sort((a,b)=>(b[1].score||0)-(a[1].score||0)).slice(0,8);
+            const my = cyberEnsureSeasonHero(name);
+            seasonBox.innerHTML = `
+                <div class="season-row">目前賽季：<span class="season-badge">${cyberEscapeHtml(season.seasonId)}</span></div>
+                <div class="season-row">目前武將：<span style="color:#00ff41; font-weight:bold;">${cyberEscapeHtml(name)}</span><br>賽季分 ${my.score || 0}｜擂台勝 ${my.arenaWins || 0}｜章節 ${my.chapters || 0}｜重鑄 ${my.reforges || 0}</div>
+                <div class="season-row"><strong style="color:#ffd700;">賽季榜</strong><br>${rows.length ? rows.map((r,i)=>`#${i+1} ${cyberEscapeHtml(r[0])}：${r[1].score || 0} 分`).join('<br>') : '尚無賽季紀錄'}</div>
+            `;
+        }
+
+        // 劇情副本
+        const chapterBox = document.getElementById('chapterBoard');
+        const chapterSel = document.getElementById('chapterSelect');
+        if (chapterBox) {
+            const progress = cyberEnsureChapterHero(name);
+            chapterBox.innerHTML = CYBER_CHAPTERS.map((c, idx) => {
+                const locked = idx > 0 && !progress.cleared[CYBER_CHAPTERS[idx-1].id];
+                const clear = !!progress.cleared[c.id];
+                return `<div class="chapter-row ${locked ? 'chapter-locked' : ''}">
+                    ${clear ? '✅' : locked ? '🔒' : '⬜'} <strong>${cyberEscapeHtml(c.name)}</strong><br>
+                    Boss：<span class="chapter-boss">${cyberEscapeHtml(c.boss)}</span>｜戰力 ${c.power}<br>
+                    ${cyberEscapeHtml(c.desc)}｜獎勵：稱號【${cyberEscapeHtml(c.rewardTitle)}】、修羅印 +${c.rewardSeal}
+                </div>`;
+            }).join('');
+        }
+        if (chapterSel) {
+            const progress = cyberEnsureChapterHero(name);
+            const current = chapterSel.value;
+            chapterSel.innerHTML = '';
+            CYBER_CHAPTERS.forEach((c, idx) => {
+                const locked = idx > 0 && !progress.cleared[CYBER_CHAPTERS[idx-1].id];
+                const clear = !!progress.cleared[c.id];
+                const opt = new Option(`${clear ? '✅' : locked ? '🔒' : '⚔️'} ${c.name}｜${c.boss}`, c.id);
+                opt.disabled = locked;
+                chapterSel.add(opt);
+            });
+            if ([...chapterSel.options].some(o => o.value === current)) chapterSel.value = current;
+        }
+
+        // 神兵重鑄
+        const forgeBox = document.getElementById('forgeBoard');
+        const forgeSel = document.getElementById('forgeItemSelect');
+        if (forgeBox) {
+            const forge = cyberEnsureForgeHero(name);
+            const forgedItems = Object.values(forge.items || {});
+            forgeBox.innerHTML = `
+                <div class="forge-row">目前武將：<span style="color:#00ff41; font-weight:bold;">${cyberEscapeHtml(name)}</span></div>
+                <div class="forge-row">修羅印：<span style="color:#ffd700; font-weight:bold;">${forge.seals || 0}</span>｜重鑄次數：${forge.totalReforges || 0}</div>
+                <div class="forge-row"><strong style="color:#c084ff;">已重鑄神兵</strong><br>
+                    ${forgedItems.length ? forgedItems.map(it => `<div><span class="forge-item-name">${cyberEscapeHtml(it.name)}</span><br>${cyberFormatAffixes(it.affixes)}</div>`).join('') : '尚未重鑄神兵。'}
+                </div>
+            `;
+        }
+        if (forgeSel) {
+            const current = forgeSel.value;
+            forgeSel.innerHTML = '';
+            const inv = cyberGetRpgHeroInventory(hero);
+            inv.forEach(item => {
+                const key = cyberGetForgeItemKey(item);
+                forgeSel.add(new Option(`重鑄：${key}`, key));
+            });
+            if ([...forgeSel.options].some(o => o.value === current)) forgeSel.value = current;
+        }
+    }
+
     function cyberRefreshAllPublicWarroom() {
         const nickInput = document.getElementById('chatNickInput');
         if (nickInput && !nickInput.value) nickInput.value = localStorage.getItem(CYBER_NICK_KEY) || CYBER_OWNER_NAME;
@@ -6981,6 +7458,7 @@ function cyberRefreshArenaUI() {
         cyberRefreshArenaUI();
         if (typeof cyberRefreshEnhancedGameUI === 'function') cyberRefreshEnhancedGameUI();
         if (typeof cyberRefreshThreeSystemsUI === 'function') cyberRefreshThreeSystemsUI();
+        if (typeof cyberRefreshAdvancedSystemsUI === 'function') cyberRefreshAdvancedSystemsUI();
     }
 
     function cyberLoadScript(src) {
@@ -7055,6 +7533,7 @@ function cyberRefreshArenaUI() {
         setInterval(cyberRefreshArenaSelect, 3000);
         setInterval(cyberRefreshEnhancedGameUI, 3000);
         setInterval(cyberRefreshThreeSystemsUI, 3000);
+        setInterval(cyberRefreshAdvancedSystemsUI, 3000);
     });
 
 </script>
