@@ -5481,12 +5481,33 @@
         if (arr.length === 0) {
             box.innerHTML = pinnedHtml + '<span style="color:#777;">尚無聊天訊息，第一位武者可以開始發言。</span>';
         } else {
-            box.innerHTML = pinnedHtml + arr.map(m => {
-                const displayName = m.name || m.nick || '無名武者';
-                const displayMsg = (m.msg !== undefined) ? m.msg : (m.message || '');
-                const mutedTag = muted[displayName] ? '<span style="color:#ff3131; font-size:11px;">【已禁言】</span>' : '';
-                return `<div class="chat-row"><span class="name">${cyberEscapeHtml(displayName)}</span>${mutedTag}<span class="time">${cyberNowTime(m.time)}</span><br>${cyberEscapeHtml(displayMsg)}</div>`;
-            }).join('');
+box.innerHTML = pinnedHtml + arr.map(m => {
+    const displayName = m.name || m.nick || '無名武者';
+    const displayMsg = (m.msg !== undefined) ? m.msg : (m.message || '');
+    const ipTag = m.ipTag || '';
+
+    const mutedByName = muted[displayName] === true || muted[cyberSafeMuteKey('nick', displayName)] === true;
+    const mutedByIp = ipTag && muted[cyberSafeMuteKey('ip', ipTag)] === true;
+
+    const mutedTag = mutedByName || mutedByIp
+        ? '<span style="color:#ff3131; font-size:11px;">【已禁言】</span>'
+        : '';
+
+    const ownerIpTag = cyberIsRoomOwner() && ipTag
+        ? `<br><span style="color:#777; font-size:11px;">裝置標記：${cyberEscapeHtml(ipTag)}</span>`
+        : '';
+
+    return `
+        <div class="chat-row">
+            <span class="name">${cyberEscapeHtml(displayName)}</span>
+            ${mutedTag}
+            <span class="time">${cyberNowTime(m.time)}</span>
+            <br>
+            ${cyberEscapeHtml(displayMsg)}
+            ${ownerIpTag}
+        </div>
+    `;
+}).join('');
         }
         box.scrollTop = box.scrollHeight;
     }
