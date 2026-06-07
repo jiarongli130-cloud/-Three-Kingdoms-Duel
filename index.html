@@ -1075,24 +1075,6 @@
             <button onclick="deleteSpecificRpgGeneral()" style="border-color: #a52a2a; color: #ff3131; flex: 1;">🗑️ 徹底抹殺</button>
         </div>
 
-        <!-- 自創武將登陸後：主動遭遇敵人單挑系統 -->
-        <div style="border:1px solid #ff3131; padding:10px; background:rgba(255,49,49,0.06); margin-top:5px; border-radius:5px;">
-            <div style="color:#ff3131; font-weight:bold; text-shadow:0 0 5px #ff3131; margin-bottom:5px;">⚠️ 自創武將登陸後・主動遭遇敵人</div>
-            <div style="font-size:12px; color:#ccc; margin-bottom:8px;">確認命格或喚醒自創武將後，有機率遭遇同級～高 3 級的敵人主動單挑；戰鬥會直接在上方 VS 單挑介面進行。</div>
-            <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
-                <label style="color:#ffd700; font-size:12px; min-width:90px;">遭遇機率：</label>
-                <select id="activeEncounterRateSelect" onchange="saveActiveEncounterRate()" style="flex:1; min-width:130px; border-color:#ff3131; color:#ff3131; background:#000;">
-                    <option value="none">無</option>
-                    <option value="rare">極少</option>
-                    <option value="low">少</option>
-                    <option value="mid" selected>中</option>
-                    <option value="high">多</option>
-                    <option value="veryHigh">頻繁</option>
-                </select>
-                <button onclick="forceActiveEnemyEncounter()" style="flex:1; min-width:130px; border-color:#ff8c00; color:#ff8c00; font-size:12px;">🔥 手動觸發來犯</button>
-            </div>
-        </div>
-
         <div id="rpgPanel" style="display: none; border: 1px solid #ffd700; padding: 10px; background: #222; margin-top: 10px; width: 100%; box-sizing: border-box;">
             <h4 style="margin: 0 0 10px 0; color: #ffd700;">⚔️ 武將狀態與行囊</h4>
             <div id="rpgStatsDisplay" style="font-size: 14px; margin-bottom: 10px; color: #ccc;"></div>
@@ -1498,6 +1480,26 @@
             <div class="hp-bar-container" style="border: 1px solid var(--accent-red);"><div id="p2HpBar" class="hp-bar p2-hp"></div></div>
             <div id="p2HpText" style="color: var(--accent-red); font-weight: bold; margin-top: 5px;">100/100</div>
         </div>
+    </div>
+
+    <!-- 自創武將主動遇敵系統：只限異界修羅，不包含歷史遺珠 -->
+    <div class="controls" id="rpgEncounterControlPanel" style="border: 1px solid #ff8c00; padding: 12px; border-radius: 5px; background: rgba(255,140,0,0.06); margin-top: 12px; align-items: center;">
+        <div style="flex:2; min-width:240px; color:#ffd700; font-size:13px; line-height:1.6;">
+            <strong style="color:#ff8c00; text-shadow:0 0 6px #ff8c00;">⚔️ 自創武將主動遇敵</strong><br>
+            只會觸發異界修羅；歷史遺珠不會被系統主動拉入戰鬥。敵人取自代碼人物，排除蔣大器與毛宗崗，並以同級～高 3 級生成。
+        </div>
+        <div style="flex:1; min-width:170px;">
+            <label style="font-size:12px; color:#aaa;">主動遇敵機率 / 間隔：</label>
+            <select id="rpgEncounterRateSelect" onchange="cyberSetEncounterRate(this.value)" style="border-color:#ff8c00; color:#ff8c00;">
+                <option value="none">無</option>
+                <option value="rarely">極少</option>
+                <option value="low">少</option>
+                <option value="medium">中</option>
+                <option value="high">多</option>
+                <option value="frequent">頻繁</option>
+            </select>
+        </div>
+        <button onclick="cyberManualEncounter()" style="flex:1; min-width:150px; border-color:#ff3131; color:#ff3131; font-weight:bold;">🔥 手動遇敵</button>
     </div>
 
     <div id="battleLog">系統待命中...請選擇將領並按下發動，或舉辦賽事。</div>
@@ -3210,115 +3212,6 @@
     let activeRpgGeneral = null;
 
     // ==============================================================
-    // ⚠️ 自創武將登陸後：主動遭遇敵人單挑系統
-    // ==============================================================
-    const ACTIVE_ENCOUNTER_RATE_KEY = 'activeEnemyEncounterRate_v1';
-    const ACTIVE_ENCOUNTER_RATES = {
-        none: { label: '無', chance: 0 },
-        rare: { label: '極少', chance: 0.05 },
-        low: { label: '少', chance: 0.12 },
-        mid: { label: '中', chance: 0.25 },
-        high: { label: '多', chance: 0.45 },
-        veryHigh: { label: '頻繁', chance: 0.70 }
-    };
-
-    function initActiveEncounterRateSelect() {
-        const sel = document.getElementById('activeEncounterRateSelect');
-        if (!sel) return;
-        const saved = localStorage.getItem(ACTIVE_ENCOUNTER_RATE_KEY) || 'mid';
-        sel.value = ACTIVE_ENCOUNTER_RATES[saved] ? saved : 'mid';
-    }
-
-    function saveActiveEncounterRate() {
-        const sel = document.getElementById('activeEncounterRateSelect');
-        if (!sel) return;
-        localStorage.setItem(ACTIVE_ENCOUNTER_RATE_KEY, sel.value);
-        const rate = ACTIVE_ENCOUNTER_RATES[sel.value] || ACTIVE_ENCOUNTER_RATES.mid;
-        battleLog.innerHTML += `<br><span style="color:#ff8c00; font-weight:bold;">⚠️【來犯機率調整】自創武將登陸後主動遭遇敵人的機率已設為：${rate.label}。</span><br>`;
-        battleLog.scrollTop = battleLog.scrollHeight;
-    }
-
-    function getActiveEncounterRate() {
-        const sel = document.getElementById('activeEncounterRateSelect');
-        const key = (sel && sel.value) || localStorage.getItem(ACTIVE_ENCOUNTER_RATE_KEY) || 'mid';
-        return ACTIVE_ENCOUNTER_RATES[key] || ACTIVE_ENCOUNTER_RATES.mid;
-    }
-
-    function isSelfCreatedGeneralForEncounter(gen) {
-        return !!(gen && (gen.isRPG || gen.inventory !== undefined) && !gen.isActiveEncounterEnemy);
-    }
-
-    function createActiveEncounterEnemy(hero) {
-        const gap = Math.floor(Math.random() * 4); // 同級～高 3 級
-        const heroLevel = hero && hero.isRPG ? (hero.level || 1) : 1;
-        const enemyLevel = heroLevel + gap;
-        const basePool = generals.filter(g => g && !g.isHidden && !g.isActiveEncounterEnemy && g.name !== hero.name);
-        const base = basePool.length ? basePool[Math.floor(Math.random() * basePool.length)] : { name: '無名刺客', power: 1, skills: [], rank: '暗影流' };
-        const scale = 1 + gap * 0.08 + Math.random() * 0.06;
-        const heroPower = Math.max(1, hero.power || 1);
-        const basePower = Math.max(heroPower, base.power || 1);
-        const enemyPower = Math.max(1, Math.floor(Math.max(heroPower, basePower * 0.85) * scale + gap * 10));
-        const copiedSkills = Array.isArray(base.skills) ? [...base.skills].slice(0, 4) : [];
-        return {
-            name: `來犯敵將・${base.name}影武者 LV.${enemyLevel}`,
-            power: enemyPower,
-            rank: `主動來犯者｜${gap === 0 ? '同級' : '高 ' + gap + ' 級'}｜原型：${base.name}`,
-            skills: copiedSkills,
-            inventory: [],
-            harem: [],
-            level: enemyLevel,
-            isActiveEncounterEnemy: true
-        };
-    }
-
-    function clearOldActiveEncounterEnemies() {
-        for (let i = generals.length - 1; i >= 0; i--) {
-            if (generals[i] && generals[i].isActiveEncounterEnemy) generals.splice(i, 1);
-        }
-    }
-
-    function triggerActiveEnemyEncounter(hero, forced = false) {
-        if (!isSelfCreatedGeneralForEncounter(hero)) return false;
-        const rate = getActiveEncounterRate();
-        if (!forced && Math.random() >= rate.chance) {
-            battleLog.innerHTML += `<br><span style="color:#777;">⚠️【風聲鶴唳】${hero.name} 登陸沙盤，四野殺氣浮動；本次未遭遇主動來犯者。（目前機率：${rate.label}）</span><br>`;
-            battleLog.scrollTop = battleLog.scrollHeight;
-            return false;
-        }
-
-        clearOldActiveEncounterEnemies();
-        const enemy = createActiveEncounterEnemy(hero);
-        generals.push(enemy);
-        updateDropdowns();
-
-        const heroIndex = generals.findIndex(g => g === hero || (g && g.name === hero.name && !g.isActiveEncounterEnemy));
-        const enemyIndex = generals.findIndex(g => g === enemy);
-        if (heroIndex < 0 || enemyIndex < 0) return false;
-
-        p1Select.value = heroIndex;
-        p2Select.value = enemyIndex;
-        checkRpgPanel();
-        battleLog.innerHTML = `<h2 style="color:#ff3131; text-align:center; text-shadow:0 0 10px #ff3131;">⚠️ 主動遭遇戰爆發！</h2>` +
-            `<div style="color:#ddd; text-align:center; font-weight:bold; margin-bottom:10px;">${hero.name} 剛登陸沙盤，遭遇 <span style="color:#ff3131;">${enemy.name}</span> 主動單挑！<br>敵人等級：LV.${enemy.level}｜敵人武力：${enemy.power}｜機率設定：${rate.label}</div>`;
-        battleLog.scrollTop = battleLog.scrollHeight;
-        setTimeout(() => startDuel(false), 250);
-        return true;
-    }
-
-    function tryActiveEnemyEncounter(hero, source = 'login') {
-        setTimeout(() => triggerActiveEnemyEncounter(hero, false), 350);
-    }
-
-    function forceActiveEnemyEncounter() {
-        const hero = activeRpgGeneral || (p1Select && generals[p1Select.value]);
-        if (!isSelfCreatedGeneralForEncounter(hero)) {
-            alert('請先確認、喚醒，或在單挑我軍選定一名自創武將。');
-            return;
-        }
-        triggerActiveEnemyEncounter(hero, true);
-    }
-
-    // ==============================================================
     // 😈 【修羅七誓】業障監控系統：每位自創武將獨立保存
     // ==============================================================
     function getAsuraStorageKey(gen = activeRpgGeneral) {
@@ -3433,7 +3326,7 @@
             currentRpgDraft = {
                 name: nameInput, power: initPower, rank: "異界凡人 (LV.1)",
                 isRPG: true, level: 1, exp: 0, expNext: 100, statPoints: 0, skillPoints: 0,
-                skills: initSkills, inventory: [], harem: [], masteries: {}, masteredSkills: [], masterBattleCount: 0, isMaxAwakened: false // 新增 harem 與拜師學藝陣列
+                skills: initSkills, inventory: [], harem: [], masteries: {}, masteredSkills: [], masterBattleCount: 0, encounterWins: 0, encounterLosses: 0, isMaxAwakened: false // 新增 harem、拜師學藝與主動遇敵紀錄
             };
             document.getElementById('prevSkillsContainer').style.display = "block";
             
@@ -3479,11 +3372,9 @@
         }
         
         battleLog.scrollTop = battleLog.scrollHeight;
-        const landedRpgGeneral = currentRpgDraft;
         document.getElementById('rpgPreview').style.display = "none";
         document.getElementById('rpgName').value = '';
         currentRpgDraft = null;
-        tryActiveEnemyEncounter(landedRpgGeneral, 'confirm');
     }
 
     function gainExp(generalName, expAmount, silent = false) {
@@ -3798,7 +3689,6 @@
         battleLog.innerHTML += `<br><span style="color:#1e90ff; font-weight:bold;">📂 【時空召喚】成功讀取自創武將 ${gen.name} 降臨沙盤！</span><br>`;
         battleLog.scrollTop = battleLog.scrollHeight;
         cyberRefreshEnhancedGameUI();
-        tryActiveEnemyEncounter(gen, 'load');
     }
 
     function deleteSpecificRpgGeneral() {
@@ -3891,7 +3781,6 @@
     
     updateDropdowns();
     populateSavedGenerals();
-    initActiveEncounterRateSelect();
 
     function randomize() {
         let maxIdx = p1Select.options.length;
@@ -3899,6 +3788,256 @@
         p2Select.selectedIndex = Math.floor(Math.random() * maxIdx);
         battleLog.innerHTML = "天道已選定隨機將領。";
         checkRpgPanel();
+    }
+
+    // ==============================================================
+    // ⚔️ 自創武將主動遇敵系統：異界修羅限定，歷史遺珠不觸發
+    // ==============================================================
+    const CYBER_ENCOUNTER_RATE_KEY = 'cyberRpgEncounterRate_v1';
+    const CYBER_ENCOUNTER_EXCLUDED_NAMES = ['蔣大器', '毛宗崗'];
+    const CYBER_ENCOUNTER_RATES = {
+        none:     { label:'無',   interval:0,      chance:0 },
+        rarely:   { label:'極少', interval:300000, chance:0.45 },
+        low:      { label:'少',   interval:180000, chance:0.55 },
+        medium:   { label:'中',   interval:120000, chance:0.65 },
+        high:     { label:'多',   interval:75000,  chance:0.78 },
+        frequent: { label:'頻繁', interval:45000,  chance:0.90 }
+    };
+    let cyberEncounterTimer = null;
+    let cyberEncounterLock = false;
+    let cyberCurrentEncounter = null;
+
+    function cyberGetEncounterRate() {
+        const saved = localStorage.getItem(CYBER_ENCOUNTER_RATE_KEY) || 'none';
+        return CYBER_ENCOUNTER_RATES[saved] ? saved : 'none';
+    }
+
+    function cyberSetEncounterRate(rate) {
+        if (!CYBER_ENCOUNTER_RATES[rate]) rate = 'none';
+        localStorage.setItem(CYBER_ENCOUNTER_RATE_KEY, rate);
+        cyberRestartEncounterTimer();
+        const cfg = CYBER_ENCOUNTER_RATES[rate];
+        if (typeof battleLog !== 'undefined' && battleLog) {
+            battleLog.innerHTML += `<br><span style="color:#ff8c00; font-weight:bold;">⚔️【主動遇敵設定】已切換為：${cfg.label}${rate === 'none' ? '，系統不會自動拉怪。' : `，系統會以安全間隔判定遇敵，避免頁面連續戰鬥造成崩潰。`}</span><br>`;
+            battleLog.scrollTop = battleLog.scrollHeight;
+        }
+    }
+
+    function cyberInitEncounterControls() {
+        const sel = document.getElementById('rpgEncounterRateSelect');
+        if (sel) sel.value = cyberGetEncounterRate();
+        cyberRestartEncounterTimer();
+    }
+
+    function cyberRestartEncounterTimer() {
+        if (cyberEncounterTimer) {
+            clearInterval(cyberEncounterTimer);
+            cyberEncounterTimer = null;
+        }
+        const rate = cyberGetEncounterRate();
+        const cfg = CYBER_ENCOUNTER_RATES[rate];
+        if (!cfg || !cfg.interval) return;
+        cyberEncounterTimer = setInterval(() => cyberTryAutoEncounter(rate), cfg.interval);
+    }
+
+    function cyberGetSelectedRpgHero() {
+        const p1 = generals[p1Select.value];
+        const p2 = generals[p2Select.value];
+        if (p1 && p1.isRPG) return p1;
+        if (p2 && p2.isRPG) return p2;
+        if (activeRpgGeneral && activeRpgGeneral.isRPG) return activeRpgGeneral;
+        return null;
+    }
+
+    function cyberRemoveOldEncounterEnemies() {
+        for (let i = generals.length - 1; i >= 0; i--) {
+            if (generals[i] && generals[i].isEncounterEnemy) generals.splice(i, 1);
+        }
+    }
+
+    function cyberPickEncounterBaseEnemy(hero) {
+        const pool = generals.filter(g => {
+            if (!g || g.isHidden || g.isEncounterEnemy) return false;
+            if (g.isRPG || g.inventory !== undefined) return false; // 排除異界修羅與歷史遺珠/自創凡人
+            if (CYBER_ENCOUNTER_EXCLUDED_NAMES.includes(g.name)) return false;
+            if (g.name === hero.name) return false;
+            return typeof g.power === 'number' && isFinite(g.power) && g.power > 0;
+        });
+        if (!pool.length) return null;
+
+        // 優先挑與自創武將目前戰力接近者，避免一開場就極端輾壓造成體驗失衡。
+        const heroPower = Math.max(1, hero.power || 1);
+        const near = pool.filter(g => Math.abs((g.power || 1) - Math.min(100, heroPower)) <= 25);
+        const finalPool = near.length ? near : pool;
+        return finalPool[Math.floor(Math.random() * finalPool.length)];
+    }
+
+    function cyberBuildEncounterEnemy(hero, baseEnemy, manual = false) {
+        const heroLevel = Math.max(1, parseInt(hero.level || 1));
+        const levelDelta = Math.floor(Math.random() * 4); // 同級～高三級
+        const enemyLevel = heroLevel + levelDelta;
+        const heroPower = Math.max(1, hero.power || 1);
+        const basePower = Math.max(1, baseEnemy.power || 1);
+        const levelPressure = levelDelta * Math.max(3, Math.floor(heroPower * 0.03));
+        const baseFlavor = Math.floor(Math.min(20, basePower / 5));
+        const encounterPower = Math.max(1, Math.floor(heroPower + levelPressure + baseFlavor + Math.random() * 6 - 2));
+        return {
+            ...baseEnemy,
+            name: `${baseEnemy.name}【遇敵LV.${enemyLevel}】`,
+            baseEncounterName: baseEnemy.name,
+            rank: `${baseEnemy.rank || '沙盤武將'}｜主動遇敵・${levelDelta === 0 ? '同級' : `高${levelDelta}級`}｜${manual ? '手動' : '自動'}`,
+            power: encounterPower,
+            level: enemyLevel,
+            isEncounterEnemy: true,
+            isHidden: false,
+            inventory: undefined,
+            harem: undefined
+        };
+    }
+
+    function cyberSelectDropdownByGeneral(targetSelect, genObj) {
+        if (!targetSelect || !genObj) return;
+        const idx = generals.indexOf(genObj);
+        for (let i = 0; i < targetSelect.options.length; i++) {
+            if (parseInt(targetSelect.options[i].value) === idx) {
+                targetSelect.selectedIndex = i;
+                return;
+            }
+        }
+    }
+
+    async function cyberStartEncounter(manual = false) {
+        if (cyberEncounterLock || window.cyberDuelBusy) {
+            if (manual) alert('目前已有戰鬥正在進行，請等這場 VS 結束後再遇敵。');
+            return;
+        }
+        const hero = cyberGetSelectedRpgHero();
+        if (!hero || !hero.isRPG) {
+            if (manual) alert('請先在 VS 選單選定一名「異界修羅」自創武將；歷史遺珠不會觸發主動遇敵。');
+            return;
+        }
+
+        const baseEnemy = cyberPickEncounterBaseEnemy(hero);
+        if (!baseEnemy) {
+            if (manual) alert('找不到可用敵人。請確認代碼人物庫存在，且不是蔣大器、毛宗崗或自創武將。');
+            return;
+        }
+
+        cyberEncounterLock = true;
+        cyberRemoveOldEncounterEnemies();
+        const encounterEnemy = cyberBuildEncounterEnemy(hero, baseEnemy, manual);
+        generals.push(encounterEnemy);
+        updateDropdowns();
+        cyberSelectDropdownByGeneral(p1Select, hero);
+        cyberSelectDropdownByGeneral(p2Select, encounterEnemy);
+        checkRpgPanel();
+
+        cyberCurrentEncounter = {
+            heroName: hero.name,
+            enemyName: encounterEnemy.name,
+            baseEnemyName: baseEnemy.name,
+            manual,
+            enemyLevel: encounterEnemy.level,
+            startedAt: Date.now()
+        };
+
+        battleLog.innerHTML = `<span style="color:#ff3131; font-weight:bold; font-size:18px;">⚔️【${manual ? '手動遇敵' : '主動遇敵'}】${hero.name} 行走沙盤，遭遇 ${baseEnemy.name}！</span><br>` +
+            `<span style="color:#ffd700;">敵將等級：LV.${encounterEnemy.level}（${encounterEnemy.level === (hero.level || 1) ? '同級' : `高 ${encounterEnemy.level - (hero.level || 1)} 級`}）｜戰力投影：${encounterEnemy.power}</span><br>` +
+            `<span style="color:#aaa;">戰鬥已送入 VS 介面，不會連續觸發，避免頁面負荷過高。</span><br><br>`;
+
+        try {
+            await startDuel(false);
+        } finally {
+            cyberEncounterLock = false;
+        }
+    }
+
+    function cyberManualEncounter() {
+        cyberStartEncounter(true);
+    }
+
+    function cyberTryAutoEncounter(rate = cyberGetEncounterRate()) {
+        const cfg = CYBER_ENCOUNTER_RATES[rate];
+        if (!cfg || !cfg.interval || cyberEncounterLock || window.cyberDuelBusy) return;
+        if (Math.random() > cfg.chance) return;
+        const hero = cyberGetSelectedRpgHero();
+        if (!hero || !hero.isRPG) return;
+        cyberStartEncounter(false);
+    }
+
+    function cyberSaveEncounterHero(hero) {
+        if (!hero || !hero.isRPG) return;
+        normalizeRpgSkillBuckets(hero);
+        let savedData = JSON.parse(localStorage.getItem('rpgGenerals')) || {};
+        savedData[hero.name] = hero;
+        localStorage.setItem('rpgGenerals', JSON.stringify(savedData));
+        populateSavedGenerals();
+    }
+
+    function cyberApplyEncounterRewards(hero, defeatedEnemy, enemyLevel, manual = false) {
+        if (!hero || !hero.isRPG) return;
+        hero.encounterWins = (hero.encounterWins || 0) + 1;
+        hero.statPoints = (hero.statPoints || 0) + 1;
+        const levelGap = Math.max(0, enemyLevel - (hero.level || 1));
+        const expReward = 260 + levelGap * 90 + (manual ? 40 : 0);
+        const coinReward = 10 + levelGap * 4 + (manual ? 2 : 0);
+        const sealReward = 2 + levelGap;
+        gainExp(hero.name, expReward);
+
+        if (Math.random() < 0.18 + levelGap * 0.04) {
+            hero.skillPoints = (hero.skillPoints || 0) + 1;
+            battleLog.innerHTML += `<span style="color:#00ffff; font-weight:bold;">📘【遇敵悟道】${hero.name} 在生死對決中頓悟，額外獲得技能點 +1！</span><br>`;
+        }
+        if (Math.random() < 0.12 + levelGap * 0.03) {
+            const t = levelGap >= 3 ? '越級獵將者' : '沙盤獵將';
+            if (typeof cyberAwardTitle === 'function') cyberAwardTitle(hero.name, t, true);
+        }
+
+        if (typeof cyberAddCoins === 'function') cyberAddCoins(hero.name, coinReward, '主動遇敵勝利');
+        if (typeof cyberAddShuraSeals === 'function') cyberAddShuraSeals(hero.name, sealReward);
+        if (typeof cyberDailyAdd === 'function') cyberDailyAdd('arenaFight', 1, hero.name);
+        if (typeof cyberSeasonAdd === 'function') cyberSeasonAdd(hero.name, 'arenaWin', 6 + levelGap * 2);
+        if (typeof cyberAddFactionResult === 'function') cyberAddFactionResult(hero.name, 'win', 2 + levelGap);
+        if (typeof cyberEventAdd === 'function') cyberEventAdd(hero.name, 'arena', 1);
+        if (typeof cyberApplyDestinyBonus === 'function') cyberApplyDestinyBonus(hero.name, 'arena');
+        if (typeof cyberTryAdventure === 'function') cyberTryAdventure('battle', hero.name);
+        if (typeof cyberAddLegendRecord === 'function') cyberAddLegendRecord('主動遇敵', `${hero.name} 擊敗 ${defeatedEnemy}，取得武神幣 +${coinReward}、修羅印 +${sealReward}、武力點 +1`, 12 + levelGap);
+        triggerBossDrop(hero, defeatedEnemy);
+        cyberSaveEncounterHero(hero);
+        battleLog.innerHTML += `<br><div style="border:1px solid #ffd700; padding:10px; background:rgba(255,215,0,0.08); margin-top:8px;">
+            <span style="color:#ffd700; font-weight:bold; font-size:16px;">🎁【主動遇敵戰利品】${hero.name} 擊敗 ${defeatedEnemy}！</span><br>
+            <span style="color:#00ff41;">EXP +${expReward}、武力點 +1、武神幣 +${coinReward}、修羅印 +${sealReward}</span><br>
+            <span style="color:#aaa;">並同步推進：每日任務、賽季積分、軍團積分、限時活動、天命/奇遇、封神榜紀錄。</span>
+        </div><br>`;
+    }
+
+    function cyberApplyEncounterLoss(hero, enemyName) {
+        if (!hero || !hero.isRPG) return;
+        hero.encounterLosses = (hero.encounterLosses || 0) + 1;
+        gainExp(hero.name, 120);
+        if (typeof cyberAddCoins === 'function') cyberAddCoins(hero.name, 3, '主動遇敵敗北參戰');
+        if (typeof cyberDailyAdd === 'function') cyberDailyAdd('arenaFight', 1, hero.name);
+        if (typeof cyberAddFactionResult === 'function') cyberAddFactionResult(hero.name, 'lose', 1);
+        if (typeof cyberSeasonAdd === 'function') cyberSeasonAdd(hero.name, 'arenaLose', 1);
+        if (typeof cyberTryAdventure === 'function') cyberTryAdventure('battle', hero.name);
+        cyberSaveEncounterHero(hero);
+        battleLog.innerHTML += `<br><span style="color:#8a2be2; font-weight:bold;">💀【遇敵敗北淬鍊】${hero.name} 不敵 ${enemyName}，仍獲得 EXP +120、武神幣 +3，並推進參戰類紀錄。</span><br>`;
+    }
+
+    function cyberResolveCurrentEncounter(winnerObj, loserObj) {
+        if (!cyberCurrentEncounter) return;
+        const data = cyberCurrentEncounter;
+        cyberCurrentEncounter = null;
+        const hero = generals.find(g => g.name === data.heroName && g.isRPG);
+        const enemyDisplay = data.baseEnemyName || data.enemyName || '遭遇敵';
+        if (!hero) return;
+        if (winnerObj && winnerObj.name === hero.name) {
+            cyberApplyEncounterRewards(hero, enemyDisplay, data.enemyLevel || (hero.level || 1), data.manual);
+        } else {
+            cyberApplyEncounterLoss(hero, enemyDisplay);
+        }
+        renderRpgPanel(hero);
+        updateDropdowns();
     }
 
     function randomizeTeam() {
@@ -4074,6 +4213,11 @@
     // ==============================================================
 
     async function startDuel(isTournamentMode = false, carryHp1 = null, carryHp2 = null, returnFullResult = false) {
+        if (window.cyberDuelBusy && !isTournamentMode) {
+            alert('目前已有 VS 戰鬥正在進行，請等戰鬥結束後再發動。');
+            return -1;
+        }
+        window.cyberDuelBusy = true;
         const p1 = generals[p1Select.value];
         const p2 = generals[p2Select.value];
         
@@ -4465,9 +4609,16 @@
             }
         }
         
+        const winnerObj = h1 > h2 ? p1 : p2;
+        const loserObj = h1 > h2 ? p2 : p1;
+        if (!isTournamentMode && typeof cyberResolveCurrentEncounter === 'function') {
+            cyberResolveCurrentEncounter(winnerObj, loserObj);
+        }
+
         updateAsuraUI();
 
         const winnerIndex = h1 > h2 ? parseInt(p1Select.value) : parseInt(p2Select.value);
+        window.cyberDuelBusy = false;
         if (returnFullResult) {
             return {
                 winnerIndex: winnerIndex,
@@ -6688,7 +6839,7 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         loseScore.currentStreak = 0;
 
         if ([3,5,10,20,50].includes(winScore.currentStreak)) {
-            cyberSendSystemChat(`【擂台連勝】${result.winner.name} 達成 ${winScore.currentStreak} 連勝！`);
+            cyberSendArenaChat(`【擂台連勝】${result.winner.name} 達成 ${winScore.currentStreak} 連勝！`);
             cyberAddLegendRecord('擂台連勝', `${result.winner.name} 達成 ${winScore.currentStreak} 連勝`, winScore.currentStreak);
         }
 
@@ -6733,47 +6884,73 @@ box.innerHTML = pinnedHtml + arr.map(m => {
             battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold;">🌐【公開擂台】${result.winner.name} 擊敗 ${result.loser.name}，勝者繼續留在擂台！敗者冷卻 5 分鐘。</span><br>`;
             battleLog.scrollTop = battleLog.scrollHeight;
         }
-        cyberSendSystemChat(`【公開擂台】${result.winner.name} 擊敗 ${result.loser.name}，勝者留場，敗者冷卻 5 分鐘。`);
+        cyberSendArenaChat(`【公開擂台】${result.winner.name} 擊敗 ${result.loser.name}，勝者留場，敗者冷卻 5 分鐘。`);
     }
 
-function cyberSendSystemChat(msg) {
-    const now = Date.now();
+// ==============================================================
+    // 【天下公頻節流規則】
+    // 天下公頻聊天室只保留：
+    // 1. 玩家手動聊天 cyberSendPublicChat()
+    // 2. 擂台賽消息 cyberSendArenaChat()
+    //
+    // 其他系統公告仍可進 battleLog / 封神榜 / 各系統面板，
+    // 但不再寫入 chatMessages，避免刷屏與消耗 Firebase 流量。
+    // ==============================================================
+    function cyberWritePublicChatMessage(item, fallbackLabel = '系統訊息') {
+        if (cyberFirebaseReady && cyberDb) {
+            cyberDb.ref(`${CYBER_ROOM_PATH}/chatMessages`).push(item)
+                .then(() => {
+                    cyberRefreshChatLog();
+                })
+                .catch(err => {
+                    console.warn(`${fallbackLabel}寫入 Firebase 失敗，改寫入本機聊天室：`, err);
 
-    // 同時保留 name/msg 與 nick/message，確保本機模式與 Firebase 規則都吃得到
-    const item = {
-        id: `${now}_system`,
-        name: '擂台系統',
-        nick: '擂台系統',
-        msg: msg,
-        message: msg,
-        time: now
-    };
-
-    if (cyberFirebaseReady && cyberDb) {
-        cyberDb.ref(`${CYBER_ROOM_PATH}/chatMessages`).push(item)
-            .then(() => {
-                cyberRefreshChatLog();
-            })
-            .catch(err => {
-                console.warn('擂台系統訊息寫入 Firebase 失敗，改寫入本機聊天室：', err);
-
-                const arr = cyberGetChatMessages();
-                arr.push(item);
-                cyberWriteJson(CYBER_CHAT_KEY, arr.slice(-120));
-                cyberRefreshChatLog();
-            });
-    } else {
-        const arr = cyberGetChatMessages();
-        arr.push(item);
-        cyberWriteJson(CYBER_CHAT_KEY, arr.slice(-120));
-        cyberRefreshChatLog();
+                    const arr = cyberGetChatMessages();
+                    arr.push(item);
+                    cyberWriteJson(CYBER_CHAT_KEY, arr.slice(-120));
+                    cyberRefreshChatLog();
+                });
+        } else {
+            const arr = cyberGetChatMessages();
+            arr.push(item);
+            cyberWriteJson(CYBER_CHAT_KEY, arr.slice(-120));
+            cyberRefreshChatLog();
+        }
     }
-}
+
+    function cyberSendArenaChat(msg) {
+        const now = Date.now();
+
+        // 擂台戰報豁免全聊天室禁言，但只限擂台賽消息使用此函式。
+        const item = {
+            id: `${now}_arena_system`,
+            name: '擂台系統',
+            nick: '擂台系統',
+            msg: msg,
+            message: msg,
+            type: 'arena',
+            arenaReport: true,
+            time: now
+        };
+
+        cyberWritePublicChatMessage(item, '擂台戰報');
+    }
+
+    function cyberSendSystemChat(msg) {
+        // 非擂台系統公告不再進天下公頻 / Firebase chatMessages。
+        // 保留到主戰鬥紀錄，讓本機玩家仍看得到系統事件，不影響各面板與封神榜。
+        if (typeof battleLog !== 'undefined' && battleLog) {
+            battleLog.innerHTML += `<br><span style="color:#888; font-weight:bold;">【系統紀錄】${cyberEscapeHtml(msg)}</span><br>`;
+            battleLog.scrollTop = battleLog.scrollHeight;
+        } else {
+            console.log('[系統紀錄]', msg);
+        }
+    }
 
     function cyberArenaLog(msg) {
         const feed = document.getElementById('arenaBattleFeed');
         if (feed) feed.innerHTML = cyberEscapeHtml(msg);
-        cyberSendSystemChat(msg);
+        cyberSendArenaChat(msg);
     }
 
 function cyberRefreshArenaUI() {
@@ -6927,7 +7104,7 @@ function cyberRefreshArenaUI() {
                 scoreObj.score = (scoreObj.score || 0) + (r.bonusScore || 0);
                 cyberAwardTitle(name, r.title, true);
                 cyberAddLegendRecord('擂台連勝獎勵', `${name} 達成 ${r.streak} 連勝，獲得 ${r.label}，額外積分 +${r.bonusScore || 0}`, r.streak);
-                cyberSendSystemChat(`【擂台連勝獎勵】${name} 達成 ${r.streak} 連勝，獲得 ${r.label}，額外積分 +${r.bonusScore || 0}！`);
+                cyberSendArenaChat(`【擂台連勝獎勵】${name} 達成 ${r.streak} 連勝，獲得 ${r.label}，額外積分 +${r.bonusScore || 0}！`);
             }
         });
     }
@@ -9094,6 +9271,7 @@ function cyberRefreshArenaUI() {
         setInterval(cyberRefreshSocialEconomyUI, 3000);
         setInterval(cyberRefreshDestinyBondUI, 3000);
         setInterval(cyberRefreshFamilyRomanceUI, 3000);
+        cyberInitEncounterControls();
     });
 
 </script>
