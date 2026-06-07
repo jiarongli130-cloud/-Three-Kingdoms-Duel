@@ -376,6 +376,95 @@
     font-size: 13px;
     margin-top: 4px;
 }
+
+        /* ==============================================================
+           🎮 武神養成擴充：每日任務／稱號／連勝／世界Boss／封神榜
+           ============================================================== */
+        .wargame-expansion-panel {
+            border: 2px solid #8a2be2;
+            padding: 15px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, rgba(138,43,226,0.13), rgba(0,255,255,0.06), rgba(255,215,0,0.05));
+            box-shadow: 0 0 18px rgba(138,43,226,0.20);
+            display: block;
+            margin-bottom: 20px;
+        }
+        .wargame-expansion-panel h3 {
+            margin: 0 0 8px 0;
+            color: #c084ff;
+            text-shadow: 0 0 8px #8a2be2;
+        }
+        .wargame-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+        .wargame-box {
+            border: 1px solid #333;
+            background: rgba(0,0,0,0.68);
+            padding: 10px;
+            border-radius: 6px;
+            min-height: 150px;
+        }
+        .wargame-box h4 {
+            margin: 0 0 8px 0;
+            color: #ffd700;
+            text-shadow: 0 0 5px rgba(255,215,0,0.45);
+        }
+        .quest-row, .hall-row, .title-row, .boss-row {
+            border-bottom: 1px solid #222;
+            padding: 6px 0;
+            color: #ddd;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .quest-done {
+            color: #00ff41;
+            text-shadow: 0 0 5px #00ff41;
+            font-weight: bold;
+        }
+        .title-chip {
+            display: inline-block;
+            border: 1px solid #00ffff;
+            color: #00ffff;
+            border-radius: 999px;
+            padding: 2px 8px;
+            margin: 2px;
+            font-size: 12px;
+            background: rgba(0,255,255,0.06);
+            text-shadow: 0 0 5px #00ffff;
+        }
+        .title-chip.current {
+            border-color: #ffd700;
+            color: #ffd700;
+            background: rgba(255,215,0,0.10);
+            text-shadow: 0 0 8px #ffd700;
+        }
+        .boss-hp-wrap {
+            height: 22px;
+            background: #1a0000;
+            border: 1px solid #ff3131;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 6px 0;
+        }
+        .boss-hp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff3131, #ff8c00, #ffd700);
+            transition: width .25s ease;
+        }
+        .boss-name {
+            color: #ff3131;
+            font-weight: bold;
+            text-shadow: 0 0 8px #ff3131;
+        }
+        .streak-glow {
+            color: #ffd700;
+            font-weight: bold;
+            text-shadow: 0 0 6px #ffd700, 0 0 12px #ff8c00;
+        }
+        @media (max-width: 760px) { .wargame-grid { grid-template-columns: 1fr; } }
+
         .firebase-off { color: #aaa; }
         .firebase-on { color: #00ff41; text-shadow: 0 0 5px #00ff41; }
         @media (max-width: 760px) { .public-warroom-grid { grid-template-columns: 1fr; } }
@@ -577,6 +666,40 @@
             <h4>🏆 自創武將擂台排行榜｜累計積分最高者第一名</h4>
             <p style="font-size:12px; color:#aaa; margin-top:-4px;">勝利 +3 分，落敗 +1 參戰分；所有參加擂台者都會被排名。敗者 5 分鐘後才能再次挑戰。</p>
             <div id="arenaRankBoard">排行榜載入中...</div>
+        </div>
+    </div>
+
+
+    <!-- 武神養成擴充：每日任務＋稱號＋連勝＋世界Boss＋封神榜 -->
+    <div class="controls wargame-expansion-panel" id="wargameExpansionPanel">
+        <h3>🎮 武神養成擴充系統：每日任務・稱號・連勝・世界 Boss・封神榜</h3>
+        <p style="font-size:12px; color:#aaa; margin:0 0 12px 0;">
+            建議先選定或喚醒一名自創武將，再進行每日任務、擂台連勝與世界 Boss 挑戰。擂台、拜師與 Boss 傷害都會推進養成紀錄。
+        </p>
+        <div class="wargame-grid">
+            <div class="wargame-box">
+                <h4>📜 每日任務</h4>
+                <div id="dailyQuestBoard">每日任務載入中...</div>
+                <button onclick="cyberClaimAllDailyRewards()" style="margin-top:8px; border-color:#00ff41; color:#00ff41;">領取已完成獎勵</button>
+            </div>
+            <div class="wargame-box">
+                <h4>🏷️ 稱號系統</h4>
+                <div id="titleBoard">稱號資料載入中...</div>
+                <div style="display:flex; gap:6px; margin-top:8px;">
+                    <select id="titleSelect" style="flex:2; border-color:#00ffff; color:#00ffff;"></select>
+                    <button onclick="cyberEquipSelectedTitle()" style="flex:1; border-color:#ffd700; color:#ffd700;">裝備稱號</button>
+                </div>
+            </div>
+            <div class="wargame-box">
+                <h4>🐉 世界 Boss</h4>
+                <div id="worldBossBoard">世界 Boss 載入中...</div>
+                <button onclick="cyberAttackWorldBoss()" style="margin-top:8px; border-color:#ff3131; color:#ff3131;">⚔️ 挑戰世界 Boss</button>
+            </div>
+            <div class="wargame-box">
+                <h4>🏛️ 封神榜紀錄館</h4>
+                <div id="legendHallBoard" style="max-height:260px; overflow-y:auto;">封神榜載入中...</div>
+                <button onclick="cyberRefreshEnhancedGameUI()" style="margin-top:8px; border-color:#8a2be2; color:#c084ff;">刷新紀錄館</button>
+            </div>
         </div>
     </div>
 
@@ -2844,6 +2967,7 @@
         alert(`主公，武將【${activeRpgGeneral.name}】之靈魂數據已封存於天道命盤。`);
         battleLog.innerHTML += `<br><span style="color:#32cd32; font-weight:bold;">💾 【數據封存】武將 ${activeRpgGeneral.name} 已安全保存！</span><br>`;
         battleLog.scrollTop = battleLog.scrollHeight;
+        cyberRefreshEnhancedGameUI();
     }
 
     function loadSpecificRpgGeneral() {
@@ -2866,6 +2990,7 @@
         alert(`已成功喚醒武將：${gen.name}！`);
         battleLog.innerHTML += `<br><span style="color:#1e90ff; font-weight:bold;">📂 【時空召喚】成功讀取自創武將 ${gen.name} 降臨沙盤！</span><br>`;
         battleLog.scrollTop = battleLog.scrollHeight;
+        cyberRefreshEnhancedGameUI();
     }
 
     function deleteSpecificRpgGeneral() {
@@ -4838,6 +4963,8 @@
         }
 
         gainExp(activeRpgGeneral.name, expGain);
+        cyberDailyAdd('masterTrain', 1, activeRpgGeneral.name);
+        cyberUpdateTitleAchievementsFromMaster(activeRpgGeneral.name, traineeWins);
 
         if (!hasSkill && (traineeWins || activeRpgGeneral.masteries[masterName] >= 60)) {
             // 師承技能只進入拜師學藝欄位 masteredSkills，不再放入已習得技能欄 skills。
@@ -5662,8 +5789,12 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         state.champion = fighters[name];
         const s = cyberEnsureScore(state, name);
         s.fights += 0;
+        s.currentStreak = s.currentStreak || 0;
+        s.bestStreak = s.bestStreak || 0;
+        cyberUpdateTitleAchievementsFromArena(name, s);
         cyberSaveArenaState(state);
         cyberArenaLog(`👑 ${name} 登上公開擂台，成為第一任擂主！`);
+        cyberRefreshEnhancedGameUI();
     }
 
     function cyberSimArenaDuel(champion, challenger) {
@@ -5711,11 +5842,32 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         state.roster[challengerName] = challenger;
         if (state.champion.name && !state.roster[state.champion.name]) state.roster[state.champion.name] = state.champion;
 
+        const oldChampionName = state.champion && state.champion.name ? state.champion.name : '';
         const result = cyberSimArenaDuel(state.champion, challenger);
         const winScore = cyberEnsureScore(state, result.winner.name);
         const loseScore = cyberEnsureScore(state, result.loser.name);
         winScore.score += 3; winScore.win += 1; winScore.fights += 1; winScore.lastFight = Date.now();
         loseScore.score += 1; loseScore.lose += 1; loseScore.fights += 1; loseScore.lastFight = Date.now();
+
+        // 擂台連勝獎勵：守擂成功累加，挑戰者奪擂從 1 連勝開始，敗者歸零。
+        if (result.winner.name === oldChampionName) {
+            winScore.currentStreak = (winScore.currentStreak || 0) + 1;
+        } else {
+            winScore.currentStreak = 1;
+        }
+        winScore.bestStreak = Math.max(winScore.bestStreak || 0, winScore.currentStreak || 0);
+        loseScore.currentStreak = 0;
+
+        if ([3,5,10,20,50].includes(winScore.currentStreak)) {
+            cyberSendSystemChat(`【擂台連勝】${result.winner.name} 達成 ${winScore.currentStreak} 連勝！`);
+            cyberAddLegendRecord('擂台連勝', `${result.winner.name} 達成 ${winScore.currentStreak} 連勝`, winScore.currentStreak);
+        }
+
+        cyberDailyAdd('arenaFight', 1, result.winner.name);
+        cyberDailyAdd('arenaFight', 1, result.loser.name);
+        cyberUpdateTitleAchievementsFromArena(result.winner.name, winScore);
+        cyberUpdateTitleAchievementsFromArena(result.loser.name, loseScore);
+
         state.cooldowns[result.loser.name] = Date.now() + CYBER_COOLDOWN_MS;
         state.champion = result.winner.name === challenger.name ? challenger : state.champion;
         cyberSaveArenaState(state);
@@ -5781,9 +5933,12 @@ function cyberRefreshArenaUI() {
             champBox.innerHTML = `
                 <div class="arena-champion-skin">
                     <div class="arena-champion-title">👑 目前擂台主 👑</div>
-                    <div class="arena-champion-name">${cyberEscapeHtml(state.champion.name)}</div>
+                    <div class="arena-champion-name">${cyberEscapeHtml(cyberGetHeroTitlePrefix(state.champion.name))}${cyberEscapeHtml(state.champion.name)}</div>
                     <div class="arena-champion-meta">
                         武力 ${cyberEscapeHtml(state.champion.power)} ｜ ${cyberEscapeHtml(state.champion.rank || '自創武將')}
+                    </div>
+                    <div class="arena-champion-meta streak-glow">
+                        目前連勝 ${((state.scores || {})[state.champion.name] || {}).currentStreak || 0}｜最高連勝 ${((state.scores || {})[state.champion.name] || {}).bestStreak || 0}
                     </div>
                     <div style="font-size:12px; color:#bbb; margin-top:6px;">
                         勝者繼續留場，直到被下一位挑戰者擊敗。
@@ -5813,7 +5968,7 @@ function cyberRefreshArenaUI() {
                 return `
                     <div class="rank-row rank-no1-skin">
                         <span class="rank-no1-text">
-                            🏆 第 ${idx + 1} 名｜${cyberEscapeHtml(p.name)}｜積分 ${p.score || 0}｜勝 ${p.win || 0}｜敗 ${p.lose || 0}｜出戰 ${p.fights || 0}${cdText}
+                            🏆 第 ${idx + 1} 名｜${cyberEscapeHtml(cyberGetHeroTitlePrefix(p.name))}${cyberEscapeHtml(p.name)}｜積分 ${p.score || 0}｜勝 ${p.win || 0}｜敗 ${p.lose || 0}｜連勝 ${p.currentStreak || 0}｜最高 ${p.bestStreak || 0}｜出戰 ${p.fights || 0}${cdText}
                         </span>
                         ${isChampion ? '<span class="rank-champion-badge">｜⚔️ 現任擂主</span>' : ''}
                     </div>
@@ -5824,9 +5979,9 @@ function cyberRefreshArenaUI() {
 
             return `
                 <div class="${cls}">
-                    第 ${idx + 1} 名｜${cyberEscapeHtml(p.name)}
+                    第 ${idx + 1} 名｜${cyberEscapeHtml(cyberGetHeroTitlePrefix(p.name))}${cyberEscapeHtml(p.name)}
                     ${isChampion ? '<span class="rank-champion-badge">｜⚔️ 現任擂主</span>' : ''}
-                    ｜積分 ${p.score || 0}｜勝 ${p.win || 0}｜敗 ${p.lose || 0}｜出戰 ${p.fights || 0}${cdText}
+                    ｜積分 ${p.score || 0}｜勝 ${p.win || 0}｜敗 ${p.lose || 0}｜連勝 ${p.currentStreak || 0}｜最高 ${p.bestStreak || 0}｜出戰 ${p.fights || 0}${cdText}
                 </div>
             `;
         }).join('') : '<span style="color:#777;">尚無擂台排名，第一場戰鬥後自動建立。</span>';
@@ -5835,11 +5990,401 @@ function cyberRefreshArenaUI() {
     cyberRefreshArenaSelect();
 }
 
+
+    // ==============================================================
+    // 🎮 武神養成擴充：每日任務／稱號／連勝／世界Boss／封神榜
+    // ==============================================================
+    const CYBER_GAME_META_KEY = 'cyberGameMeta_v1';
+    const CYBER_DAILY_KEY = 'cyberDailyMissionState_v1';
+    const CYBER_WORLD_BOSS_KEY = 'cyberWorldBossState_v1';
+    const CYBER_LEGEND_HALL_KEY = 'cyberLegendHall_v1';
+
+    const CYBER_TITLE_CATALOG = {
+        "初登擂台": "第一次參與公開擂台。",
+        "十勝武者": "公開擂台累計勝利 10 場。",
+        "百戰修羅": "公開擂台累計出戰 100 場。",
+        "萬人敵": "公開擂台最高連勝達 10 場。",
+        "不敗擂主": "公開擂台最高連勝達 20 場。",
+        "弒師者": "拜師切磋中擊敗任一師傅。",
+        "師門百鍊": "拜師切磋累計 100 次。",
+        "弒魔先鋒": "世界 Boss 單日累計傷害達 3000。",
+        "封神留名": "名字進入封神榜紀錄館。"
+    };
+
+    function cyberTodayKey() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    function cyberGetActiveHeroName() {
+        if (activeRpgGeneral && activeRpgGeneral.name) return activeRpgGeneral.name;
+        const sel = document.getElementById('arenaFighterSelect');
+        if (sel && sel.value) return sel.value;
+        return cyberGetNick();
+    }
+
+    function cyberGetActiveHero() {
+        const name = cyberGetActiveHeroName();
+        return generals.find(g => g.name === name) || activeRpgGeneral || null;
+    }
+
+    function cyberGetGameMeta() {
+        const meta = cyberReadJson(CYBER_GAME_META_KEY, { heroes: {} });
+        if (!meta.heroes) meta.heroes = {};
+        return meta;
+    }
+
+    function cyberSaveGameMeta(meta) {
+        cyberWriteJson(CYBER_GAME_META_KEY, meta);
+    }
+
+    function cyberEnsureHeroMeta(name) {
+        const meta = cyberGetGameMeta();
+        if (!meta.heroes[name]) {
+            meta.heroes[name] = {
+                titles: [],
+                currentTitle: '',
+                arenaWins: 0,
+                arenaFights: 0,
+                masterTrains: 0,
+                masterWins: 0,
+                bossDamageTotal: 0,
+                bossKills: 0,
+                bestStreak: 0
+            };
+        }
+        cyberSaveGameMeta(meta);
+        return meta.heroes[name];
+    }
+
+    function cyberAwardTitle(name, title, silent = false) {
+        if (!name || !title) return false;
+        const meta = cyberGetGameMeta();
+        if (!meta.heroes[name]) cyberEnsureHeroMeta(name);
+        const hero = meta.heroes[name];
+
+        if (!hero.titles.includes(title)) {
+            hero.titles.push(title);
+            if (!hero.currentTitle) hero.currentTitle = title;
+            cyberSaveGameMeta(meta);
+            cyberAddLegendRecord('稱號', `【${name}】獲得稱號「${title}」`, 10);
+            if (!silent) {
+                cyberSendSystemChat(`【稱號覺醒】${name} 獲得稱號「${title}」！`);
+            }
+            return true;
+        }
+        cyberSaveGameMeta(meta);
+        return false;
+    }
+
+    function cyberGetHeroTitlePrefix(name) {
+        const meta = cyberGetGameMeta();
+        const h = meta.heroes && meta.heroes[name];
+        return h && h.currentTitle ? `【${h.currentTitle}】` : '';
+    }
+
+    function cyberEquipSelectedTitle() {
+        const name = cyberGetActiveHeroName();
+        const sel = document.getElementById('titleSelect');
+        if (!sel || !sel.value) { alert('此武將目前沒有可裝備稱號。'); return; }
+
+        const meta = cyberGetGameMeta();
+        if (!meta.heroes[name]) cyberEnsureHeroMeta(name);
+        meta.heroes[name].currentTitle = sel.value;
+        cyberSaveGameMeta(meta);
+        alert(`已為 ${name} 裝備稱號：【${sel.value}】`);
+        cyberRefreshEnhancedGameUI();
+        cyberRefreshArenaUI();
+    }
+
+    function cyberAddLegendRecord(type, text, score = 0) {
+        const arr = cyberReadJson(CYBER_LEGEND_HALL_KEY, []);
+        const item = {
+            id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
+            type,
+            text,
+            score,
+            time: Date.now()
+        };
+        arr.unshift(item);
+        cyberWriteJson(CYBER_LEGEND_HALL_KEY, arr.slice(0, 80));
+    }
+
+    function cyberBuildDailyTemplate() {
+        return [
+            { id: 'arenaFight', title: '今日擂台試煉', desc: '完成 3 場公開擂台戰', target: 3, reward: { stat: 3, label: '武力點 +3' } },
+            { id: 'masterTrain', title: '今日拜師修煉', desc: '拜師切磋 5 次', target: 5, reward: { skill: 1, label: '技能點 +1' } },
+            { id: 'bossDamage', title: '今日弒魔遠征', desc: '對世界 Boss 造成 3000 傷害', target: 3000, reward: { stat: 5, title: '弒魔先鋒', label: '武力點 +5，可能取得稱號「弒魔先鋒」' } }
+        ];
+    }
+
+    function cyberGetDailyState() {
+        const today = cyberTodayKey();
+        let state = cyberReadJson(CYBER_DAILY_KEY, null);
+        if (!state || state.date !== today) {
+            state = { date: today, heroes: {} };
+            cyberWriteJson(CYBER_DAILY_KEY, state);
+        }
+        if (!state.heroes) state.heroes = {};
+        return state;
+    }
+
+    function cyberEnsureDailyHero(name) {
+        const state = cyberGetDailyState();
+        if (!state.heroes[name]) {
+            const quests = {};
+            cyberBuildDailyTemplate().forEach(q => quests[q.id] = { progress: 0, claimed: false });
+            state.heroes[name] = { quests };
+            cyberWriteJson(CYBER_DAILY_KEY, state);
+        }
+        return state.heroes[name];
+    }
+
+    function cyberDailyAdd(type, amount = 1, name = cyberGetActiveHeroName()) {
+        const state = cyberGetDailyState();
+        const heroDaily = cyberEnsureDailyHero(name);
+        if (!heroDaily.quests[type]) heroDaily.quests[type] = { progress: 0, claimed: false };
+        heroDaily.quests[type].progress += amount;
+        cyberWriteJson(CYBER_DAILY_KEY, state);
+        cyberRefreshEnhancedGameUI();
+    }
+
+    function cyberClaimAllDailyRewards() {
+        const name = cyberGetActiveHeroName();
+        const state = cyberGetDailyState();
+        const heroDaily = cyberEnsureDailyHero(name);
+        const hero = generals.find(g => g.name === name);
+        let claimedAny = false;
+
+        cyberBuildDailyTemplate().forEach(q => {
+            const row = heroDaily.quests[q.id] || { progress: 0, claimed: false };
+            if (!row.claimed && row.progress >= q.target) {
+                row.claimed = true;
+                claimedAny = true;
+
+                if (hero && hero.isRPG) {
+                    if (q.reward.stat) hero.statPoints = (hero.statPoints || 0) + q.reward.stat;
+                    if (q.reward.skill) hero.skillPoints = (hero.skillPoints || 0) + q.reward.skill;
+                    if (q.reward.title) cyberAwardTitle(name, q.reward.title, true);
+
+                    let savedData = JSON.parse(localStorage.getItem('rpgGenerals')) || {};
+                    savedData[hero.name] = hero;
+                    localStorage.setItem('rpgGenerals', JSON.stringify(savedData));
+                }
+
+                cyberAddLegendRecord('每日任務', `${name} 完成「${q.title}」，獲得 ${q.reward.label}`, 5);
+            }
+            heroDaily.quests[q.id] = row;
+        });
+
+        cyberWriteJson(CYBER_DAILY_KEY, state);
+        if (claimedAny) {
+            alert('已領取所有可領取的每日任務獎勵！');
+            cyberSendSystemChat(`【每日任務】${name} 領取今日任務獎勵！`);
+            if (hero && hero.isRPG) renderRpgPanel(hero);
+            updateDropdowns();
+        } else {
+            alert('目前沒有可領取的每日任務獎勵。');
+        }
+        cyberRefreshEnhancedGameUI();
+    }
+
+    function cyberWorldBossTemplate() {
+        const bosses = [
+            { name: '魔化呂布・無雙鬼神', maxHp: 50000, desc: '方天畫戟撕裂天穹，挑戰者越強，傷害越高。' },
+            { name: '黑龍董卓・暴虐魔君', maxHp: 62000, desc: '黑火焚城，需眾武將合力擊破。' },
+            { name: '天外項羽・霸王降世', maxHp: 78000, desc: '五千年武勇幻影，壓迫全場。' },
+            { name: '棄天帝劉協・神之滅', maxHp: 99999, desc: '終極神敵，擊破者必留名封神榜。' }
+        ];
+        const idx = new Date().getDate() % bosses.length;
+        return bosses[idx];
+    }
+
+    function cyberGetWorldBossState() {
+        const today = cyberTodayKey();
+        const base = cyberWorldBossTemplate();
+        let state = cyberReadJson(CYBER_WORLD_BOSS_KEY, null);
+        if (!state || state.date !== today || state.name !== base.name) {
+            state = {
+                date: today,
+                name: base.name,
+                desc: base.desc,
+                maxHp: base.maxHp,
+                hp: base.maxHp,
+                damageBoard: {},
+                defeated: false,
+                defeatedBy: ''
+            };
+            cyberWriteJson(CYBER_WORLD_BOSS_KEY, state);
+        }
+        if (!state.damageBoard) state.damageBoard = {};
+        return state;
+    }
+
+    function cyberSaveWorldBossState(state) {
+        cyberWriteJson(CYBER_WORLD_BOSS_KEY, state);
+    }
+
+    function cyberAttackWorldBoss() {
+        const hero = cyberGetActiveHero();
+        const name = cyberGetActiveHeroName();
+
+        if (!hero || !hero.power) {
+            alert('請先選定或喚醒一名自創武將，再挑戰世界 Boss。');
+            return;
+        }
+
+        const state = cyberGetWorldBossState();
+        if (state.defeated || state.hp <= 0) {
+            alert('今日世界 Boss 已被擊破，明日會刷新新的 Boss。');
+            return;
+        }
+
+        const titleBonus = cyberGetHeroTitlePrefix(name) ? 1.08 : 1;
+        const baseDamage = Math.max(50, Math.floor((hero.power || 1) * (5 + Math.random() * 5) * titleBonus));
+        const crit = Math.random() < Math.min(0.35, (hero.power || 1) / 2000);
+        const damage = crit ? baseDamage * 2 : baseDamage;
+
+        state.hp = Math.max(0, state.hp - damage);
+        state.damageBoard[name] = (state.damageBoard[name] || 0) + damage;
+        cyberSaveWorldBossState(state);
+
+        const meta = cyberGetGameMeta();
+        if (!meta.heroes[name]) cyberEnsureHeroMeta(name);
+        meta.heroes[name].bossDamageTotal = (meta.heroes[name].bossDamageTotal || 0) + damage;
+        cyberSaveGameMeta(meta);
+
+        cyberDailyAdd('bossDamage', damage, name);
+
+        if (state.damageBoard[name] >= 3000) cyberAwardTitle(name, '弒魔先鋒', true);
+
+        let logMsg = `🐉【世界Boss】${name} 對 ${state.name} 造成 ${damage} 傷害${crit ? '（暴擊）' : ''}！`;
+        if (typeof battleLog !== 'undefined') {
+            battleLog.innerHTML += `<br><span style="color:#ff3131; font-weight:bold;">${cyberEscapeHtml(logMsg)}</span><br>`;
+            battleLog.scrollTop = battleLog.scrollHeight;
+        }
+
+        if (state.hp <= 0) {
+            state.defeated = true;
+            state.defeatedBy = name;
+            cyberSaveWorldBossState(state);
+
+            const meta2 = cyberGetGameMeta();
+            if (!meta2.heroes[name]) cyberEnsureHeroMeta(name);
+            meta2.heroes[name].bossKills = (meta2.heroes[name].bossKills || 0) + 1;
+            cyberSaveGameMeta(meta2);
+
+            cyberAwardTitle(name, '封神留名', true);
+            cyberAddLegendRecord('世界Boss', `${name} 擊破 ${state.name}，成為今日弒神者`, 50);
+            cyberSendSystemChat(`【世界Boss擊破】${name} 給予 ${state.name} 最終一擊，封神榜留名！`);
+        }
+
+        cyberRefreshEnhancedGameUI();
+    }
+
+    function cyberUpdateTitleAchievementsFromArena(name, scoreObj) {
+        if (!name || !scoreObj) return;
+        const meta = cyberGetGameMeta();
+        if (!meta.heroes[name]) cyberEnsureHeroMeta(name);
+        const hero = meta.heroes[name];
+        hero.arenaWins = Math.max(hero.arenaWins || 0, scoreObj.win || 0);
+        hero.arenaFights = Math.max(hero.arenaFights || 0, scoreObj.fights || 0);
+        hero.bestStreak = Math.max(hero.bestStreak || 0, scoreObj.bestStreak || 0);
+        cyberSaveGameMeta(meta);
+
+        if ((scoreObj.fights || 0) >= 1) cyberAwardTitle(name, '初登擂台', true);
+        if ((scoreObj.win || 0) >= 10) cyberAwardTitle(name, '十勝武者', true);
+        if ((scoreObj.fights || 0) >= 100) cyberAwardTitle(name, '百戰修羅', true);
+        if ((scoreObj.bestStreak || 0) >= 10) cyberAwardTitle(name, '萬人敵', true);
+        if ((scoreObj.bestStreak || 0) >= 20) cyberAwardTitle(name, '不敗擂主', true);
+    }
+
+    function cyberUpdateTitleAchievementsFromMaster(name, wonMaster = false) {
+        if (!name) return;
+        const meta = cyberGetGameMeta();
+        if (!meta.heroes[name]) cyberEnsureHeroMeta(name);
+        const hero = meta.heroes[name];
+        hero.masterTrains = (hero.masterTrains || 0) + 1;
+        if (wonMaster) hero.masterWins = (hero.masterWins || 0) + 1;
+        cyberSaveGameMeta(meta);
+
+        if (wonMaster) cyberAwardTitle(name, '弒師者', true);
+        if ((hero.masterTrains || 0) >= 100) cyberAwardTitle(name, '師門百鍊', true);
+    }
+
+    function cyberRefreshEnhancedGameUI() {
+        const name = cyberGetActiveHeroName();
+        const heroMeta = cyberEnsureHeroMeta(name);
+
+        // 每日任務
+        const questBox = document.getElementById('dailyQuestBoard');
+        if (questBox) {
+            const daily = cyberEnsureDailyHero(name);
+            questBox.innerHTML = cyberBuildDailyTemplate().map(q => {
+                const row = daily.quests[q.id] || { progress: 0, claimed: false };
+                const done = row.progress >= q.target;
+                const progress = Math.min(row.progress, q.target);
+                return `
+                    <div class="quest-row ${done ? 'quest-done' : ''}">
+                        ${done ? '✅' : '⬜'} <strong>${q.title}</strong><br>
+                        ${q.desc}<br>
+                        進度：${progress}/${q.target}｜獎勵：${q.reward.label}${row.claimed ? '｜已領取' : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 稱號
+        const titleBox = document.getElementById('titleBoard');
+        const titleSel = document.getElementById('titleSelect');
+        if (titleBox) {
+            const titles = heroMeta.titles || [];
+            titleBox.innerHTML = `
+                <div class="title-row">目前武將：<span style="color:#00ff41; font-weight:bold;">${cyberEscapeHtml(name)}</span></div>
+                <div class="title-row">目前稱號：${heroMeta.currentTitle ? `<span class="title-chip current">【${cyberEscapeHtml(heroMeta.currentTitle)}】</span>` : '尚未裝備稱號'}</div>
+                <div class="title-row">${titles.length ? titles.map(t => `<span class="title-chip ${t === heroMeta.currentTitle ? 'current' : ''}">【${cyberEscapeHtml(t)}】</span>`).join('') : '尚未取得稱號。可透過擂台、拜師、世界 Boss 取得。'}</div>
+            `;
+        }
+        if (titleSel) {
+            titleSel.innerHTML = '';
+            (heroMeta.titles || []).forEach(t => titleSel.add(new Option(`【${t}】${CYBER_TITLE_CATALOG[t] || ''}`, t)));
+            if (heroMeta.currentTitle && [...titleSel.options].some(o => o.value === heroMeta.currentTitle)) titleSel.value = heroMeta.currentTitle;
+        }
+
+        // 世界 Boss
+        const bossBox = document.getElementById('worldBossBoard');
+        if (bossBox) {
+            const boss = cyberGetWorldBossState();
+            const pct = Math.max(0, Math.min(100, Math.round((boss.hp / boss.maxHp) * 100)));
+            const board = Object.entries(boss.damageBoard || {}).sort((a,b)=>b[1]-a[1]).slice(0,5);
+            bossBox.innerHTML = `
+                <div class="boss-row"><span class="boss-name">${cyberEscapeHtml(boss.name)}</span><br>${cyberEscapeHtml(boss.desc || '')}</div>
+                <div class="boss-hp-wrap"><div class="boss-hp-fill" style="width:${pct}%"></div></div>
+                <div class="boss-row">HP：${boss.hp}/${boss.maxHp}｜${boss.defeated ? '✅ 已擊破' : '戰鬥中'}</div>
+                <div class="boss-row"><strong style="color:#ffd700;">今日傷害榜</strong><br>
+                    ${board.length ? board.map((x,i)=>`${i+1}. ${cyberEscapeHtml(x[0])}：${x[1]} 傷害`).join('<br>') : '尚無挑戰紀錄'}
+                </div>
+            `;
+        }
+
+        // 封神榜
+        const hallBox = document.getElementById('legendHallBoard');
+        if (hallBox) {
+            const hall = cyberReadJson(CYBER_LEGEND_HALL_KEY, []);
+            hallBox.innerHTML = hall.length ? hall.slice(0,30).map((r, idx) => {
+                const d = new Date(r.time || Date.now());
+                const stamp = `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+                return `<div class="hall-row">#${idx+1}｜${cyberEscapeHtml(r.type)}｜${cyberEscapeHtml(r.text)} <span style="color:#777;">${stamp}</span></div>`;
+            }).join('') : '<div class="hall-row">尚無封神紀錄。擊破 Boss、取得稀有稱號、締造連勝後會留名。</div>';
+        }
+    }
+
     function cyberRefreshAllPublicWarroom() {
         const nickInput = document.getElementById('chatNickInput');
         if (nickInput && !nickInput.value) nickInput.value = localStorage.getItem(CYBER_NICK_KEY) || CYBER_OWNER_NAME;
         cyberRefreshChatLog();
         cyberRefreshArenaUI();
+        if (typeof cyberRefreshEnhancedGameUI === 'function') cyberRefreshEnhancedGameUI();
     }
 
     function cyberLoadScript(src) {
@@ -5912,6 +6457,7 @@ function cyberRefreshArenaUI() {
         if (msgInput) msgInput.addEventListener('keydown', e => { if (e.key === 'Enter') cyberSendPublicChat(); });
         setInterval(cyberRefreshArenaUI, 1000);
         setInterval(cyberRefreshArenaSelect, 3000);
+        setInterval(cyberRefreshEnhancedGameUI, 3000);
     });
 
 </script>
