@@ -1486,7 +1486,8 @@
     <div class="controls" id="rpgEncounterControlPanel" style="border: 1px solid #ff8c00; padding: 12px; border-radius: 5px; background: rgba(255,140,0,0.06); margin-top: 12px; align-items: center;">
         <div style="flex:2; min-width:240px; color:#ffd700; font-size:13px; line-height:1.6;">
             <strong style="color:#ff8c00; text-shadow:0 0 6px #ff8c00;">⚔️ 自創武將主動遇敵</strong><br>
-            只會觸發異界修羅；歷史遺珠不會被系統主動拉入戰鬥。敵人取自代碼人物，排除蔣大器與毛宗崗，並以同級～高 3 級生成。
+            只會觸發異界修羅；歷史遺珠不會被系統主動拉入戰鬥。敵人取自代碼人物，排除蔣大器與毛宗崗，並以同級～高 3 級生成。<br>
+            <span id="rpgEncounterLockedHeroText" style="color:#00ffff; font-weight:bold; text-shadow:0 0 5px #00ffff;">目前掛機武將：未鎖定</span>
         </div>
         <div style="flex:1; min-width:170px;">
             <label style="font-size:12px; color:#aaa;">主動遇敵機率 / 間隔：</label>
@@ -3426,7 +3427,10 @@
 
     function renderRpgPanel(gen) {
         activeRpgGeneral = gen;
+        // 遇敵掛機鎖定：只要玩家選定/顯示一名異界修羅，就記住這位作為主動/手動遇敵預設主角。
         if (activeRpgGeneral && activeRpgGeneral.isRPG) {
+            try { localStorage.setItem('cyberRpgEncounterLockedHero_v1', activeRpgGeneral.name); } catch(e) {}
+            if (typeof cyberRefreshEncounterLockStatus === 'function') cyberRefreshEncounterLockStatus();
             normalizeRpgSkillBuckets(activeRpgGeneral);
             loadAsuraAchievements(activeRpgGeneral);
         }
@@ -3683,6 +3687,10 @@
         } else {
             generals.push(gen); 
         }
+        if (gen && gen.isRPG) {
+            try { localStorage.setItem('cyberRpgEncounterLockedHero_v1', gen.name); } catch(e) {}
+            activeRpgGeneral = gen;
+        }
         
         updateDropdowns();
         alert(`已成功喚醒武將：${gen.name}！`);
@@ -3716,6 +3724,10 @@
     }
 
     function updateDropdowns() {
+        // 重建下拉選單前先記住原本選定者，避免遇敵戰鬥結束後被洗回第一個武將。
+        const oldP1Name = (p1Select && p1Select.value !== undefined && generals[p1Select.value]) ? generals[p1Select.value].name : '';
+        const oldP2Name = (p2Select && p2Select.value !== undefined && generals[p2Select.value]) ? generals[p2Select.value].name : '';
+        const lockedEncounterHeroName = localStorage.getItem('cyberRpgEncounterLockedHero_v1') || '';
         p1Select.innerHTML = '';
         p2Select.innerHTML = '';
         const tourneySelect = document.getElementById('tourneySelect');
@@ -3775,6 +3787,29 @@
                 if(sel) sel.add(new Option(optStr, idx));
             });
         });
+
+        const selectByName = (targetSelect, name) => {
+            if (!targetSelect || !name) return false;
+            for (let i = 0; i < targetSelect.options.length; i++) {
+                const idx = parseInt(targetSelect.options[i].value);
+                if (generals[idx] && generals[idx].name === name) {
+                    targetSelect.selectedIndex = i;
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        selectByName(p1Select, oldP1Name);
+        selectByName(p2Select, oldP2Name);
+        // 若沒有原本選項可恢復，仍自動把「掛機鎖定武將」放回我軍，讓主動/手動遇敵不用重選。
+        if (lockedEncounterHeroName) {
+            const currentP1 = generals[p1Select.value];
+            if (!currentP1 || !currentP1.isRPG || currentP1.name !== lockedEncounterHeroName) {
+                selectByName(p1Select, lockedEncounterHeroName);
+            }
+        }
+        if (typeof cyberRefreshEncounterLockStatus === 'function') cyberRefreshEncounterLockStatus();
         
         checkRpgPanel();
     }
@@ -3806,6 +3841,32 @@
     let cyberEncounterTimer = null;
     let cyberEncounterLock = false;
     let cyberCurrentEncounter = null;
+    const CYBER_ENCOUNTER_LOCKED_HERO_KEY = 'cyberRpgEncounterLockedHero_v1';
+
+    function cyberLockEncounterHero(hero) {
+        if (!hero || !hero.isRPG) return;
+        try { localStorage.setItem(CYBER_ENCOUNTER_LOCKED_HERO_KEY, hero.name); } catch(e) {}
+        activeRpgGeneral = hero;
+        cyberRefreshEncounterLockStatus();
+    }
+
+    function cyberGetLockedEncounterHero() {
+        let lockedName = '';
+        try { lockedName = localStorage.getItem(CYBER_ENCOUNTER_LOCKED_HERO_KEY) || ''; } catch(e) { lockedName = ''; }
+        if (!lockedName) return null;
+        const hero = generals.find(g => g && g.isRPG && g.name === lockedName);
+        if (!hero) return null;
+        return hero;
+    }
+
+    function cyberRefreshEncounterLockStatus() {
+        const box = document.getElementById('rpgEncounterLockedHeroText');
+        if (!box) return;
+        const hero = cyberGetLockedEncounterHero();
+        box.innerHTML = hero
+            ? `目前掛機武將：${hero.name}｜主動/手動遇敵將持續使用此武將`
+            : '目前掛機武將：未鎖定';
+    }
 
     function cyberGetEncounterRate() {
         const saved = localStorage.getItem(CYBER_ENCOUNTER_RATE_KEY) || 'none';
@@ -3826,6 +3887,7 @@
     function cyberInitEncounterControls() {
         const sel = document.getElementById('rpgEncounterRateSelect');
         if (sel) sel.value = cyberGetEncounterRate();
+        cyberRefreshEncounterLockStatus();
         cyberRestartEncounterTimer();
     }
 
@@ -3841,11 +3903,14 @@
     }
 
     function cyberGetSelectedRpgHero() {
+        // 掛機遇敵優先讀取「已鎖定的自創武將」，避免 updateDropdowns 重建選單後需要重新點選。
+        const lockedHero = cyberGetLockedEncounterHero();
+        if (lockedHero) return lockedHero;
         const p1 = generals[p1Select.value];
         const p2 = generals[p2Select.value];
-        if (p1 && p1.isRPG) return p1;
-        if (p2 && p2.isRPG) return p2;
-        if (activeRpgGeneral && activeRpgGeneral.isRPG) return activeRpgGeneral;
+        if (p1 && p1.isRPG) { cyberLockEncounterHero(p1); return p1; }
+        if (p2 && p2.isRPG) { cyberLockEncounterHero(p2); return p2; }
+        if (activeRpgGeneral && activeRpgGeneral.isRPG) { cyberLockEncounterHero(activeRpgGeneral); return activeRpgGeneral; }
         return null;
     }
 
@@ -3913,9 +3978,10 @@
         }
         const hero = cyberGetSelectedRpgHero();
         if (!hero || !hero.isRPG) {
-            if (manual) alert('請先在 VS 選單選定一名「異界修羅」自創武將；歷史遺珠不會觸發主動遇敵。');
+            if (manual) alert('請先在 VS 選單選定或喚醒一名「異界修羅」自創武將；選定後系統會自動鎖定這位武將持續遇敵。歷史遺珠不會觸發主動遇敵。');
             return;
         }
+        cyberLockEncounterHero(hero);
 
         const baseEnemy = cyberPickEncounterBaseEnemy(hero);
         if (!baseEnemy) {
@@ -3949,6 +4015,13 @@
             await startDuel(false);
         } finally {
             cyberEncounterLock = false;
+            // 戰鬥結束後再次確認鎖定，下一次自動/手動遇敵會沿用同一位武將。
+            const lockedHero = cyberGetLockedEncounterHero();
+            if (lockedHero) {
+                cyberSelectDropdownByGeneral(p1Select, lockedHero);
+                activeRpgGeneral = lockedHero;
+                cyberRefreshEncounterLockStatus();
+            }
         }
     }
 
