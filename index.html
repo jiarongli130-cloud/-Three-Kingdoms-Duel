@@ -1524,7 +1524,9 @@
 
     const masterOrder = Object.keys(masterSkillMap);
 
-    const skillPool = Object.keys(skillDict);
+    // 【技能池分流】拜師學藝技能只能透過拜師取得，不能被「覺醒新技能」或創角初始技能抽到。
+    const masterSkillSet = new Set(Object.values(masterSkillMap));
+    const skillPool = Object.keys(skillDict).filter(skillName => !masterSkillSet.has(skillName));
 
     // 【50件武神兵器譜 + 15件紅顏伴侶 + 終極神賞】 植入底層標籤
     const itemDatabase = [
@@ -2678,13 +2680,19 @@
 
     function awakenSkill() {
         if (activeRpgGeneral && activeRpgGeneral.isRPG && activeRpgGeneral.skillPoints >= 3) {
-            let availableSkills = skillPool.filter(s => !activeRpgGeneral.skills.includes(s));
-            if (availableSkills.length === 0) { alert("已覺醒所有常規技能！"); return; }
+            if (!activeRpgGeneral.skills) activeRpgGeneral.skills = [];
+
+            // 一般覺醒只允許抽「常規技能」。
+            // 拜師學藝技能屬於師承系統，只能從 runMasterTrainingBattle() 取得，不能從這裡抽到。
+            let availableSkills = skillPool.filter(s => !masterSkillSet.has(s) && !activeRpgGeneral.skills.includes(s));
+
+            if (availableSkills.length === 0) { alert("已覺醒所有常規技能！拜師專屬技能請透過拜師學藝取得。"); return; }
+
             activeRpgGeneral.skillPoints -= 3;
             let newSkill = availableSkills[Math.floor(Math.random() * availableSkills.length)];
             activeRpgGeneral.skills.push(newSkill);
             renderRpgPanel(activeRpgGeneral);
-            alert(`恭喜！覺醒新技能：【${newSkill}】`);
+            alert(`恭喜！覺醒常規新技能：【${newSkill}】`);
         } else {
             alert("技能點不足或非RPG武將！");
         }
@@ -4788,7 +4796,7 @@
             battleLog.innerHTML += `<span style="color:#aaa;">📜【溫故知新】已掌握【${skillName}】，本次切磋轉為純經驗修煉。</span><br>`;
         } else {
             const remain = Math.max(0, 60 - activeRpgGeneral.masteries[masterName]);
-            battleLog.innerHTML += `<span style="color:#ffd700;">🔥【師承進度】${masterName} 認可度 ${activeRpgGeneral.masteries[masterName]}/3，再切磋 ${remain} 次必定覺醒【${skillName}】。</span><br>`;
+            battleLog.innerHTML += `<span style="color:#ffd700;">🔥【師承進度】${masterName} 認可度 ${activeRpgGeneral.masteries[masterName]}/60，再切磋 ${remain} 次必定覺醒【${skillName}】。</span><br>`;
         }
 
         // 靜默封存，不彈出保存提示，避免每次拜師都打斷流程。
