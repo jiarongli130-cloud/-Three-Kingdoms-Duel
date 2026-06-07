@@ -698,6 +698,94 @@
         }
         @media (max-width: 900px) { .advanced-game-grid { grid-template-columns: 1fr; } }
 
+
+        /* ==============================================================
+           🎲 觀戰助威＋武神商店＋限時活動 三大線上玩法
+           ============================================================== */
+        .social-economy-panel {
+            border: 2px solid #ff8c00;
+            padding: 15px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, rgba(255,140,0,0.12), rgba(0,255,255,0.06), rgba(255,0,255,0.06));
+            box-shadow: 0 0 20px rgba(255,140,0,0.18);
+            display: block;
+            margin-bottom: 20px;
+        }
+        .social-economy-panel h3 {
+            margin: 0 0 8px 0;
+            color: #ff8c00;
+            text-shadow: 0 0 8px #ff8c00;
+        }
+        .social-economy-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 14px;
+        }
+        .social-economy-box {
+            border: 1px solid #333;
+            background: rgba(0,0,0,0.70);
+            padding: 10px;
+            border-radius: 6px;
+            min-height: 185px;
+        }
+        .social-economy-box h4 {
+            margin: 0 0 8px 0;
+            color: #ffd700;
+            text-shadow: 0 0 5px rgba(255,215,0,0.55);
+        }
+        .cheer-row, .shop-row, .event-row {
+            border-bottom: 1px solid #222;
+            padding: 6px 0;
+            color: #ddd;
+            font-size: 13px;
+            line-height: 1.55;
+            word-break: break-word;
+        }
+        .coin-badge {
+            display:inline-block;
+            border:1px solid #ffd700;
+            color:#ffd700;
+            border-radius:999px;
+            padding:2px 8px;
+            margin:2px;
+            font-size:12px;
+            background:rgba(255,215,0,0.10);
+            text-shadow:0 0 6px #ffd700;
+        }
+        .cheer-side {
+            display:inline-block;
+            border:1px solid #00ffff;
+            color:#00ffff;
+            border-radius:5px;
+            padding:2px 6px;
+            margin:2px;
+            font-size:12px;
+            background:rgba(0,255,255,0.08);
+            text-shadow:0 0 5px #00ffff;
+        }
+        .cheer-side.red {
+            border-color:#ff3131;
+            color:#ff3131;
+            background:rgba(255,49,49,0.08);
+            text-shadow:0 0 5px #ff3131;
+        }
+        .event-hot {
+            color:#ff3131;
+            font-weight:bold;
+            text-shadow:0 0 7px #ff3131;
+        }
+        .event-done {
+            color:#00ff41;
+            font-weight:bold;
+            text-shadow:0 0 6px #00ff41;
+        }
+        .shop-item-name {
+            color:#ffd700;
+            font-weight:bold;
+            text-shadow:0 0 6px #ffd700;
+        }
+        @media (max-width: 900px) { .social-economy-grid { grid-template-columns: 1fr; } }
+
         .firebase-off { color: #aaa; }
         .firebase-on { color: #00ff41; text-shadow: 0 0 5px #00ff41; }
         @media (max-width: 760px) { .public-warroom-grid { grid-template-columns: 1fr; } }
@@ -994,6 +1082,42 @@
                     <select id="forgeItemSelect" style="flex:2; min-width:180px; border-color:#8a2be2; color:#c084ff;"></select>
                     <button onclick="cyberReforgeSelectedItem()" style="flex:1; min-width:110px; border-color:#ffd700; color:#ffd700;">重鑄神兵</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 觀戰助威＋武神商店＋限時活動系統 -->
+    <div class="controls social-economy-panel" id="socialEconomyPanel">
+        <h3>🎲 觀戰助威・武神商店・限時活動系統</h3>
+        <p style="font-size:12px; color:#aaa; margin:0 0 12px 0;">
+            讓沒上場的玩家也能參與：助威擂主或挑戰者、下注武神幣、購買道具與挑戰限時活動。所有獎勵只使用遊戲內貨幣，不涉及真錢。
+        </p>
+        <div class="social-economy-grid">
+            <div class="social-economy-box">
+                <h4>📣 觀戰助威 / 押勝負</h4>
+                <div id="cheerBetBoard">助威資料載入中...</div>
+                <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+                    <select id="cheerSideSelect" style="flex:1; min-width:120px; border-color:#00ffff; color:#00ffff;">
+                        <option value="champion">助威擂主</option>
+                        <option value="challenger">助威挑戰者</option>
+                    </select>
+                    <input id="betCoinInput" type="number" min="0" value="0" placeholder="押注武神幣" style="flex:1; min-width:110px; border-color:#ffd700; color:#ffd700;">
+                    <button onclick="cyberPlaceCheerBet()" style="flex:1; min-width:110px; border-color:#00ff41; color:#00ff41;">助威下注</button>
+                </div>
+            </div>
+            <div class="social-economy-box">
+                <h4>🛒 武神商店</h4>
+                <div id="wushenShopBoard">商店資料載入中...</div>
+                <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+                    <select id="shopItemSelect" style="flex:2; min-width:180px; border-color:#ffd700; color:#ffd700;"></select>
+                    <button onclick="cyberBuyShopItem()" style="flex:1; min-width:90px; border-color:#ff8c00; color:#ff8c00;">購買</button>
+                </div>
+            </div>
+            <div class="social-economy-box">
+                <h4>🔥 限時活動</h4>
+                <div id="eventBoard">活動資料載入中...</div>
+                <button onclick="cyberClaimEventRewards()" style="margin-top:8px; border-color:#ff3131; color:#ff3131;">領取活動獎勵</button>
             </div>
         </div>
     </div>
@@ -5259,6 +5383,8 @@
 
         gainExp(activeRpgGeneral.name, expGain);
         cyberDailyAdd('masterTrain', 1, activeRpgGeneral.name);
+        cyberEventAdd(activeRpgGeneral.name, 'master', 1);
+        cyberAddCoins(activeRpgGeneral.name, traineeWins ? 8 : 3, traineeWins ? '拜師擊敗師傅' : '拜師切磋');
         cyberUpdateTitleAchievementsFromMaster(activeRpgGeneral.name, traineeWins);
         cyberTryAdventure('master', activeRpgGeneral.name);
 
@@ -6092,9 +6218,11 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         cyberArenaLog(`👑 ${name} 登上公開擂台，成為第一任擂主！`);
         cyberAddFactionResult(name, 'win', 1);
         cyberSeasonAdd(name, 'arenaEnter', 3);
+        cyberAddCoins(name, 3, '登上公開擂台');
         cyberTryAdventure('battle', name);
         cyberRefreshEnhancedGameUI();
         cyberRefreshThreeSystemsUI();
+        cyberRefreshSocialEconomyUI();
     }
 
     function cyberSimArenaDuel(champion, challenger) {
@@ -6183,6 +6311,11 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         cyberAddFactionResult(result.loser.name, 'lose', 1);
         cyberSeasonAdd(result.winner.name, 'arenaWin', 10);
         cyberSeasonAdd(result.loser.name, 'arenaLose', 2);
+        cyberAddCoins(result.winner.name, 12, '擂台勝利');
+        cyberAddCoins(result.loser.name, 4, '擂台參戰');
+        cyberEventAdd(result.winner.name, 'arena', 1);
+        cyberEventAdd(result.loser.name, 'arena', 1);
+        cyberResolveCheerBets(result.winner.name, oldChampionName, challenger.name);
         cyberRecordArenaRevengeResult(result.winner.name, result.loser.name);
         cyberTryAdventure('battle', result.winner.name);
         cyberTryAdventure('battle', result.loser.name);
@@ -6646,6 +6779,8 @@ function cyberRefreshArenaUI() {
         cyberAddFactionResult(name, 'boss', Math.floor(damage / 100));
         cyberSeasonAdd(name, 'bossDamage', Math.floor(damage / 100));
         cyberAddShuraSeals(name, Math.max(1, Math.floor(damage / 500)));
+        cyberAddCoins(name, Math.max(1, Math.floor(damage / 300)), '世界Boss傷害');
+        cyberEventAdd(name, 'boss', damage);
         cyberTryAdventure('boss', name);
 
         if (state.damageBoard[name] >= 3000) cyberAwardTitle(name, '弒魔先鋒', true);
@@ -7278,6 +7413,7 @@ function cyberRefreshArenaUI() {
         cyberSaveForgeState(state);
 
         cyberSeasonAdd(name, 'reforge', 8);
+        cyberEventAdd(name, 'forge', 1);
         cyberAddLegendRecord('神兵重鑄', `${name} 重鑄神兵「${sel.value}」`, 10);
         cyberSendSystemChat(`【神兵重鑄】${name} 消耗 ${cost} 枚修羅印，重鑄「${sel.value}」成功！`);
         cyberRefreshAdvancedSystemsUI();
@@ -7326,6 +7462,8 @@ function cyberRefreshArenaUI() {
             cyberAwardTitle(name, chapter.rewardTitle, true);
             cyberAddShuraSeals(name, chapter.rewardSeal);
             cyberSeasonAdd(name, 'chapter', 20 + idx * 5);
+            cyberAddCoins(name, 25 + idx * 5, `通關劇情副本「${chapter.name}」`);
+            cyberEventAdd(name, 'chapter', 1);
             cyberAddLegendRecord('劇情副本', `${name} 通關「${chapter.name}」，擊破 ${chapter.boss}`, 20 + idx * 5);
             cyberSendSystemChat(`【劇情通關】${name} 通關「${chapter.name}」，獲得稱號【${chapter.rewardTitle}】與修羅印 +${chapter.rewardSeal}！`);
             if (idx === CYBER_CHAPTERS.length - 1) {
@@ -7451,6 +7589,314 @@ function cyberRefreshArenaUI() {
         }
     }
 
+
+    // ==============================================================
+    // 🎲 觀戰助威＋武神商店＋限時活動系統
+    // ==============================================================
+    const CYBER_COIN_KEY = 'cyberWushenCoinState_v1';
+    const CYBER_CHEER_KEY = 'cyberCheerBetState_v1';
+    const CYBER_EVENT_KEY = 'cyberLimitedEventState_v1';
+
+    const CYBER_SHOP_ITEMS = [
+        { id:'challenge_ticket', name:'擂台挑戰券', cost:30, desc:'解除自己一次擂台冷卻。', type:'ticket' },
+        { id:'shura_seal_pack', name:'修羅印小包', cost:50, desc:'獲得修羅印 +20。', type:'seals', amount:20 },
+        { id:'skill_scroll', name:'武學殘卷', cost:80, desc:'自創武將技能點 +1。', type:'skill', amount:1 },
+        { id:'stat_elixir', name:'霸體丹', cost:90, desc:'自創武將武力點 +5。', type:'stat', amount:5 },
+        { id:'boss_order', name:'弒魔令', cost:120, desc:'世界 Boss 傷害立即追加一次小爆發。', type:'bossBurst' },
+        { id:'title_skin', name:'稱號光耀石', cost:160, desc:'獲得稱號【光耀武神】。', type:'title', title:'光耀武神' }
+    ];
+
+    function cyberGetCoinState() {
+        const s = cyberReadJson(CYBER_COIN_KEY, { heroes: {} });
+        if (!s.heroes) s.heroes = {};
+        return s;
+    }
+
+    function cyberSaveCoinState(s) {
+        cyberWriteJson(CYBER_COIN_KEY, s);
+    }
+
+    function cyberEnsureCoinHero(name) {
+        const s = cyberGetCoinState();
+        if (!s.heroes[name]) s.heroes[name] = { coins: 0, earned: 0, spent: 0 };
+        cyberSaveCoinState(s);
+        return s.heroes[name];
+    }
+
+    function cyberAddCoins(name, amount, reason = '') {
+        if (!name || !amount) return;
+        const s = cyberGetCoinState();
+        if (!s.heroes[name]) s.heroes[name] = { coins: 0, earned: 0, spent: 0 };
+        s.heroes[name].coins = Math.max(0, (s.heroes[name].coins || 0) + amount);
+        if (amount > 0) s.heroes[name].earned = (s.heroes[name].earned || 0) + amount;
+        if (amount < 0) s.heroes[name].spent = (s.heroes[name].spent || 0) + Math.abs(amount);
+        cyberSaveCoinState(s);
+        if (reason && amount > 0) cyberAddLegendRecord('武神幣', `${name} 獲得武神幣 +${amount}｜${reason}`, amount);
+    }
+
+    function cyberGetCheerState() {
+        const s = cyberReadJson(CYBER_CHEER_KEY, { currentMatch: '', bets: {}, resolved: [] });
+        if (!s.bets) s.bets = {};
+        if (!s.resolved) s.resolved = [];
+        return s;
+    }
+
+    function cyberSaveCheerState(s) {
+        cyberWriteJson(CYBER_CHEER_KEY, s);
+    }
+
+    function cyberGetCurrentArenaMatchId() {
+        const state = cyberGetArenaState();
+        const champ = state.champion && state.champion.name ? state.champion.name : '無擂主';
+        const challengerSel = document.getElementById('arenaFighterSelect');
+        const challenger = challengerSel && challengerSel.value ? challengerSel.value : '未選挑戰者';
+        return `${champ}__VS__${challenger}`;
+    }
+
+    function cyberPlaceCheerBet() {
+        const nick = cyberGetNick();
+        const side = (document.getElementById('cheerSideSelect') || {}).value || 'champion';
+        const betInput = document.getElementById('betCoinInput');
+        const bet = Math.max(0, Number(betInput ? betInput.value : 0) || 0);
+        const matchId = cyberGetCurrentArenaMatchId();
+
+        const coin = cyberEnsureCoinHero(nick);
+        if (bet > 0 && coin.coins < bet) {
+            alert(`武神幣不足，目前只有 ${coin.coins}。`);
+            return;
+        }
+
+        const s = cyberGetCheerState();
+        if (!s.bets[matchId]) s.bets[matchId] = { champion: {}, challenger: {}, time: Date.now() };
+        if (s.bets[matchId][side][nick]) {
+            alert('這一場你已經助威/下注過了。');
+            return;
+        }
+
+        if (bet > 0) cyberAddCoins(nick, -bet, '押勝負');
+        s.bets[matchId][side][nick] = { bet, time: Date.now() };
+        s.currentMatch = matchId;
+        cyberSaveCheerState(s);
+
+        const sideText = side === 'champion' ? '擂主' : '挑戰者';
+        cyberSendSystemChat(`【觀戰助威】${nick} 支持${sideText}${bet > 0 ? `，押注 ${bet} 武神幣` : ''}！`);
+        cyberRefreshSocialEconomyUI();
+    }
+
+    function cyberResolveCheerBets(winnerName, oldChampionName, challengerName) {
+        const matchId = `${oldChampionName || '無擂主'}__VS__${challengerName || '未選挑戰者'}`;
+        const s = cyberGetCheerState();
+        const betPack = s.bets[matchId];
+        if (!betPack) return;
+
+        const winnerSide = winnerName === oldChampionName ? 'champion' : 'challenger';
+        const loserSide = winnerSide === 'champion' ? 'challenger' : 'champion';
+
+        const cheerCount = Object.keys(betPack[winnerSide] || {}).length;
+        const bonusCoins = cheerCount >= 10 ? 15 : cheerCount >= 3 ? 5 : 2;
+
+        Object.entries(betPack[winnerSide] || {}).forEach(([nick, data]) => {
+            const payout = (data.bet || 0) * 2 + bonusCoins;
+            cyberAddCoins(nick, payout, `押中 ${winnerName} 勝利`);
+        });
+
+        Object.entries(betPack[loserSide] || {}).forEach(([nick, data]) => {
+            if ((data.bet || 0) === 0) cyberAddCoins(nick, 1, '參與觀戰助威');
+        });
+
+        s.resolved.unshift({ matchId, winnerName, winnerSide, time: Date.now() });
+        delete s.bets[matchId];
+        cyberSaveCheerState(s);
+
+        if (cheerCount >= 3) cyberSendSystemChat(`【助威奏效】${winnerName} 得到 ${cheerCount} 名觀眾助威，全場氣勢暴漲！`);
+        if (cheerCount >= 10) cyberAddLegendRecord('觀戰助威', `${winnerName} 獲得 ${cheerCount} 人助威，人氣爆棚`, cheerCount);
+    }
+
+    function cyberGetEventId() {
+        const d = new Date();
+        const dayIndex = Math.floor(d.getTime() / 86400000);
+        return `EVT-${dayIndex}`;
+    }
+
+    function cyberGetEventTemplate() {
+        const pool = [
+            { id:'arena_fever', name:'擂台狂潮', desc:'今日擂台出戰 5 場', targetType:'arena', target:5, rewardCoins:80, rewardSeals:20, title:'擂台狂潮者' },
+            { id:'boss_hunt', name:'弒魔遠征', desc:'今日世界 Boss 傷害達 5000', targetType:'boss', target:5000, rewardCoins:100, rewardSeals:25, title:'弒魔遠征者' },
+            { id:'chapter_rush', name:'武神傳突破', desc:'今日劇情副本通關 2 次', targetType:'chapter', target:2, rewardCoins:120, rewardSeals:30, title:'劇情突破者' },
+            { id:'forge_day', name:'神兵鍛造日', desc:'今日神兵重鑄 2 次', targetType:'forge', target:2, rewardCoins:90, rewardSeals:35, title:'鍛造名匠' },
+            { id:'master_day', name:'拜師百鍊日', desc:'今日拜師切磋 8 次', targetType:'master', target:8, rewardCoins:75, rewardSeals:15, title:'百鍊學徒' }
+        ];
+        const idx = Math.floor(Date.now() / 86400000) % pool.length;
+        return pool[idx];
+    }
+
+    function cyberGetEventState() {
+        const eid = cyberGetEventId();
+        const tpl = cyberGetEventTemplate();
+        let s = cyberReadJson(CYBER_EVENT_KEY, null);
+        if (!s || s.eventId !== eid || s.templateId !== tpl.id) {
+            s = { eventId: eid, templateId: tpl.id, heroes: {}, claimed: {} };
+            cyberWriteJson(CYBER_EVENT_KEY, s);
+        }
+        if (!s.heroes) s.heroes = {};
+        if (!s.claimed) s.claimed = {};
+        return s;
+    }
+
+    function cyberSaveEventState(s) {
+        cyberWriteJson(CYBER_EVENT_KEY, s);
+    }
+
+    function cyberEventAdd(name, type, amount = 1) {
+        if (!name) return;
+        const tpl = cyberGetEventTemplate();
+        if (tpl.targetType !== type) return;
+        const s = cyberGetEventState();
+        if (!s.heroes[name]) s.heroes[name] = { progress: 0 };
+        s.heroes[name].progress = (s.heroes[name].progress || 0) + amount;
+        cyberSaveEventState(s);
+    }
+
+    function cyberClaimEventRewards() {
+        const name = cyberGetActiveHeroName();
+        const hero = generals.find(g => g.name === name) || activeRpgGeneral;
+        if (!hero || !hero.isRPG) {
+            alert('請先選定或喚醒一名自創武將。');
+            return;
+        }
+
+        const tpl = cyberGetEventTemplate();
+        const s = cyberGetEventState();
+        const progress = s.heroes[name] ? (s.heroes[name].progress || 0) : 0;
+        if (progress < tpl.target) {
+            alert(`活動尚未完成：${progress}/${tpl.target}`);
+            return;
+        }
+        if (s.claimed[name]) {
+            alert('今日活動獎勵已領取。');
+            return;
+        }
+
+        s.claimed[name] = true;
+        cyberSaveEventState(s);
+        cyberAddCoins(name, tpl.rewardCoins, `完成限時活動「${tpl.name}」`);
+        cyberAddShuraSeals(name, tpl.rewardSeals);
+        cyberAwardTitle(name, tpl.title, true);
+        cyberAddLegendRecord('限時活動', `${name} 完成「${tpl.name}」，取得【${tpl.title}】`, 30);
+        cyberSendSystemChat(`【限時活動完成】${name} 完成「${tpl.name}」，獲得武神幣 +${tpl.rewardCoins}、修羅印 +${tpl.rewardSeals}、稱號【${tpl.title}】！`);
+        cyberRefreshSocialEconomyUI();
+        cyberRefreshAdvancedSystemsUI();
+        cyberRefreshEnhancedGameUI();
+    }
+
+    function cyberBuyShopItem() {
+        const name = cyberGetActiveHeroName();
+        const hero = generals.find(g => g.name === name) || activeRpgGeneral;
+        const sel = document.getElementById('shopItemSelect');
+        if (!hero || !hero.isRPG) {
+            alert('請先選定或喚醒一名自創武將。');
+            return;
+        }
+        if (!sel || !sel.value) return;
+        const item = CYBER_SHOP_ITEMS.find(x => x.id === sel.value);
+        if (!item) return;
+
+        const coin = cyberEnsureCoinHero(name);
+        if ((coin.coins || 0) < item.cost) {
+            alert(`武神幣不足！需要 ${item.cost}，目前只有 ${coin.coins || 0}。`);
+            return;
+        }
+
+        cyberAddCoins(name, -item.cost, `購買 ${item.name}`);
+
+        if (item.type === 'seals') {
+            cyberAddShuraSeals(name, item.amount || 0);
+        } else if (item.type === 'skill') {
+            hero.skillPoints = (hero.skillPoints || 0) + (item.amount || 1);
+        } else if (item.type === 'stat') {
+            hero.statPoints = (hero.statPoints || 0) + (item.amount || 1);
+        } else if (item.type === 'title') {
+            cyberAwardTitle(name, item.title, true);
+        } else if (item.type === 'ticket') {
+            const state = cyberGetArenaState();
+            if (state.cooldowns) state.cooldowns[name] = 0;
+            cyberSaveArenaState(state);
+        } else if (item.type === 'bossBurst') {
+            const boss = cyberGetWorldBossState();
+            if (!boss.defeated && boss.hp > 0) {
+                const dmg = Math.max(500, Math.floor((hero.power || 1) * 6));
+                boss.hp = Math.max(0, boss.hp - dmg);
+                boss.damageBoard[name] = (boss.damageBoard[name] || 0) + dmg;
+                cyberSaveWorldBossState(boss);
+                cyberDailyAdd('bossDamage', dmg, name);
+                cyberSeasonAdd(name, 'bossDamage', Math.floor(dmg / 100));
+            }
+        }
+
+        let savedData = JSON.parse(localStorage.getItem('rpgGenerals')) || {};
+        savedData[hero.name] = hero;
+        localStorage.setItem('rpgGenerals', JSON.stringify(savedData));
+
+        cyberAddLegendRecord('武神商店', `${name} 購買「${item.name}」`, 8);
+        cyberSendSystemChat(`【武神商店】${name} 購買「${item.name}」成功！`);
+        renderRpgPanel(hero);
+        updateDropdowns();
+        cyberRefreshSocialEconomyUI();
+        cyberRefreshAdvancedSystemsUI();
+        cyberRefreshEnhancedGameUI();
+    }
+
+    function cyberRefreshSocialEconomyUI() {
+        const name = cyberGetActiveHeroName();
+        const coin = cyberEnsureCoinHero(name);
+
+        const cheerBox = document.getElementById('cheerBetBoard');
+        if (cheerBox) {
+            const matchId = cyberGetCurrentArenaMatchId();
+            const s = cyberGetCheerState();
+            const pack = s.bets[matchId] || { champion: {}, challenger: {} };
+            const champCount = Object.keys(pack.champion || {}).length;
+            const challengerCount = Object.keys(pack.challenger || {}).length;
+            const champBet = Object.values(pack.champion || {}).reduce((a,b)=>a+(b.bet||0),0);
+            const challengerBet = Object.values(pack.challenger || {}).reduce((a,b)=>a+(b.bet||0),0);
+            cheerBox.innerHTML = `
+                <div class="cheer-row">目前場次：<br><span style="color:#ffd700;">${cyberEscapeHtml(matchId.replace('__VS__',' VS '))}</span></div>
+                <div class="cheer-row"><span class="cheer-side">擂主方</span> 助威 ${champCount} 人｜押注 ${champBet} 武神幣</div>
+                <div class="cheer-row"><span class="cheer-side red">挑戰者方</span> 助威 ${challengerCount} 人｜押注 ${challengerBet} 武神幣</div>
+                <div class="cheer-row">你的武神幣：<span class="coin-badge">${coin.coins || 0}</span></div>
+            `;
+        }
+
+        const shopBox = document.getElementById('wushenShopBoard');
+        const shopSel = document.getElementById('shopItemSelect');
+        if (shopBox) {
+            shopBox.innerHTML = `
+                <div class="shop-row">目前武將：<span style="color:#00ff41; font-weight:bold;">${cyberEscapeHtml(name)}</span></div>
+                <div class="shop-row">武神幣：<span class="coin-badge">${coin.coins || 0}</span>｜累計取得 ${coin.earned || 0}｜已花費 ${coin.spent || 0}</div>
+                <div class="shop-row">${CYBER_SHOP_ITEMS.map(x => `<div><span class="shop-item-name">${cyberEscapeHtml(x.name)}</span>｜${x.cost} 幣<br><span style="color:#aaa;">${cyberEscapeHtml(x.desc)}</span></div>`).join('')}</div>
+            `;
+        }
+        if (shopSel) {
+            const current = shopSel.value;
+            shopSel.innerHTML = '';
+            CYBER_SHOP_ITEMS.forEach(x => shopSel.add(new Option(`${x.name}｜${x.cost}幣｜${x.desc}`, x.id)));
+            if ([...shopSel.options].some(o => o.value === current)) shopSel.value = current;
+        }
+
+        const eventBox = document.getElementById('eventBoard');
+        if (eventBox) {
+            const tpl = cyberGetEventTemplate();
+            const s = cyberGetEventState();
+            const progress = s.heroes[name] ? (s.heroes[name].progress || 0) : 0;
+            const done = progress >= tpl.target;
+            eventBox.innerHTML = `
+                <div class="event-row"><span class="event-hot">今日活動：${cyberEscapeHtml(tpl.name)}</span><br>${cyberEscapeHtml(tpl.desc)}</div>
+                <div class="event-row ${done ? 'event-done' : ''}">${done ? '✅' : '⬜'} 進度：${Math.min(progress, tpl.target)}/${tpl.target}${s.claimed[name] ? '｜已領取' : ''}</div>
+                <div class="event-row">獎勵：武神幣 +${tpl.rewardCoins}｜修羅印 +${tpl.rewardSeals}｜稱號【${cyberEscapeHtml(tpl.title)}】</div>
+            `;
+        }
+    }
+
     function cyberRefreshAllPublicWarroom() {
         const nickInput = document.getElementById('chatNickInput');
         if (nickInput && !nickInput.value) nickInput.value = localStorage.getItem(CYBER_NICK_KEY) || CYBER_OWNER_NAME;
@@ -7459,6 +7905,7 @@ function cyberRefreshArenaUI() {
         if (typeof cyberRefreshEnhancedGameUI === 'function') cyberRefreshEnhancedGameUI();
         if (typeof cyberRefreshThreeSystemsUI === 'function') cyberRefreshThreeSystemsUI();
         if (typeof cyberRefreshAdvancedSystemsUI === 'function') cyberRefreshAdvancedSystemsUI();
+        if (typeof cyberRefreshSocialEconomyUI === 'function') cyberRefreshSocialEconomyUI();
     }
 
     function cyberLoadScript(src) {
@@ -7534,6 +7981,7 @@ function cyberRefreshArenaUI() {
         setInterval(cyberRefreshEnhancedGameUI, 3000);
         setInterval(cyberRefreshThreeSystemsUI, 3000);
         setInterval(cyberRefreshAdvancedSystemsUI, 3000);
+        setInterval(cyberRefreshSocialEconomyUI, 3000);
     });
 
 </script>
