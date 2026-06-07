@@ -874,6 +874,105 @@
         }
         @media (max-width: 900px) { .destiny-bond-grid { grid-template-columns: 1fr; } }
 
+
+        /* ==============================================================
+           🌸 銅雀紅顏家族系統：結婚・多妻妾・子嗣・家族傳承
+           ============================================================== */
+        .family-romance-panel {
+            border: 2px solid #ff69b4;
+            padding: 15px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, rgba(255,105,180,0.13), rgba(255,215,0,0.07), rgba(138,43,226,0.07));
+            box-shadow: 0 0 20px rgba(255,105,180,0.20);
+            display: block;
+            margin-bottom: 20px;
+        }
+        .family-romance-panel h3 {
+            margin: 0 0 8px 0;
+            color: #ff69b4;
+            text-shadow: 0 0 8px #ff69b4;
+        }
+        .family-romance-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 14px;
+        }
+        .family-romance-box {
+            border: 1px solid #333;
+            background: rgba(0,0,0,0.72);
+            padding: 10px;
+            border-radius: 6px;
+            min-height: 190px;
+        }
+        .family-romance-box h4 {
+            margin: 0 0 8px 0;
+            color: #ffd700;
+            text-shadow: 0 0 5px rgba(255,215,0,0.55);
+        }
+        .family-row, .spouse-row, .child-row {
+            border-bottom: 1px solid #222;
+            padding: 6px 0;
+            color: #ddd;
+            font-size: 13px;
+            line-height: 1.55;
+            word-break: break-word;
+        }
+        .spouse-chip {
+            display:inline-block;
+            border:1px solid #ff69b4;
+            color:#ffb6d9;
+            border-radius:999px;
+            padding:2px 8px;
+            margin:2px;
+            font-size:12px;
+            background:rgba(255,105,180,0.10);
+            text-shadow:0 0 5px #ff69b4;
+        }
+        .spouse-main {
+            border-color:#ffd700 !important;
+            color:#ffd700 !important;
+            text-shadow:0 0 7px #ffd700 !important;
+            background:rgba(255,215,0,0.10) !important;
+        }
+        .spouse-consort {
+            border-color:#c084ff !important;
+            color:#c084ff !important;
+            text-shadow:0 0 7px #8a2be2 !important;
+            background:rgba(138,43,226,0.10) !important;
+        }
+        .affection-meter {
+            height: 12px;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 999px;
+            overflow: hidden;
+            margin: 4px 0 6px 0;
+        }
+        .affection-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff69b4, #ffd700, #ff4dff);
+            transition: width .25s ease;
+        }
+        .child-card {
+            border:1px solid #00ffff;
+            border-radius:6px;
+            padding:7px;
+            margin:5px 0;
+            background:linear-gradient(135deg, rgba(0,255,255,0.10), rgba(255,215,0,0.06));
+            box-shadow:0 0 10px rgba(0,255,255,0.12);
+        }
+        .child-name {
+            color:#00ffff;
+            font-weight:bold;
+            text-shadow:0 0 6px #00ffff;
+        }
+        .family-bonus {
+            color:#ffd700;
+            font-weight:bold;
+            text-shadow:0 0 6px #ffd700;
+        }
+        @media (max-width: 900px) { .family-romance-grid { grid-template-columns: 1fr; } }
+
         .firebase-off { color: #aaa; }
         .firebase-on { color: #00ff41; text-shadow: 0 0 5px #00ff41; }
         @media (max-width: 760px) { .public-warroom-grid { grid-template-columns: 1fr; } }
@@ -1235,6 +1334,49 @@
                 <h4>🏅 霸業成就總覽</h4>
                 <div id="achievementSummaryBoard">成就總覽載入中...</div>
                 <button onclick="cyberRefreshDestinyBondUI()" style="margin-top:8px; border-color:#00ff41; color:#00ff41;">刷新總覽</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 銅雀紅顏家族系統：結婚・多妻妾・子嗣・家族傳承 -->
+    <div class="controls family-romance-panel" id="familyRomancePanel">
+        <h3>🌸 銅雀紅顏家族系統：結婚・多妻妾・子嗣・家族傳承</h3>
+        <p style="font-size:12px; color:#aaa; margin:0 0 12px 0;">
+            最後補強情感與家族玩法：與紅顏培養好感、締結婚姻、冊立正妻或側室、祈福得子、培養子嗣，形成武神家族傳承。全程為遊戲式互動，不含露骨內容。
+        </p>
+        <div class="family-romance-grid">
+            <div class="family-romance-box">
+                <h4>💍 紅顏締緣 / 結婚納妾</h4>
+                <div id="familySpouseBoard">紅顏家族資料載入中...</div>
+                <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+                    <select id="romanceBeautySelect" style="flex:2; min-width:170px; border-color:#ff69b4; color:#ff69b4;"></select>
+                    <select id="romanceRoleSelect" style="flex:1; min-width:120px; border-color:#ffd700; color:#ffd700;">
+                        <option value="main">正妻</option>
+                        <option value="consort">側室</option>
+                        <option value="companion">紅顏知己</option>
+                    </select>
+                    <button onclick="cyberMarrySelectedBeauty()" style="flex:1; min-width:120px; border-color:#ff69b4; color:#ff69b4;">締結姻緣</button>
+                </div>
+            </div>
+            <div class="family-romance-box">
+                <h4>🌹 日常互動</h4>
+                <div id="familyInteractionBoard">互動資料載入中...</div>
+                <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+                    <select id="familyTargetSelect" style="flex:2; min-width:170px; border-color:#ff69b4; color:#ff69b4;"></select>
+                    <button onclick="cyberInteractWithSpouse('gift')" style="flex:1; min-width:90px; border-color:#ffd700; color:#ffd700;">贈禮</button>
+                    <button onclick="cyberInteractWithSpouse('date')" style="flex:1; min-width:90px; border-color:#ff69b4; color:#ff69b4;">同遊</button>
+                    <button onclick="cyberPrayForChild()" style="flex:1; min-width:110px; border-color:#00ffff; color:#00ffff;">祈福得子</button>
+                </div>
+            </div>
+            <div class="family-romance-box">
+                <h4>👶 子嗣培養 / 家族傳承</h4>
+                <div id="familyChildBoard">子嗣資料載入中...</div>
+                <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+                    <select id="familyChildSelect" style="flex:2; min-width:170px; border-color:#00ffff; color:#00ffff;"></select>
+                    <button onclick="cyberTrainSelectedChild()" style="flex:1; min-width:100px; border-color:#00ff41; color:#00ff41;">培養子嗣</button>
+                    <button onclick="cyberInheritFromSelectedChild()" style="flex:1; min-width:100px; border-color:#ffd700; color:#ffd700;">家族傳承</button>
+                </div>
             </div>
         </div>
     </div>
@@ -6433,6 +6575,12 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         cyberAddCoins(result.loser.name, 4, '擂台參戰');
         cyberApplyDestinyBonus(result.winner.name, 'arena');
         cyberApplyDestinyBonus(result.loser.name, 'arena');
+        if (typeof cyberGetFamilyBonus === 'function') {
+            const fbW = cyberGetFamilyBonus(result.winner.name);
+            const fbL = cyberGetFamilyBonus(result.loser.name);
+            if (fbW.coinBonus && typeof cyberAddCoins === 'function') cyberAddCoins(result.winner.name, Math.floor(fbW.coinBonus / 3), '家族加成：擂台勝利');
+            if (fbL.coinBonus && typeof cyberAddCoins === 'function') cyberAddCoins(result.loser.name, Math.floor(fbL.coinBonus / 5), '家族加成：擂台參戰');
+        }
         cyberEventAdd(result.winner.name, 'arena', 1);
         cyberEventAdd(result.loser.name, 'arena', 1);
         cyberAwardBondFromBattle(result.winner.name, result.loser.name, result.winner.name);
@@ -6902,6 +7050,10 @@ function cyberRefreshArenaUI() {
         cyberAddShuraSeals(name, Math.max(1, Math.floor(damage / 500)));
         cyberAddCoins(name, Math.max(1, Math.floor(damage / 300)), '世界Boss傷害');
         cyberApplyDestinyBonus(name, 'boss');
+        if (typeof cyberGetFamilyBonus === 'function') {
+            const fb = cyberGetFamilyBonus(name);
+            if (fb.sealBonus && typeof cyberAddShuraSeals === 'function') cyberAddShuraSeals(name, Math.max(1, Math.floor(fb.sealBonus / 3)));
+        }
         cyberEventAdd(name, 'boss', damage);
         cyberTryAdventure('boss', name);
 
@@ -8289,6 +8441,439 @@ function cyberRefreshArenaUI() {
         }
     }
 
+
+    // ==============================================================
+    // 🌸 銅雀紅顏家族系統：結婚・多妻妾・子嗣・家族傳承
+    // ==============================================================
+    const CYBER_FAMILY_KEY = 'cyberFamilyRomanceState_v1';
+
+    const CYBER_ROMANCE_BEAUTIES = [
+        { name:'樊玥', trait:'龍魂守護', bonus:'HP上限與免死氣運提升', rarity:'legend' },
+        { name:'孫仁（孫尚香）', trait:'弓腰姬', bonus:'擂台氣勢與反擊提升', rarity:'epic' },
+        { name:'馬雲騄', trait:'西涼女騎', bonus:'挑戰與突擊收益提升', rarity:'epic' },
+        { name:'祝融', trait:'南蠻火神', bonus:'Boss傷害與奇遇機率提升', rarity:'epic' },
+        { name:'貂蟬', trait:'閉月', bonus:'稱號與聲望收益提升', rarity:'legend' },
+        { name:'大喬', trait:'江東明月', bonus:'家族安定與子嗣培養提升', rarity:'rare' },
+        { name:'小喬', trait:'東風花影', bonus:'每日互動收益提升', rarity:'rare' },
+        { name:'甄氏', trait:'洛神', bonus:'天命卡與修羅印收益提升', rarity:'legend' },
+        { name:'黃氏（黃月英）', trait:'機巧天工', bonus:'神兵重鑄收益提升', rarity:'epic' },
+        { name:'鄒氏', trait:'亂世妖華', bonus:'復仇與奇遇收益提升', rarity:'rare' },
+        { name:'嚴氏', trait:'溫婉持家', bonus:'武神幣收益提升', rarity:'rare' },
+        { name:'徐氏', trait:'智計深閨', bonus:'賽季分與任務收益提升', rarity:'rare' },
+        { name:'郭氏', trait:'鳳儀謀后', bonus:'軍團積分收益提升', rarity:'epic' },
+        { name:'糜氏', trait:'仁德內助', bonus:'拜師修煉收益提升', rarity:'rare' },
+        { name:'甘氏', trait:'靜水柔光', bonus:'子嗣氣運提升', rarity:'rare' }
+    ];
+
+    const CYBER_CHILD_TALENTS = [
+        '龍膽傳人', '鳳儀天姿', '虎魄戰骨', '麒麟瑞命', '洛神氣運',
+        '修羅血脈', '武庫奇才', '銅雀福星', '天書慧根', '江東英魂'
+    ];
+
+    function cyberGetFamilyState() {
+        const s = cyberReadJson(CYBER_FAMILY_KEY, { heroes: {} });
+        if (!s.heroes) s.heroes = {};
+        return s;
+    }
+
+    function cyberSaveFamilyState(s) {
+        cyberWriteJson(CYBER_FAMILY_KEY, s);
+    }
+
+    function cyberEnsureFamilyHero(name) {
+        const s = cyberGetFamilyState();
+        if (!s.heroes[name]) {
+            s.heroes[name] = {
+                spouses: {},
+                children: [],
+                familyPrestige: 0,
+                lastInteractionDay: '',
+                interactionCountToday: 0
+            };
+        }
+        if (!s.heroes[name].spouses) s.heroes[name].spouses = {};
+        if (!Array.isArray(s.heroes[name].children)) s.heroes[name].children = [];
+        cyberSaveFamilyState(s);
+        return s.heroes[name];
+    }
+
+    function cyberGetBeautyInfo(name) {
+        return CYBER_ROMANCE_BEAUTIES.find(b => b.name === name) || { name, trait:'紅顏', bonus:'情義加成', rarity:'rare' };
+    }
+
+    function cyberFamilyRoleText(role) {
+        if (role === 'main') return '正妻';
+        if (role === 'consort') return '側室';
+        return '紅顏知己';
+    }
+
+    function cyberFamilyRoleClass(role) {
+        if (role === 'main') return 'spouse-main';
+        if (role === 'consort') return 'spouse-consort';
+        return '';
+    }
+
+    function cyberNormalizeFamilyDaily(fam) {
+        const today = cyberTodayKey ? cyberTodayKey() : new Date().toISOString().slice(0,10);
+        if (fam.lastInteractionDay !== today) {
+            fam.lastInteractionDay = today;
+            fam.interactionCountToday = 0;
+        }
+    }
+
+    function cyberPopulateRomanceSelects() {
+        const beautySel = document.getElementById('romanceBeautySelect');
+        const targetSel = document.getElementById('familyTargetSelect');
+        const childSel = document.getElementById('familyChildSelect');
+        const heroName = cyberGetActiveHeroName();
+        const fam = cyberEnsureFamilyHero(heroName);
+
+        if (beautySel) {
+            const current = beautySel.value;
+            beautySel.innerHTML = '';
+            CYBER_ROMANCE_BEAUTIES.forEach(b => {
+                const married = fam.spouses[b.name];
+                beautySel.add(new Option(`${married ? '✅' : '💗'} ${b.name}｜${b.trait}｜${b.bonus}`, b.name));
+            });
+            if ([...beautySel.options].some(o => o.value === current)) beautySel.value = current;
+        }
+
+        if (targetSel) {
+            const current = targetSel.value;
+            targetSel.innerHTML = '';
+            Object.entries(fam.spouses || {}).forEach(([name, sp]) => {
+                targetSel.add(new Option(`${cyberFamilyRoleText(sp.role)}｜${name}｜好感 ${sp.affection || 0}`, name));
+            });
+            if ([...targetSel.options].some(o => o.value === current)) targetSel.value = current;
+        }
+
+        if (childSel) {
+            const current = childSel.value;
+            childSel.innerHTML = '';
+            (fam.children || []).forEach(c => {
+                childSel.add(new Option(`${c.name}｜${c.talent}｜Lv.${c.level || 1}｜潛力${c.potential}`, c.id));
+            });
+            if ([...childSel.options].some(o => o.value === current)) childSel.value = current;
+        }
+    }
+
+    function cyberMarrySelectedBeauty() {
+        const heroName = cyberGetActiveHeroName();
+        const hero = generals.find(g => g.name === heroName) || activeRpgGeneral;
+        if (!hero || !hero.isRPG) {
+            alert('請先選定或喚醒一名自創武將。');
+            return;
+        }
+
+        const beautySel = document.getElementById('romanceBeautySelect');
+        const roleSel = document.getElementById('romanceRoleSelect');
+        const beautyName = beautySel ? beautySel.value : '';
+        const role = roleSel ? roleSel.value : 'companion';
+        if (!beautyName) return;
+
+        const state = cyberGetFamilyState();
+        if (!state.heroes[heroName]) state.heroes[heroName] = { spouses: {}, children: [], familyPrestige:0, lastInteractionDay:'', interactionCountToday:0 };
+        const fam = state.heroes[heroName];
+
+        if (role === 'main') {
+            const hasMain = Object.values(fam.spouses || {}).some(s => s.role === 'main');
+            if (hasMain && (!fam.spouses[beautyName] || fam.spouses[beautyName].role !== 'main')) {
+                alert('已有正妻。若要更動，請先將此紅顏設定為側室或紅顏知己。');
+                return;
+            }
+        }
+
+        const info = cyberGetBeautyInfo(beautyName);
+        const existed = !!fam.spouses[beautyName];
+        fam.spouses[beautyName] = {
+            name: beautyName,
+            role,
+            affection: existed ? Math.max(fam.spouses[beautyName].affection || 0, 35) : 35,
+            trait: info.trait,
+            rarity: info.rarity,
+            marriedAt: fam.spouses[beautyName]?.marriedAt || Date.now()
+        };
+        fam.familyPrestige = (fam.familyPrestige || 0) + (role === 'main' ? 20 : role === 'consort' ? 12 : 8);
+        cyberSaveFamilyState(state);
+
+        cyberAwardTitle(heroName, role === 'main' ? '銅雀正緣' : '銅雀多情', true);
+        if (typeof cyberAddCoins === 'function') cyberAddCoins(heroName, role === 'main' ? 30 : 15, '締結紅顏姻緣');
+        if (typeof cyberAddLegendRecord === 'function') cyberAddLegendRecord('紅顏家族', `${heroName} 與 ${beautyName} 締結${cyberFamilyRoleText(role)}`, 18);
+        if (typeof cyberSendSystemChat === 'function') cyberSendSystemChat(`【銅雀姻緣】${heroName} 與 ${beautyName} 締結${cyberFamilyRoleText(role)}，家族聲望提升！`);
+
+        cyberRefreshFamilyRomanceUI();
+        cyberRefreshEnhancedGameUI && cyberRefreshEnhancedGameUI();
+    }
+
+    function cyberInteractWithSpouse(type) {
+        const heroName = cyberGetActiveHeroName();
+        const hero = generals.find(g => g.name === heroName) || activeRpgGeneral;
+        if (!hero || !hero.isRPG) {
+            alert('請先選定或喚醒一名自創武將。');
+            return;
+        }
+
+        const sel = document.getElementById('familyTargetSelect');
+        const beautyName = sel ? sel.value : '';
+        if (!beautyName) {
+            alert('請先締結至少一位紅顏。');
+            return;
+        }
+
+        const state = cyberGetFamilyState();
+        const fam = cyberEnsureFamilyHero(heroName);
+        cyberNormalizeFamilyDaily(fam);
+
+        const cost = type === 'gift' ? 20 : 10;
+        if (typeof cyberEnsureCoinHero === 'function') {
+            const coin = cyberEnsureCoinHero(heroName);
+            if ((coin.coins || 0) < cost) {
+                alert(`武神幣不足，此互動需要 ${cost}。`);
+                return;
+            }
+            cyberAddCoins(heroName, -cost, type === 'gift' ? '紅顏贈禮' : '紅顏同遊');
+        }
+
+        const gain = type === 'gift' ? 18 : 10;
+        fam.spouses[beautyName].affection = Math.min(100, (fam.spouses[beautyName].affection || 0) + gain);
+        fam.familyPrestige = (fam.familyPrestige || 0) + (type === 'gift' ? 4 : 2);
+        fam.interactionCountToday = (fam.interactionCountToday || 0) + 1;
+        state.heroes[heroName] = fam;
+        cyberSaveFamilyState(state);
+
+        if (fam.spouses[beautyName].affection >= 80) cyberAwardTitle(heroName, '情義無雙', true);
+        if (typeof cyberTryAdventure === 'function' && Math.random() < 0.12) cyberTryAdventure('manual', heroName);
+        if (typeof cyberSendSystemChat === 'function') cyberSendSystemChat(`【紅顏互動】${heroName} 與 ${beautyName} ${type === 'gift' ? '互贈珍禮' : '同遊賞景'}，好感 +${gain}！`);
+
+        cyberRefreshFamilyRomanceUI();
+    }
+
+    function cyberGenerateChildName(heroName, beautyName) {
+        const surname = (heroName || '武').slice(0, 1);
+        const pool = ['龍兒','鳳兒','雲麟','星河','玄英','天驕','承武','凌霄','玉衡','無雙','子衿','明凰'];
+        return `${surname}${pool[Math.floor(Math.random() * pool.length)]}`;
+    }
+
+    function cyberPrayForChild() {
+        const heroName = cyberGetActiveHeroName();
+        const hero = generals.find(g => g.name === heroName) || activeRpgGeneral;
+        if (!hero || !hero.isRPG) {
+            alert('請先選定或喚醒一名自創武將。');
+            return;
+        }
+
+        const sel = document.getElementById('familyTargetSelect');
+        const beautyName = sel ? sel.value : '';
+        if (!beautyName) {
+            alert('請先選擇已締結姻緣的紅顏。');
+            return;
+        }
+
+        const state = cyberGetFamilyState();
+        const fam = cyberEnsureFamilyHero(heroName);
+        const sp = fam.spouses[beautyName];
+        if (!sp) return;
+
+        const baseChance = 0.28 + Math.min(0.42, (sp.affection || 0) / 180);
+        const childLimit = 12;
+        if ((fam.children || []).length >= childLimit) {
+            alert(`目前子嗣已達 ${childLimit} 名上限。`);
+            return;
+        }
+
+        if (Math.random() > baseChance) {
+            sp.affection = Math.min(100, (sp.affection || 0) + 3);
+            fam.familyPrestige = (fam.familyPrestige || 0) + 1;
+            state.heroes[heroName] = fam;
+            cyberSaveFamilyState(state);
+            alert('祈福暫未得子，但情義更深，好感 +3。');
+            cyberRefreshFamilyRomanceUI();
+            return;
+        }
+
+        const talent = CYBER_CHILD_TALENTS[Math.floor(Math.random() * CYBER_CHILD_TALENTS.length)];
+        const potential = Math.floor(60 + Math.random() * 41 + Math.min(20, (sp.affection || 0) / 5));
+        const child = {
+            id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
+            name: cyberGenerateChildName(heroName, beautyName),
+            mother: beautyName,
+            talent,
+            potential: Math.min(120, potential),
+            level: 1,
+            training: 0,
+            bornAt: Date.now()
+        };
+        fam.children.push(child);
+        fam.familyPrestige = (fam.familyPrestige || 0) + 25;
+        sp.affection = Math.min(100, (sp.affection || 0) + 8);
+        state.heroes[heroName] = fam;
+        cyberSaveFamilyState(state);
+
+        cyberAwardTitle(heroName, '開枝散葉', true);
+        if (typeof cyberAddLegendRecord === 'function') cyberAddLegendRecord('家族傳承', `${heroName} 與 ${beautyName} 得子「${child.name}」，天賦【${talent}】`, 25);
+        if (typeof cyberSendSystemChat === 'function') cyberSendSystemChat(`【家族喜訊】${heroName} 與 ${beautyName} 誕下子嗣「${child.name}」，天賦【${talent}】！`);
+        cyberRefreshFamilyRomanceUI();
+    }
+
+    function cyberTrainSelectedChild() {
+        const heroName = cyberGetActiveHeroName();
+        const hero = generals.find(g => g.name === heroName) || activeRpgGeneral;
+        if (!hero || !hero.isRPG) {
+            alert('請先選定或喚醒一名自創武將。');
+            return;
+        }
+
+        const childSel = document.getElementById('familyChildSelect');
+        const childId = childSel ? childSel.value : '';
+        if (!childId) {
+            alert('尚無子嗣可培養。');
+            return;
+        }
+
+        const cost = 25;
+        if (typeof cyberEnsureCoinHero === 'function') {
+            const coin = cyberEnsureCoinHero(heroName);
+            if ((coin.coins || 0) < cost) {
+                alert(`武神幣不足，培養子嗣需要 ${cost}。`);
+                return;
+            }
+            cyberAddCoins(heroName, -cost, '培養子嗣');
+        }
+
+        const state = cyberGetFamilyState();
+        const fam = cyberEnsureFamilyHero(heroName);
+        const child = fam.children.find(c => c.id === childId);
+        if (!child) return;
+
+        const gain = Math.floor(8 + Math.random() * 13);
+        child.training = (child.training || 0) + gain;
+        if (child.training >= child.level * 35 && child.level < 10) {
+            child.training = 0;
+            child.level += 1;
+            fam.familyPrestige = (fam.familyPrestige || 0) + child.level * 3;
+            if (child.level >= 5) cyberAwardTitle(heroName, '名門望族', true);
+            if (child.level >= 10) cyberAwardTitle(heroName, '武神世家', true);
+            if (typeof cyberSendSystemChat === 'function') cyberSendSystemChat(`【子嗣培養】${heroName} 之子嗣「${child.name}」提升至 Lv.${child.level}！`);
+        }
+
+        state.heroes[heroName] = fam;
+        cyberSaveFamilyState(state);
+        cyberRefreshFamilyRomanceUI();
+    }
+
+    function cyberInheritFromSelectedChild() {
+        const heroName = cyberGetActiveHeroName();
+        const hero = generals.find(g => g.name === heroName) || activeRpgGeneral;
+        if (!hero || !hero.isRPG) {
+            alert('請先選定或喚醒一名自創武將。');
+            return;
+        }
+
+        const childSel = document.getElementById('familyChildSelect');
+        const childId = childSel ? childSel.value : '';
+        if (!childId) {
+            alert('尚無子嗣可傳承。');
+            return;
+        }
+
+        const state = cyberGetFamilyState();
+        const fam = cyberEnsureFamilyHero(heroName);
+        const child = fam.children.find(c => c.id === childId);
+        if (!child) return;
+
+        if ((child.level || 1) < 5) {
+            alert('子嗣至少 Lv.5 才能進行家族傳承。');
+            return;
+        }
+
+        const statGain = Math.max(1, Math.floor((child.level || 1) / 2));
+        const skillGain = child.level >= 10 ? 1 : 0;
+        hero.statPoints = (hero.statPoints || 0) + statGain;
+        hero.skillPoints = (hero.skillPoints || 0) + skillGain;
+        fam.familyPrestige = (fam.familyPrestige || 0) + 10;
+
+        let savedData = JSON.parse(localStorage.getItem('rpgGenerals')) || {};
+        savedData[hero.name] = hero;
+        localStorage.setItem('rpgGenerals', JSON.stringify(savedData));
+        state.heroes[heroName] = fam;
+        cyberSaveFamilyState(state);
+
+        if (typeof cyberAddLegendRecord === 'function') cyberAddLegendRecord('家族傳承', `${heroName} 透過子嗣「${child.name}」傳承，武力點 +${statGain}${skillGain ? '、技能點 +1' : ''}`, 20);
+        if (typeof cyberSendSystemChat === 'function') cyberSendSystemChat(`【家族傳承】${heroName} 受子嗣「${child.name}」傳承反哺，武力點 +${statGain}${skillGain ? '、技能點 +1' : ''}！`);
+        renderRpgPanel(hero);
+        cyberRefreshFamilyRomanceUI();
+    }
+
+    function cyberGetFamilyBonus(heroName) {
+        const fam = cyberEnsureFamilyHero(heroName);
+        const spouseCount = Object.keys(fam.spouses || {}).length;
+        const childCount = (fam.children || []).length;
+        const prestige = fam.familyPrestige || 0;
+        return {
+            spouseCount,
+            childCount,
+            prestige,
+            coinBonus: Math.min(20, spouseCount * 2 + Math.floor(prestige / 100)),
+            sealBonus: Math.min(10, childCount + Math.floor(prestige / 150)),
+            title: spouseCount >= 5 ? '銅雀霸主' : childCount >= 5 ? '家族興盛' : ''
+        };
+    }
+
+    function cyberRefreshFamilyRomanceUI() {
+        const heroName = cyberGetActiveHeroName();
+        const fam = cyberEnsureFamilyHero(heroName);
+        cyberNormalizeFamilyDaily(fam);
+        cyberPopulateRomanceSelects();
+
+        const spouseBox = document.getElementById('familySpouseBoard');
+        if (spouseBox) {
+            const spouses = Object.values(fam.spouses || {});
+            const bonus = cyberGetFamilyBonus(heroName);
+            spouseBox.innerHTML = `
+                <div class="family-row">目前武將：<span style="color:#00ff41; font-weight:bold;">${cyberEscapeHtml(heroName)}</span></div>
+                <div class="family-row">家族聲望：<span class="family-bonus">${bonus.prestige}</span>｜紅顏 ${bonus.spouseCount}｜子嗣 ${bonus.childCount}</div>
+                <div class="family-row">家族加成：武神幣收益 +${bonus.coinBonus}%｜修羅印氣運 +${bonus.sealBonus}%</div>
+                ${spouses.length ? spouses.map(sp => {
+                    const pct = Math.max(0, Math.min(100, sp.affection || 0));
+                    return `<div class="spouse-row">
+                        <span class="spouse-chip ${cyberFamilyRoleClass(sp.role)}">${cyberFamilyRoleText(sp.role)}｜${cyberEscapeHtml(sp.name)}</span>
+                        <br>特質：${cyberEscapeHtml(sp.trait || '')}｜好感 ${pct}/100
+                        <div class="affection-meter"><div class="affection-fill" style="width:${pct}%"></div></div>
+                    </div>`;
+                }).join('') : '<div class="spouse-row">尚未締結紅顏姻緣。可選紅顏並設定正妻、側室或紅顏知己。</div>'}
+            `;
+        }
+
+        const interBox = document.getElementById('familyInteractionBoard');
+        if (interBox) {
+            const todayLeft = Math.max(0, 8 - (fam.interactionCountToday || 0));
+            interBox.innerHTML = `
+                <div class="family-row">每日互動剩餘建議次數：<span class="family-bonus">${todayLeft}</span></div>
+                <div class="family-row">贈禮：花費 20 武神幣，好感 +18，可能觸發奇遇。</div>
+                <div class="family-row">同遊：花費 10 武神幣，好感 +10，家族聲望小幅增加。</div>
+                <div class="family-row">祈福得子：好感越高，成功率越高；子嗣可培養與傳承。</div>
+            `;
+        }
+
+        const childBox = document.getElementById('familyChildBoard');
+        if (childBox) {
+            const children = fam.children || [];
+            childBox.innerHTML = `
+                <div class="child-row">子嗣數量：<span class="family-bonus">${children.length}</span>｜培養子嗣可提高家族聲望與傳承獎勵。</div>
+                ${children.length ? children.map(c => `
+                    <div class="child-card">
+                        <div class="child-name">👶 ${cyberEscapeHtml(c.name)}</div>
+                        母親：${cyberEscapeHtml(c.mother)}｜天賦：${cyberEscapeHtml(c.talent)}<br>
+                        Lv.${c.level || 1}｜潛力 ${c.potential}｜修煉 ${c.training || 0}/${(c.level || 1) * 35}
+                    </div>
+                `).join('') : '<div class="child-row">尚無子嗣。可與高好感紅顏進行祈福得子。</div>'}
+            `;
+        }
+
+        const bonus = cyberGetFamilyBonus(heroName);
+        if (bonus.title) cyberAwardTitle(heroName, bonus.title, true);
+    }
+
     function cyberRefreshAllPublicWarroom() {
         const nickInput = document.getElementById('chatNickInput');
         if (nickInput && !nickInput.value) nickInput.value = localStorage.getItem(CYBER_NICK_KEY) || CYBER_OWNER_NAME;
@@ -8299,6 +8884,7 @@ function cyberRefreshArenaUI() {
         if (typeof cyberRefreshAdvancedSystemsUI === 'function') cyberRefreshAdvancedSystemsUI();
         if (typeof cyberRefreshSocialEconomyUI === 'function') cyberRefreshSocialEconomyUI();
         if (typeof cyberRefreshDestinyBondUI === 'function') cyberRefreshDestinyBondUI();
+        if (typeof cyberRefreshFamilyRomanceUI === 'function') cyberRefreshFamilyRomanceUI();
     }
 
     function cyberLoadScript(src) {
@@ -8376,6 +8962,7 @@ function cyberRefreshArenaUI() {
         setInterval(cyberRefreshAdvancedSystemsUI, 3000);
         setInterval(cyberRefreshSocialEconomyUI, 3000);
         setInterval(cyberRefreshDestinyBondUI, 3000);
+        setInterval(cyberRefreshFamilyRomanceUI, 3000);
     });
 
 </script>
