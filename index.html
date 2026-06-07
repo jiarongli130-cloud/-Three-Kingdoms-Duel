@@ -1501,6 +1501,7 @@
             </select>
         </div>
         <button onclick="cyberManualEncounter()" style="flex:1; min-width:150px; border-color:#ff3131; color:#ff3131; font-weight:bold;">🔥 手動遇敵</button>
+        <button onclick="cyberCancelEncounterHeroLock()" style="flex:1; min-width:150px; border-color:#aaa; color:#aaa; font-weight:bold;">🧹 取消掛機武將</button>
     </div>
 
     <div id="battleLog">系統待命中...請選擇將領並按下發動，或舉辦賽事。</div>
@@ -3428,9 +3429,14 @@
     function renderRpgPanel(gen) {
         activeRpgGeneral = gen;
         // 遇敵掛機鎖定：只要玩家選定/顯示一名異界修羅，就記住這位作為主動/手動遇敵預設主角。
+        // 若玩家剛按過「取消掛機武將」，下一次真正選定/顯示新異界修羅時，會重新解除取消狀態並鎖定新武將。
         if (activeRpgGeneral && activeRpgGeneral.isRPG) {
-            try { localStorage.setItem('cyberRpgEncounterLockedHero_v1', activeRpgGeneral.name); } catch(e) {}
-            if (typeof cyberRefreshEncounterLockStatus === 'function') cyberRefreshEncounterLockStatus();
+            if (typeof cyberLockEncounterHero === 'function') {
+                cyberLockEncounterHero(activeRpgGeneral);
+            } else {
+                try { localStorage.setItem('cyberRpgEncounterLockedHero_v1', activeRpgGeneral.name); } catch(e) {}
+                if (typeof cyberRefreshEncounterLockStatus === 'function') cyberRefreshEncounterLockStatus();
+            }
             normalizeRpgSkillBuckets(activeRpgGeneral);
             loadAsuraAchievements(activeRpgGeneral);
         }
@@ -3842,12 +3848,33 @@
     let cyberEncounterLock = false;
     let cyberCurrentEncounter = null;
     const CYBER_ENCOUNTER_LOCKED_HERO_KEY = 'cyberRpgEncounterLockedHero_v1';
+    const CYBER_ENCOUNTER_LOCK_CANCELLED_KEY = 'cyberRpgEncounterLockCancelled_v1';
 
     function cyberLockEncounterHero(hero) {
         if (!hero || !hero.isRPG) return;
-        try { localStorage.setItem(CYBER_ENCOUNTER_LOCKED_HERO_KEY, hero.name); } catch(e) {}
+        try {
+            localStorage.setItem(CYBER_ENCOUNTER_LOCKED_HERO_KEY, hero.name);
+            localStorage.removeItem(CYBER_ENCOUNTER_LOCK_CANCELLED_KEY);
+        } catch(e) {}
         activeRpgGeneral = hero;
         cyberRefreshEncounterLockStatus();
+    }
+
+    function cyberIsEncounterLockCancelled() {
+        try { return localStorage.getItem(CYBER_ENCOUNTER_LOCK_CANCELLED_KEY) === '1'; } catch(e) { return false; }
+    }
+
+    function cyberCancelEncounterHeroLock() {
+        try {
+            localStorage.removeItem(CYBER_ENCOUNTER_LOCKED_HERO_KEY);
+            localStorage.setItem(CYBER_ENCOUNTER_LOCK_CANCELLED_KEY, '1');
+        } catch(e) {}
+        cyberCurrentEncounter = null;
+        cyberRefreshEncounterLockStatus();
+        if (typeof battleLog !== 'undefined' && battleLog) {
+            battleLog.innerHTML += `<br><span style="color:#aaa; font-weight:bold;">🧹【掛機武將】已取消鎖定。請在「單挑我軍」重新選擇另一名異界修羅；選定後會自動成為新的掛機武將。</span><br>`;
+            battleLog.scrollTop = battleLog.scrollHeight;
+        }
     }
 
     function cyberGetLockedEncounterHero() {
@@ -3863,9 +3890,13 @@
         const box = document.getElementById('rpgEncounterLockedHeroText');
         if (!box) return;
         const hero = cyberGetLockedEncounterHero();
-        box.innerHTML = hero
-            ? `目前掛機武將：${hero.name}｜主動/手動遇敵將持續使用此武將`
-            : '目前掛機武將：未鎖定';
+        if (hero) {
+            box.innerHTML = `目前掛機武將：${hero.name}｜主動/手動遇敵將持續使用此武將`;
+        } else if (cyberIsEncounterLockCancelled()) {
+            box.innerHTML = '目前掛機武將：已取消｜請重新選擇另一名異界修羅';
+        } else {
+            box.innerHTML = '目前掛機武將：未鎖定';
+        }
     }
 
     function cyberGetEncounterRate() {
@@ -3906,6 +3937,11 @@
         // 掛機遇敵優先讀取「已鎖定的自創武將」，避免 updateDropdowns 重建選單後需要重新點選。
         const lockedHero = cyberGetLockedEncounterHero();
         if (lockedHero) return lockedHero;
+
+        // 玩家按過「取消掛機武將」後，不再偷偷沿用目前下拉選單或 activeRpgGeneral，
+        // 必須重新選定另一名異界修羅，避免自動遇敵馬上又把舊武將鎖回去。
+        if (cyberIsEncounterLockCancelled()) return null;
+
         const p1 = generals[p1Select.value];
         const p2 = generals[p2Select.value];
         if (p1 && p1.isRPG) { cyberLockEncounterHero(p1); return p1; }
@@ -3978,7 +4014,7 @@
         }
         const hero = cyberGetSelectedRpgHero();
         if (!hero || !hero.isRPG) {
-            if (manual) alert('請先在 VS 選單選定或喚醒一名「異界修羅」自創武將；選定後系統會自動鎖定這位武將持續遇敵。歷史遺珠不會觸發主動遇敵。');
+            if (manual) alert(cyberIsEncounterLockCancelled() ? '掛機武將已取消。請先在「單挑我軍」重新選擇另一名異界修羅；選定後會自動成為新的掛機武將。' : '請先在 VS 選單選定或喚醒一名「異界修羅」自創武將；選定後系統會自動鎖定這位武將持續遇敵。歷史遺珠不會觸發主動遇敵。');
             return;
         }
         cyberLockEncounterHero(hero);
