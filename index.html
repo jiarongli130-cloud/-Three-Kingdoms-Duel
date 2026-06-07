@@ -786,6 +786,94 @@
         }
         @media (max-width: 900px) { .social-economy-grid { grid-template-columns: 1fr; } }
 
+
+        /* ==============================================================
+           🌠 天命卡牌＋武將羈絆＋成就總覽 最終養成玩法
+           ============================================================== */
+        .destiny-bond-panel {
+            border: 2px solid #ff00ff;
+            padding: 15px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, rgba(255,0,255,0.11), rgba(255,215,0,0.08), rgba(0,255,255,0.06));
+            box-shadow: 0 0 20px rgba(255,0,255,0.18);
+            display: block;
+            margin-bottom: 20px;
+        }
+        .destiny-bond-panel h3 {
+            margin: 0 0 8px 0;
+            color: #ff4dff;
+            text-shadow: 0 0 8px #ff00ff;
+        }
+        .destiny-bond-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 14px;
+        }
+        .destiny-bond-box {
+            border: 1px solid #333;
+            background: rgba(0,0,0,0.72);
+            padding: 10px;
+            border-radius: 6px;
+            min-height: 185px;
+        }
+        .destiny-bond-box h4 {
+            margin: 0 0 8px 0;
+            color: #ffd700;
+            text-shadow: 0 0 5px rgba(255,215,0,0.55);
+        }
+        .destiny-row, .bond-row, .achievement-row {
+            border-bottom: 1px solid #222;
+            padding: 6px 0;
+            color: #ddd;
+            font-size: 13px;
+            line-height: 1.55;
+            word-break: break-word;
+        }
+        .destiny-card {
+            border: 1px solid #ff00ff;
+            border-radius: 8px;
+            padding: 8px;
+            background: linear-gradient(135deg, rgba(255,0,255,0.16), rgba(0,255,255,0.07), rgba(255,215,0,0.06));
+            box-shadow: 0 0 12px rgba(255,0,255,0.22);
+            margin: 6px 0;
+        }
+        .destiny-card-name {
+            color: #ff4dff;
+            font-weight: bold;
+            text-shadow: 0 0 8px #ff00ff;
+            font-size: 15px;
+        }
+        .bond-chip {
+            display:inline-block;
+            border:1px solid #00ffff;
+            color:#00ffff;
+            border-radius:999px;
+            padding:2px 8px;
+            margin:2px;
+            font-size:12px;
+            background:rgba(0,255,255,0.08);
+            text-shadow:0 0 5px #00ffff;
+        }
+        .bond-level {
+            color:#ffd700;
+            font-weight:bold;
+            text-shadow:0 0 6px #ffd700;
+        }
+        .achievement-meter {
+            height: 12px;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 999px;
+            overflow: hidden;
+            margin: 4px 0 6px 0;
+        }
+        .achievement-meter-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff41, #00ffff, #ffd700);
+            transition: width .25s ease;
+        }
+        @media (max-width: 900px) { .destiny-bond-grid { grid-template-columns: 1fr; } }
+
         .firebase-off { color: #aaa; }
         .firebase-on { color: #00ff41; text-shadow: 0 0 5px #00ff41; }
         @media (max-width: 760px) { .public-warroom-grid { grid-template-columns: 1fr; } }
@@ -1118,6 +1206,35 @@
                 <h4>🔥 限時活動</h4>
                 <div id="eventBoard">活動資料載入中...</div>
                 <button onclick="cyberClaimEventRewards()" style="margin-top:8px; border-color:#ff3131; color:#ff3131;">領取活動獎勵</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 天命卡牌＋武將羈絆＋成就總覽系統 -->
+    <div class="controls destiny-bond-panel" id="destinyBondPanel">
+        <h3>🌠 天命卡牌・武將羈絆・霸業成就總覽</h3>
+        <p style="font-size:12px; color:#aaa; margin:0 0 12px 0;">
+            最後補強收集與長期養成：每日抽取天命卡，建立武將羈絆，查看整體霸業進度。這版建議作為目前大版本的收束版，之後先測試平衡。
+        </p>
+        <div class="destiny-bond-grid">
+            <div class="destiny-bond-box">
+                <h4>🌠 每日天命卡牌</h4>
+                <div id="destinyCardBoard">天命資料載入中...</div>
+                <button onclick="cyberDrawDailyDestinyCard()" style="margin-top:8px; border-color:#ff00ff; color:#ff4dff;">抽取今日天命</button>
+            </div>
+            <div class="destiny-bond-box">
+                <h4>🤝 武將羈絆</h4>
+                <div id="bondBoard">羈絆資料載入中...</div>
+                <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+                    <select id="bondPartnerSelect" style="flex:2; min-width:180px; border-color:#00ffff; color:#00ffff;"></select>
+                    <button onclick="cyberCreateOrUpgradeBond()" style="flex:1; min-width:110px; border-color:#ffd700; color:#ffd700;">締結羈絆</button>
+                </div>
+            </div>
+            <div class="destiny-bond-box">
+                <h4>🏅 霸業成就總覽</h4>
+                <div id="achievementSummaryBoard">成就總覽載入中...</div>
+                <button onclick="cyberRefreshDestinyBondUI()" style="margin-top:8px; border-color:#00ff41; color:#00ff41;">刷新總覽</button>
             </div>
         </div>
     </div>
@@ -5385,6 +5502,7 @@
         cyberDailyAdd('masterTrain', 1, activeRpgGeneral.name);
         cyberEventAdd(activeRpgGeneral.name, 'master', 1);
         cyberAddCoins(activeRpgGeneral.name, traineeWins ? 8 : 3, traineeWins ? '拜師擊敗師傅' : '拜師切磋');
+        cyberApplyDestinyBonus(activeRpgGeneral.name, 'master');
         cyberUpdateTitleAchievementsFromMaster(activeRpgGeneral.name, traineeWins);
         cyberTryAdventure('master', activeRpgGeneral.name);
 
@@ -6313,8 +6431,11 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         cyberSeasonAdd(result.loser.name, 'arenaLose', 2);
         cyberAddCoins(result.winner.name, 12, '擂台勝利');
         cyberAddCoins(result.loser.name, 4, '擂台參戰');
+        cyberApplyDestinyBonus(result.winner.name, 'arena');
+        cyberApplyDestinyBonus(result.loser.name, 'arena');
         cyberEventAdd(result.winner.name, 'arena', 1);
         cyberEventAdd(result.loser.name, 'arena', 1);
+        cyberAwardBondFromBattle(result.winner.name, result.loser.name, result.winner.name);
         cyberResolveCheerBets(result.winner.name, oldChampionName, challenger.name);
         cyberRecordArenaRevengeResult(result.winner.name, result.loser.name);
         cyberTryAdventure('battle', result.winner.name);
@@ -6780,6 +6901,7 @@ function cyberRefreshArenaUI() {
         cyberSeasonAdd(name, 'bossDamage', Math.floor(damage / 100));
         cyberAddShuraSeals(name, Math.max(1, Math.floor(damage / 500)));
         cyberAddCoins(name, Math.max(1, Math.floor(damage / 300)), '世界Boss傷害');
+        cyberApplyDestinyBonus(name, 'boss');
         cyberEventAdd(name, 'boss', damage);
         cyberTryAdventure('boss', name);
 
@@ -7163,7 +7285,7 @@ function cyberRefreshArenaUI() {
         const factionId = cyberGetHeroFaction(hero.name);
         const factionBonus = factionId === 'qx' ? 0.08 : 0;
         const baseChance = context === 'manual' ? 1 : (context === 'boss' ? 0.28 : context === 'master' ? 0.22 : 0.18);
-        if (Math.random() > baseChance + factionBonus) {
+        if (Math.random() > baseChance + factionBonus + cyberGetDestinyAdventureBonus(hero.name)) {
             if (context === 'manual') alert('今日風平浪靜，暫無奇遇。');
             return false;
         }
@@ -7413,6 +7535,7 @@ function cyberRefreshArenaUI() {
         cyberSaveForgeState(state);
 
         cyberSeasonAdd(name, 'reforge', 8);
+        cyberApplyDestinyBonus(name, 'forge');
         cyberEventAdd(name, 'forge', 1);
         cyberAddLegendRecord('神兵重鑄', `${name} 重鑄神兵「${sel.value}」`, 10);
         cyberSendSystemChat(`【神兵重鑄】${name} 消耗 ${cost} 枚修羅印，重鑄「${sel.value}」成功！`);
@@ -7463,6 +7586,7 @@ function cyberRefreshArenaUI() {
             cyberAddShuraSeals(name, chapter.rewardSeal);
             cyberSeasonAdd(name, 'chapter', 20 + idx * 5);
             cyberAddCoins(name, 25 + idx * 5, `通關劇情副本「${chapter.name}」`);
+            cyberApplyDestinyBonus(name, 'chapter');
             cyberEventAdd(name, 'chapter', 1);
             cyberAddLegendRecord('劇情副本', `${name} 通關「${chapter.name}」，擊破 ${chapter.boss}`, 20 + idx * 5);
             cyberSendSystemChat(`【劇情通關】${name} 通關「${chapter.name}」，獲得稱號【${chapter.rewardTitle}】與修羅印 +${chapter.rewardSeal}！`);
@@ -7897,6 +8021,274 @@ function cyberRefreshArenaUI() {
         }
     }
 
+
+    // ==============================================================
+    // 🌠 天命卡牌＋武將羈絆＋霸業成就總覽
+    // ==============================================================
+    const CYBER_DESTINY_KEY = 'cyberDailyDestinyCard_v1';
+    const CYBER_BOND_KEY = 'cyberHeroBondState_v1';
+
+    const CYBER_DESTINY_CARDS = [
+        { id:'dragon_luck', name:'青龍入命', desc:'今日擂台勝利額外獲得武神幣與賽季分。', type:'arena', coinBonus:8, seasonBonus:5 },
+        { id:'tiger_rage', name:'白虎怒斬', desc:'今日世界 Boss 傷害獎勵提升。', type:'boss', coinBonus:12, sealBonus:3 },
+        { id:'phoenix_bless', name:'鳳凰賜福', desc:'今日拜師切磋更容易獲得資源。', type:'master', coinBonus:6, skillChance:0.12 },
+        { id:'asura_fire', name:'修羅業火', desc:'今日劇情副本與重鑄獎勵提升。', type:'chapterForge', sealBonus:8, coinBonus:10 },
+        { id:'heaven_book', name:'天書現世', desc:'今日所有主要玩法都有小幅額外武神幣。', type:'all', coinBonus:5 },
+        { id:'rose_fate', name:'紅顏天緣', desc:'今日奇遇機率提高，適合刷事件。', type:'adventure', adventureBonus:0.10 }
+    ];
+
+    function cyberDestinyTodayKey() {
+        return cyberTodayKey ? cyberTodayKey() : new Date().toISOString().slice(0,10);
+    }
+
+    function cyberGetDestinyState() {
+        const s = cyberReadJson(CYBER_DESTINY_KEY, { date: '', heroes: {} });
+        if (!s.heroes) s.heroes = {};
+        if (s.date !== cyberDestinyTodayKey()) {
+            s.date = cyberDestinyTodayKey();
+            s.heroes = {};
+            cyberWriteJson(CYBER_DESTINY_KEY, s);
+        }
+        return s;
+    }
+
+    function cyberSaveDestinyState(s) {
+        cyberWriteJson(CYBER_DESTINY_KEY, s);
+    }
+
+    function cyberGetHeroDestiny(name) {
+        const s = cyberGetDestinyState();
+        return s.heroes ? s.heroes[name] : null;
+    }
+
+    function cyberGetDestinyCardInfo(cardId) {
+        return CYBER_DESTINY_CARDS.find(c => c.id === cardId) || null;
+    }
+
+    function cyberDrawDailyDestinyCard() {
+        const name = cyberGetActiveHeroName();
+        const hero = generals.find(g => g.name === name) || activeRpgGeneral;
+        if (!hero || !hero.isRPG) {
+            alert('請先選定或喚醒一名自創武將。');
+            return;
+        }
+
+        const state = cyberGetDestinyState();
+        if (state.heroes[name]) {
+            alert('今日已經抽過天命卡了。');
+            return;
+        }
+
+        const card = CYBER_DESTINY_CARDS[Math.floor(Math.random() * CYBER_DESTINY_CARDS.length)];
+        state.heroes[name] = { cardId: card.id, time: Date.now() };
+        cyberSaveDestinyState(state);
+
+        cyberAwardTitle(name, '天命之子', true);
+        cyberAddLegendRecord('天命卡牌', `${name} 抽得「${card.name}」`, 12);
+        cyberSendSystemChat(`【天命降臨】${name} 今日抽得「${card.name}」：${card.desc}`);
+        cyberRefreshDestinyBondUI();
+    }
+
+    function cyberApplyDestinyBonus(name, context) {
+        const entry = cyberGetHeroDestiny(name);
+        if (!entry) return;
+        const card = cyberGetDestinyCardInfo(entry.cardId);
+        if (!card) return;
+
+        const typeMatch = card.type === 'all' ||
+            (context === 'arena' && card.type === 'arena') ||
+            (context === 'boss' && card.type === 'boss') ||
+            (context === 'master' && card.type === 'master') ||
+            ((context === 'chapter' || context === 'forge') && card.type === 'chapterForge');
+
+        if (!typeMatch) return;
+
+        if (card.coinBonus && typeof cyberAddCoins === 'function') cyberAddCoins(name, card.coinBonus, `天命卡「${card.name}」加成`);
+        if (card.seasonBonus && typeof cyberSeasonAdd === 'function') cyberSeasonAdd(name, 'destiny', card.seasonBonus);
+        if (card.sealBonus && typeof cyberAddShuraSeals === 'function') cyberAddShuraSeals(name, card.sealBonus);
+
+        if (card.skillChance && Math.random() < card.skillChance) {
+            const hero = generals.find(g => g.name === name) || activeRpgGeneral;
+            if (hero && hero.isRPG) {
+                hero.skillPoints = (hero.skillPoints || 0) + 1;
+                let savedData = JSON.parse(localStorage.getItem('rpgGenerals')) || {};
+                savedData[hero.name] = hero;
+                localStorage.setItem('rpgGenerals', JSON.stringify(savedData));
+                cyberSendSystemChat(`【天命加成】${name} 受「${card.name}」影響，額外獲得技能點 +1！`);
+            }
+        }
+    }
+
+    function cyberGetDestinyAdventureBonus(name) {
+        const entry = cyberGetHeroDestiny(name);
+        if (!entry) return 0;
+        const card = cyberGetDestinyCardInfo(entry.cardId);
+        return card && card.type === 'adventure' ? (card.adventureBonus || 0) : 0;
+    }
+
+    function cyberGetBondState() {
+        const s = cyberReadJson(CYBER_BOND_KEY, { heroes: {} });
+        if (!s.heroes) s.heroes = {};
+        return s;
+    }
+
+    function cyberSaveBondState(s) {
+        cyberWriteJson(CYBER_BOND_KEY, s);
+    }
+
+    function cyberEnsureBondHero(name) {
+        const s = cyberGetBondState();
+        if (!s.heroes[name]) s.heroes[name] = { partners: {} };
+        if (!s.heroes[name].partners) s.heroes[name].partners = {};
+        cyberSaveBondState(s);
+        return s.heroes[name];
+    }
+
+    function cyberBondLevel(exp) {
+        if (exp >= 500) return 5;
+        if (exp >= 300) return 4;
+        if (exp >= 160) return 3;
+        if (exp >= 60) return 2;
+        if (exp >= 10) return 1;
+        return 0;
+    }
+
+    function cyberCreateOrUpgradeBond() {
+        const name = cyberGetActiveHeroName();
+        const sel = document.getElementById('bondPartnerSelect');
+        if (!sel || !sel.value) {
+            alert('請選擇羈絆對象。');
+            return;
+        }
+        const partner = sel.value;
+        if (partner === name) {
+            alert('不能和自己締結羈絆。');
+            return;
+        }
+
+        cyberAddBondExp(name, partner, 10, '締結羈絆');
+        cyberSendSystemChat(`【武將羈絆】${name} 與 ${partner} 締結羈絆，羈絆值 +10！`);
+        cyberRefreshDestinyBondUI();
+    }
+
+    function cyberAddBondExp(name, partner, amount = 1, reason = '') {
+        if (!name || !partner || name === partner) return;
+        const s = cyberGetBondState();
+        if (!s.heroes[name]) s.heroes[name] = { partners: {} };
+        if (!s.heroes[partner]) s.heroes[partner] = { partners: {} };
+        if (!s.heroes[name].partners[partner]) s.heroes[name].partners[partner] = { exp: 0, lastLevel: 0 };
+        if (!s.heroes[partner].partners[name]) s.heroes[partner].partners[name] = { exp: 0, lastLevel: 0 };
+
+        const beforeLevel = cyberBondLevel(s.heroes[name].partners[partner].exp || 0);
+        s.heroes[name].partners[partner].exp = (s.heroes[name].partners[partner].exp || 0) + amount;
+        s.heroes[partner].partners[name].exp = (s.heroes[partner].partners[name].exp || 0) + amount;
+
+        const afterLevel = cyberBondLevel(s.heroes[name].partners[partner].exp || 0);
+        if (afterLevel > beforeLevel) {
+            s.heroes[name].partners[partner].lastLevel = afterLevel;
+            s.heroes[partner].partners[name].lastLevel = afterLevel;
+            if (afterLevel >= 5) {
+                cyberAwardTitle(name, '羈絆宗師', true);
+                cyberAwardTitle(partner, '羈絆宗師', true);
+            }
+            cyberAddLegendRecord('武將羈絆', `${name} 與 ${partner} 羈絆升至 Lv.${afterLevel}`, afterLevel * 10);
+            cyberSendSystemChat(`【羈絆升級】${name} 與 ${partner} 羈絆提升至 Lv.${afterLevel}！`);
+        }
+        cyberSaveBondState(s);
+    }
+
+    function cyberAwardBondFromBattle(nameA, nameB, winnerName) {
+        if (!nameA || !nameB || nameA === nameB) return;
+        cyberAddBondExp(nameA, nameB, winnerName ? 3 : 1, '共同戰鬥');
+    }
+
+    function cyberPopulateBondPartnerSelect() {
+        const sel = document.getElementById('bondPartnerSelect');
+        if (!sel) return;
+        const current = sel.value;
+        const name = cyberGetActiveHeroName();
+        sel.innerHTML = '';
+        generals.filter(g => g && g.name && g.name !== name).slice(0, 200).forEach(g => {
+            sel.add(new Option(`${g.name}｜武力${g.power || 0}`, g.name));
+        });
+        if ([...sel.options].some(o => o.value === current)) sel.value = current;
+    }
+
+    function cyberRefreshDestinyBondUI() {
+        const name = cyberGetActiveHeroName();
+        const hero = generals.find(g => g.name === name) || activeRpgGeneral;
+
+        cyberPopulateBondPartnerSelect();
+
+        const destinyBox = document.getElementById('destinyCardBoard');
+        if (destinyBox) {
+            const entry = cyberGetHeroDestiny(name);
+            const card = entry ? cyberGetDestinyCardInfo(entry.cardId) : null;
+            destinyBox.innerHTML = card ? `
+                <div class="destiny-row">目前武將：<span style="color:#00ff41; font-weight:bold;">${cyberEscapeHtml(name)}</span></div>
+                <div class="destiny-card">
+                    <div class="destiny-card-name">🌠 ${cyberEscapeHtml(card.name)}</div>
+                    <div style="color:#ddd; margin-top:4px;">${cyberEscapeHtml(card.desc)}</div>
+                </div>
+                <div class="destiny-row">每日每名自創武將只能抽 1 次，明日刷新。</div>
+            ` : `
+                <div class="destiny-row">目前武將：<span style="color:#00ff41; font-weight:bold;">${cyberEscapeHtml(name)}</span></div>
+                <div class="destiny-row">今日尚未抽天命卡。</div>
+                <div class="destiny-row">可能出現：擂台加成、Boss 加成、拜師加成、劇情/重鑄加成、奇遇加成。</div>
+            `;
+        }
+
+        const bondBox = document.getElementById('bondBoard');
+        if (bondBox) {
+            const b = cyberEnsureBondHero(name);
+            const rows = Object.entries(b.partners || {}).sort((a,b)=>(b[1].exp||0)-(a[1].exp||0)).slice(0,8);
+            bondBox.innerHTML = `
+                <div class="bond-row">目前武將：<span style="color:#00ff41; font-weight:bold;">${cyberEscapeHtml(name)}</span></div>
+                ${rows.length ? rows.map(([p, v]) => {
+                    const lv = cyberBondLevel(v.exp || 0);
+                    return `<div class="bond-row"><span class="bond-chip">${cyberEscapeHtml(p)}</span> <span class="bond-level">Lv.${lv}</span><br>羈絆值 ${v.exp || 0}/500</div>`;
+                }).join('') : '<div class="bond-row">尚未建立羈絆。可選一名武將締結羈絆，或透過擂台對戰累積。</div>'}
+            `;
+        }
+
+        const achBox = document.getElementById('achievementSummaryBoard');
+        if (achBox) {
+            const meta = (typeof cyberGetGameMeta === 'function') ? cyberGetGameMeta() : { heroes:{} };
+            const h = meta.heroes && meta.heroes[name] ? meta.heroes[name] : {};
+            const titles = (h.titles || []).length;
+
+            const chapterProgress = (typeof cyberEnsureChapterHero === 'function') ? cyberEnsureChapterHero(name) : { cleared:{} };
+            const chapterClear = Object.keys(chapterProgress.cleared || {}).length;
+
+            const forgeState = (typeof cyberEnsureForgeHero === 'function') ? cyberEnsureForgeHero(name) : { seals:0, items:{} };
+            const forged = Object.keys(forgeState.items || {}).length;
+
+            const season = (typeof cyberEnsureSeasonHero === 'function') ? cyberEnsureSeasonHero(name) : { score:0 };
+            const bond = cyberEnsureBondHero(name);
+            const bestBond = Object.values(bond.partners || {}).reduce((m, v) => Math.max(m, cyberBondLevel(v.exp || 0)), 0);
+
+            const blocks = [
+                { label:'稱號收集', value:titles, max:35 },
+                { label:'劇情通關', value:chapterClear, max:7 },
+                { label:'神兵重鑄', value:forged, max:10 },
+                { label:'賽季積分', value:Math.min(season.score || 0, 300), max:300 },
+                { label:'最高羈絆', value:bestBond, max:5 }
+            ];
+
+            achBox.innerHTML = `
+                <div class="achievement-row">目前武將：<span style="color:#00ff41; font-weight:bold;">${cyberEscapeHtml(name)}</span></div>
+                ${blocks.map(x => {
+                    const pct = Math.max(0, Math.min(100, Math.round((x.value / x.max) * 100)));
+                    return `<div class="achievement-row">
+                        ${cyberEscapeHtml(x.label)}：${x.value}/${x.max}
+                        <div class="achievement-meter"><div class="achievement-meter-fill" style="width:${pct}%"></div></div>
+                    </div>`;
+                }).join('')}
+                <div class="achievement-row">修羅印：<span style="color:#ffd700; font-weight:bold;">${forgeState.seals || 0}</span></div>
+            `;
+        }
+    }
+
     function cyberRefreshAllPublicWarroom() {
         const nickInput = document.getElementById('chatNickInput');
         if (nickInput && !nickInput.value) nickInput.value = localStorage.getItem(CYBER_NICK_KEY) || CYBER_OWNER_NAME;
@@ -7906,6 +8298,7 @@ function cyberRefreshArenaUI() {
         if (typeof cyberRefreshThreeSystemsUI === 'function') cyberRefreshThreeSystemsUI();
         if (typeof cyberRefreshAdvancedSystemsUI === 'function') cyberRefreshAdvancedSystemsUI();
         if (typeof cyberRefreshSocialEconomyUI === 'function') cyberRefreshSocialEconomyUI();
+        if (typeof cyberRefreshDestinyBondUI === 'function') cyberRefreshDestinyBondUI();
     }
 
     function cyberLoadScript(src) {
@@ -7982,6 +8375,7 @@ function cyberRefreshArenaUI() {
         setInterval(cyberRefreshThreeSystemsUI, 3000);
         setInterval(cyberRefreshAdvancedSystemsUI, 3000);
         setInterval(cyberRefreshSocialEconomyUI, 3000);
+        setInterval(cyberRefreshDestinyBondUI, 3000);
     });
 
 </script>
