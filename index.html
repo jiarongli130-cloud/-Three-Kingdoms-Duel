@@ -4762,20 +4762,37 @@
     function populateMasterSelect() {
         const select = document.getElementById('masterSelect');
         if (!select || !activeRpgGeneral || !activeRpgGeneral.isRPG) return;
+
+        // 確保舊存檔中誤放到「已習得技能」的師承技能，會先搬回「拜師學藝」欄位。
+        normalizeRpgSkillBuckets(activeRpgGeneral);
+
         const currentVal = select.value;
         select.innerHTML = '';
+
         getTopThirtyMasters().forEach(master => {
             const skillName = masterSkillMap[master.name];
-            const learned = activeRpgGeneral.skills && activeRpgGeneral.skills.includes(skillName);
+            const learned = activeRpgGeneral.masteredSkills && activeRpgGeneral.masteredSkills.includes(skillName);
             const progress = activeRpgGeneral.masteries && activeRpgGeneral.masteries[master.name] ? activeRpgGeneral.masteries[master.name] : 0;
-            select.add(new Option(`${master.name}｜武力${master.power}｜傳授：${skillName}${learned ? ' ✅已覺醒' : `｜切磋${progress}/60`}`, master.name));
+
+            let optionText = '';
+            if (learned) {
+                optionText = `✅【已取得此師傅技能】${master.name}｜武力${master.power}｜師承：${skillName}`;
+            } else {
+                optionText = `❌【未取得】${master.name}｜武力${master.power}｜傳授：${skillName}｜切磋${progress}/60`;
+            }
+
+            const opt = new Option(optionText, master.name);
+            opt.dataset.skillName = skillName;
+            opt.dataset.learned = learned ? '1' : '0';
+            select.add(opt);
         });
+
         if ([...select.options].some(o => o.value === currentVal)) select.value = currentVal;
 
         const status = document.getElementById('rpgMasterStatus');
         if (status) {
             const learnedCount = activeRpgGeneral.masteredSkills ? activeRpgGeneral.masteredSkills.length : 0;
-            status.innerHTML = `前三十名師傅全開放：童淵以下三十名高手皆可拜師。每次與師傅切磋可得經驗；同一師傅切磋 60 次或擊敗師傅，可覺醒其專屬技能。進度：<span style="color:#ffd700; font-weight:bold;">${learnedCount}/30</span>`;
+            status.innerHTML = `前三十名師傅全開放：童淵以下三十名高手皆可拜師。每次與師傅切磋可得經驗；同一師傅切磋 60 次或擊敗師傅，可覺醒其專屬技能。已取得師承：<span style="color:#ffd700; font-weight:bold;">${learnedCount}/30</span>。下拉選單中會以 <span style="color:#00ff41; font-weight:bold;">✅【已取得此師傅技能】</span> 標記完成的師傅。`;
         }
     }
 
