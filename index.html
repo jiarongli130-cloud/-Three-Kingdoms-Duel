@@ -6557,7 +6557,7 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         loseScore.currentStreak = 0;
 
         if ([3,5,10,20,50].includes(winScore.currentStreak)) {
-            cyberSendSystemChat(`【擂台連勝】${result.winner.name} 達成 ${winScore.currentStreak} 連勝！`);
+            cyberSendArenaChat(`【擂台連勝】${result.winner.name} 達成 ${winScore.currentStreak} 連勝！`);
             cyberAddLegendRecord('擂台連勝', `${result.winner.name} 達成 ${winScore.currentStreak} 連勝`, winScore.currentStreak);
         }
 
@@ -6602,47 +6602,73 @@ box.innerHTML = pinnedHtml + arr.map(m => {
             battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold;">🌐【公開擂台】${result.winner.name} 擊敗 ${result.loser.name}，勝者繼續留在擂台！敗者冷卻 5 分鐘。</span><br>`;
             battleLog.scrollTop = battleLog.scrollHeight;
         }
-        cyberSendSystemChat(`【公開擂台】${result.winner.name} 擊敗 ${result.loser.name}，勝者留場，敗者冷卻 5 分鐘。`);
+        cyberSendArenaChat(`【公開擂台】${result.winner.name} 擊敗 ${result.loser.name}，勝者留場，敗者冷卻 5 分鐘。`);
     }
 
-function cyberSendSystemChat(msg) {
-    const now = Date.now();
+// ==============================================================
+    // 【天下公頻節流規則】
+    // 天下公頻聊天室只保留：
+    // 1. 玩家手動聊天 cyberSendPublicChat()
+    // 2. 擂台賽消息 cyberSendArenaChat()
+    //
+    // 其他系統公告仍可進 battleLog / 封神榜 / 各系統面板，
+    // 但不再寫入 chatMessages，避免刷屏與消耗 Firebase 流量。
+    // ==============================================================
+    function cyberWritePublicChatMessage(item, fallbackLabel = '系統訊息') {
+        if (cyberFirebaseReady && cyberDb) {
+            cyberDb.ref(`${CYBER_ROOM_PATH}/chatMessages`).push(item)
+                .then(() => {
+                    cyberRefreshChatLog();
+                })
+                .catch(err => {
+                    console.warn(`${fallbackLabel}寫入 Firebase 失敗，改寫入本機聊天室：`, err);
 
-    // 同時保留 name/msg 與 nick/message，確保本機模式與 Firebase 規則都吃得到
-    const item = {
-        id: `${now}_system`,
-        name: '擂台系統',
-        nick: '擂台系統',
-        msg: msg,
-        message: msg,
-        time: now
-    };
-
-    if (cyberFirebaseReady && cyberDb) {
-        cyberDb.ref(`${CYBER_ROOM_PATH}/chatMessages`).push(item)
-            .then(() => {
-                cyberRefreshChatLog();
-            })
-            .catch(err => {
-                console.warn('擂台系統訊息寫入 Firebase 失敗，改寫入本機聊天室：', err);
-
-                const arr = cyberGetChatMessages();
-                arr.push(item);
-                cyberWriteJson(CYBER_CHAT_KEY, arr.slice(-120));
-                cyberRefreshChatLog();
-            });
-    } else {
-        const arr = cyberGetChatMessages();
-        arr.push(item);
-        cyberWriteJson(CYBER_CHAT_KEY, arr.slice(-120));
-        cyberRefreshChatLog();
+                    const arr = cyberGetChatMessages();
+                    arr.push(item);
+                    cyberWriteJson(CYBER_CHAT_KEY, arr.slice(-120));
+                    cyberRefreshChatLog();
+                });
+        } else {
+            const arr = cyberGetChatMessages();
+            arr.push(item);
+            cyberWriteJson(CYBER_CHAT_KEY, arr.slice(-120));
+            cyberRefreshChatLog();
+        }
     }
-}
+
+    function cyberSendArenaChat(msg) {
+        const now = Date.now();
+
+        // 擂台戰報豁免全聊天室禁言，但只限擂台賽消息使用此函式。
+        const item = {
+            id: `${now}_arena_system`,
+            name: '擂台系統',
+            nick: '擂台系統',
+            msg: msg,
+            message: msg,
+            type: 'arena',
+            arenaReport: true,
+            time: now
+        };
+
+        cyberWritePublicChatMessage(item, '擂台戰報');
+    }
+
+    function cyberSendSystemChat(msg) {
+        // 非擂台系統公告不再進天下公頻 / Firebase chatMessages。
+        // 保留到主戰鬥紀錄，讓本機玩家仍看得到系統事件，不影響各面板與封神榜。
+        if (typeof battleLog !== 'undefined' && battleLog) {
+            battleLog.innerHTML += `<br><span style="color:#888; font-weight:bold;">【系統紀錄】${cyberEscapeHtml(msg)}</span><br>`;
+            battleLog.scrollTop = battleLog.scrollHeight;
+        } else {
+            console.log('[系統紀錄]', msg);
+        }
+    }
 
     function cyberArenaLog(msg) {
         const feed = document.getElementById('arenaBattleFeed');
         if (feed) feed.innerHTML = cyberEscapeHtml(msg);
-        cyberSendSystemChat(msg);
+        cyberSendArenaChat(msg);
     }
 
 function cyberRefreshArenaUI() {
@@ -6796,7 +6822,7 @@ function cyberRefreshArenaUI() {
                 scoreObj.score = (scoreObj.score || 0) + (r.bonusScore || 0);
                 cyberAwardTitle(name, r.title, true);
                 cyberAddLegendRecord('擂台連勝獎勵', `${name} 達成 ${r.streak} 連勝，獲得 ${r.label}，額外積分 +${r.bonusScore || 0}`, r.streak);
-                cyberSendSystemChat(`【擂台連勝獎勵】${name} 達成 ${r.streak} 連勝，獲得 ${r.label}，額外積分 +${r.bonusScore || 0}！`);
+                cyberSendArenaChat(`【擂台連勝獎勵】${name} 達成 ${r.streak} 連勝，獲得 ${r.label}，額外積分 +${r.bonusScore || 0}！`);
             }
         });
     }
