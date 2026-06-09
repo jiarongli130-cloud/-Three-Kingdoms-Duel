@@ -130,6 +130,43 @@
     line-height: 1.6;
     margin: 0 0 18px 0;
 }
+
+.book-cta-row {
+    text-align: center;
+    margin: 10px 0 22px 0;
+}
+
+.book-line-btn {
+    display: inline-block;
+    padding: 12px 18px;
+    border: 1px solid #00ff41;
+    color: #00ff41;
+    background: rgba(0, 255, 65, 0.08);
+    text-decoration: none;
+    font-weight: bold;
+    border-radius: 6px;
+    box-shadow: 0 0 12px rgba(0,255,65,0.25);
+    line-height: 1.5;
+}
+
+.book-line-btn:hover {
+    background: #00ff41;
+    color: #000;
+}
+
+.book-hero-bonus {
+    text-align: center;
+    color: #ffd700;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: -10px 0 18px 0;
+    text-shadow: 0 0 6px rgba(255,215,0,0.45);
+}
+
+.book-inline-cta {
+    text-align: center;
+    margin: 8px 0 12px 0;
+}
         .controls { display: flex; flex-wrap: wrap; justify-content: space-between; margin-bottom: 20px; gap: 10px; }
         .select-group { flex: 1; min-width: 200px; }
         select, button, input {
@@ -1000,6 +1037,12 @@
 <h1>《三國演義武力超百科》官方演武沙盤</h1>
 <p class="book-hero-subtitle">讀完書，看武力；進沙盤，親手驗證誰才是真正最強。</p>
 <p class="book-hero-note">本沙盤為《三國演義武力超百科》互動延伸內容，書中收錄完整武力排名、戰例考據與單挑評析。</p>
+<div class="book-cta-row">
+    <a class="book-line-btn" href="請把這裡換成你的LINE群邀請連結" target="_blank" rel="noopener noreferrer">
+        ⚔ 加入官方 LINE 群｜搶先取得上市通知與限定戰例
+    </a>
+</div>
+<p class="book-hero-bonus">加入 LINE 群可搶先領取：十大巔峰單挑表、上市通知、限定戰例解析。</p>
     
     <div class="controls">
         <div class="select-group">
@@ -1150,6 +1193,11 @@
     <p style="font-size:12px; color:#aaa; margin:0 0 12px 0;">
 這裡是《三國演義武力超百科》讀者與玩家的公開演武場。你可以用自創武將上擂台、留下戰報、挑戰天下高手；想搶先取得上市通知、限定戰例與讀者活動，請加入官方 LINE 群。
 </p>
+<div class="book-inline-cta">
+    <a class="book-line-btn" href="請把這裡換成你的LINE群邀請連結" target="_blank" rel="noopener noreferrer">
+        📲 加入官方 LINE 群
+    </a>
+</div>
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
             <input id="chatNickInput" placeholder="輸入聊天室暱稱 / 玩家名" style="flex:2; min-width:180px; border-color:#00ffff; color:#00ffff;">
             <button onclick="cyberSaveChatNick()" style="flex:1; min-width:100px; border-color:#00ffff; color:#00ffff;">保存暱稱</button>
@@ -6344,7 +6392,7 @@
     const CYBER_ROOM_PATH = 'threeKingdomsDuelPublicRoom_v1';
 
     // 【Firebase 開關】
-    // 之後照我教學把 ENABLE_FIREBASE_REALTIME 改 true，並貼上 firebaseConfig。
+    // Firebase 已啟用：公開聊天室與擂台資料會同步到 Realtime Database。
     window.ENABLE_FIREBASE_REALTIME = true;
     window.CYBER_FIREBASE_CONFIG = {
     apiKey: "AIzaSyCHyGp-qHs6Lv21L8pI-YZRv8xj3C2rv_8",
