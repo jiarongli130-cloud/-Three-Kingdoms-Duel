@@ -3426,6 +3426,7 @@
 
     function confirmRpgGeneral() {
         if (!currentRpgDraft) return;
+        if (typeof cyberStampMyGeneral === 'function') cyberStampMyGeneral(currentRpgDraft);
         if (currentRpgDraft.isRPG) {
             currentRpgDraft.asuraAchievements = normalizeAsuraAchievements(currentRpgDraft.asuraAchievements || {});
             localStorage.setItem(getAsuraStorageKey(currentRpgDraft), JSON.stringify(currentRpgDraft.asuraAchievements));
@@ -3733,6 +3734,7 @@
     function saveActiveRpgGeneral() {
         if (!activeRpgGeneral) { alert("主公，請先在單挑選單中選定欲封存的自創武將！"); return; }
         if (activeRpgGeneral.inventory === undefined) { alert("此乃原生將領，無法寫入天道命盤！"); return; }
+        if (typeof cyberStampMyGeneral === 'function') cyberStampMyGeneral(activeRpgGeneral);
         
         saveAsuraAchievements(activeRpgGeneral);
         let savedData = JSON.parse(localStorage.getItem('rpgGenerals')) || {};
@@ -3754,6 +3756,9 @@
         if (!savedData || !savedData[targetName]) { alert("命盤中找不到該武將數據！"); return; }
         
         let gen = savedData[targetName];
+        if (typeof cyberStampMyGeneral === 'function') cyberStampMyGeneral(gen);
+        savedData[targetName] = gen;
+        localStorage.setItem('rpgGenerals', JSON.stringify(savedData));
         if (gen && gen.isRPG) loadAsuraAchievements(gen);
         let existingIdx = generals.findIndex(g => g.name === gen.name && g.inventory !== undefined);
         if (existingIdx !== -1) {
@@ -6841,25 +6846,59 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         box.scrollTop = box.scrollHeight;
     }
 
+    /* ==============================================================
+       🛡️ 擂台防冒名補丁：選將只讀取「本機本人建立的自創武將」
+       不能再從公開 roster 選到別人登錄過的武將。
+       ============================================================== */
+    function cyberGetMyOwnerId() {
+        // 直接沿用聊天室的裝置標記；同一台裝置會固定，不會跟 Firebase 公開名冊混淆。
+        return cyberGetClientIpTag();
+    }
+
+    function cyberStampMyGeneral(g) {
+        if (!g || !g.name) return g;
+        g.ownerId = cyberGetMyOwnerId();
+        g.owner = cyberGetNick();
+        g.localOwnerVersion = 2;
+        g.lastLocalTouch = Date.now();
+        return g;
+    }
+
+    function cyberIsMyOwnedGeneral(g) {
+        if (!g || !g.name || g.inventory === undefined) return false;
+        return g.ownerId === cyberGetMyOwnerId();
+    }
+
     function cyberGetLocalRpgGenerals() {
         const saved = cyberReadJson('rpgGenerals', {});
         const map = {};
+
+        // 只允許有 ownerId 且屬於本裝置的武將進入「我的擂台選將」。
+        // 舊版未蓋 ownerId 的存檔不自動當作本人，避免共用電腦或公開資料被誤認成自己的武將。
         Object.values(saved || {}).forEach(g => {
-            if (g && g.name) map[g.name] = g;
+            if (cyberIsMyOwnedGeneral(g)) map[g.name] = g;
         });
+
         try {
-            if (activeRpgGeneral && activeRpgGeneral.name && activeRpgGeneral.inventory !== undefined) map[activeRpgGeneral.name] = activeRpgGeneral;
+            if (cyberIsMyOwnedGeneral(activeRpgGeneral)) map[activeRpgGeneral.name] = activeRpgGeneral;
         } catch(e) {}
+
         try {
-            generals.filter(g => g && g.name && g.inventory !== undefined).forEach(g => map[g.name] = g);
+            generals
+                .filter(g => cyberIsMyOwnedGeneral(g))
+                .forEach(g => map[g.name] = g);
         } catch(e) {}
+
         return map;
     }
 
     function cyberCompactFighter(g, ownerName = cyberGetNick()) {
+        const ownerId = g.ownerId || cyberGetMyOwnerId();
         return {
             name: g.name,
             owner: ownerName,
+            ownerId,
+            clientTag: ownerId,
             power: Number(g.power || 1),
             rank: g.rank || (g.isRPG ? '異界修羅' : '自創武將'),
             level: Number(g.level || 1),
@@ -6869,38 +6908,52 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         };
     }
 
+    function cyberGetMyArenaFighterMap() {
+        return Object.fromEntries(
+            Object.entries(cyberGetLocalRpgGenerals()).map(([k, v]) => [k, cyberCompactFighter(v)])
+        );
+    }
+
+    function cyberGetPublicArenaFighterMap() {
+        const state = cyberGetArenaState();
+        return { ...(state.roster || {}) };
+    }
+
+    // 舊函式保留給其他功能呼叫；但不再混入本機選將，避免 UI 把公開名冊當成「我的武將」。
+    function cyberGetArenaFighterMap() {
+        return cyberGetPublicArenaFighterMap();
+    }
+
     function cyberRegisterMyGenerals() {
         const locals = cyberGetLocalRpgGenerals();
         const names = Object.keys(locals);
         if (names.length === 0) {
-            alert('尚未找到自創武將。請先創建/喚醒/封存自創武將，再登錄到公開擂台。');
+            alert('尚未找到「本人擁有」的自創武將。請先創建新武將，或喚醒舊武將後按「封存」一次，讓系統綁定本裝置，再登錄到公開擂台。');
             return;
         }
         const state = cyberGetArenaState();
-        names.forEach(name => state.roster[name] = cyberCompactFighter(locals[name]));
+        names.forEach(name => {
+            const owned = cyberStampMyGeneral(locals[name]);
+            state.roster[name] = cyberCompactFighter(owned);
+        });
         cyberSaveArenaState(state);
-        alert(`已登錄 ${names.length} 名自創武將到擂台名冊。`);
-    }
-
-    function cyberGetArenaFighterMap() {
-        const state = cyberGetArenaState();
-        return { ...(state.roster || {}), ...Object.fromEntries(Object.entries(cyberGetLocalRpgGenerals()).map(([k,v]) => [k, cyberCompactFighter(v)])) };
+        alert(`已登錄 ${names.length} 名「我的自創武將」到擂台名冊。別人的公開武將不會被登錄。`);
     }
 
     function cyberRefreshArenaSelect() {
         const sel = document.getElementById('arenaFighterSelect');
         if (!sel) return;
         const current = sel.value;
-        const map = cyberGetArenaFighterMap();
+        const map = cyberGetMyArenaFighterMap();
         const names = Object.keys(map).sort((a,b) => (map[b].power || 0) - (map[a].power || 0));
         sel.innerHTML = '';
         if (names.length === 0) {
-            sel.add(new Option('-- 尚無自創武將可參戰 --', ''));
+            sel.add(new Option('-- 尚無「我的自創武將」可參戰 --', ''));
             return;
         }
         names.forEach(name => {
             const g = map[name];
-            sel.add(new Option(`${g.name}｜武力 ${g.power}｜${g.rank || '自創武將'}`, name));
+            sel.add(new Option(`${g.name}｜武力 ${g.power}｜${g.rank || '自創武將'}｜我的`, name));
         });
         if (names.includes(current)) sel.value = current;
     }
@@ -6926,8 +6979,10 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         if (!cd.ok) { alert(`敗者冷卻中，還要 ${cd.remain} 秒才能再次挑戰。`); return; }
         const state = cyberGetArenaState();
         if (state.champion && state.champion.name) { alert(`目前已有擂主：${state.champion.name}，請使用挑戰擂主。`); return; }
-        const fighters = cyberGetArenaFighterMap();
+        const fighters = cyberGetMyArenaFighterMap();
+        if (!fighters[name]) { alert('這不是你本機擁有的自創武將，不能登台。'); return; }
         state.champion = fighters[name];
+        state.roster[name] = fighters[name];
         const s = cyberEnsureScore(state, name);
         s.fights += 0;
         s.currentStreak = s.currentStreak || 0;
@@ -6993,9 +7048,9 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         const state = cyberGetArenaState();
         if (!state.champion || !state.champion.name) { cyberEnterArenaAsChampion(); return; }
         if (state.champion.name === challengerName) { alert('你已經是擂主，不能挑戰自己。'); return; }
-        const fighters = cyberGetArenaFighterMap();
+        const fighters = cyberGetMyArenaFighterMap();
         const challenger = fighters[challengerName];
-        if (!challenger) { alert('找不到挑戰者資料，請先登錄我的武將。'); return; }
+        if (!challenger) { alert('這不是你本機擁有的自創武將，不能拿來挑戰。請先創建/喚醒/封存自己的武將，再登錄我的武將。'); return; }
         state.roster[challengerName] = challenger;
         if (state.champion.name && !state.roster[state.champion.name]) state.roster[state.champion.name] = state.champion;
 
