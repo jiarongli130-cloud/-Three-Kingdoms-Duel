@@ -493,6 +493,76 @@
             background: rgba(255,215,0,0.10);
             text-shadow: 0 0 8px #ffd700;
         }
+        .rpg-title-equip-panel {
+            border: 1px solid #00ffff;
+            background: linear-gradient(135deg, rgba(0,255,255,0.08), rgba(255,215,0,0.06));
+            padding: 10px;
+            border-radius: 6px;
+            margin: 8px 0 10px 0;
+            color: #ddd;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .rpg-title-equip-panel h5 {
+            margin: 0 0 6px 0;
+            color: #00ffff;
+            text-shadow: 0 0 6px #00ffff;
+            font-size: 14px;
+        }
+        .custom-title-admin-panel {
+            grid-column: 1 / -1;
+            border-color: #ff8c00 !important;
+            background: linear-gradient(135deg, rgba(255,140,0,0.12), rgba(255,215,0,0.06), rgba(0,255,255,0.05)) !important;
+            box-shadow: 0 0 14px rgba(255,140,0,0.18);
+        }
+        .custom-title-admin-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .custom-title-admin-box {
+            border: 1px solid #333;
+            background: rgba(0,0,0,0.58);
+            padding: 10px;
+            border-radius: 6px;
+        }
+        .title-bonus-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(120px, 1fr));
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .title-bonus-grid label {
+            display: block;
+            color: #aaa;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+        .title-admin-note {
+            color: #aaa;
+            font-size: 12px;
+            margin: 4px 0 8px 0;
+            line-height: 1.55;
+        }
+        textarea.title-admin-textarea {
+            width: 100%;
+            min-height: 70px;
+            box-sizing: border-box;
+            background: #000;
+            color: var(--text-color);
+            border: 1px solid var(--text-color);
+            padding: 8px;
+            font-family: 'Courier New', Courier, monospace, "Microsoft JhengHei";
+            resize: vertical;
+        }
+        .title-tooltip-effect {
+            color: #ffd700;
+            font-weight: bold;
+        }
+        @media (max-width: 760px) {
+            .custom-title-admin-grid { grid-template-columns: 1fr; }
+            .title-bonus-grid { grid-template-columns: 1fr; }
+        }
         .boss-hp-wrap {
             height: 22px;
             background: #1a0000;
@@ -1139,6 +1209,7 @@
         <div id="rpgPanel" style="display: none; border: 1px solid #ffd700; padding: 10px; background: #222; margin-top: 10px; width: 100%; box-sizing: border-box;">
             <h4 style="margin: 0 0 10px 0; color: #ffd700;">⚔️ 武將狀態與行囊</h4>
             <div id="rpgStatsDisplay" style="font-size: 14px; margin-bottom: 10px; color: #ccc;"></div>
+            <div id="rpgTitleEquipPanel" class="rpg-title-equip-panel">稱號裝備資料載入中...</div>
             
             <div id="rpgActionButtons" style="display: flex; flex-direction: column; gap: 10px;">
                 <div style="display: flex; gap: 5px; align-items: center;">
@@ -1264,6 +1335,41 @@
                 <div style="display:flex; gap:6px; margin-top:8px;">
                     <select id="titleSelect" style="flex:2; border-color:#00ffff; color:#00ffff;"></select>
                     <button onclick="cyberEquipSelectedTitle()" style="flex:1; border-color:#ffd700; color:#ffd700;">裝備稱號</button>
+                </div>
+            </div>
+            <div class="wargame-box custom-title-admin-panel" id="customTitleAdminPanel" style="display:none;">
+                <h4>👑 群主專用｜自訂稱號管理</h4>
+                <p class="title-admin-note">只有 Google 群主登入後可使用。稱號建立後會保存於本機 localStorage，並預留 Firebase 上雲接口。</p>
+                <div class="custom-title-admin-grid">
+                    <div class="custom-title-admin-box">
+                        <strong style="color:#ff8c00;">新增／覆寫自訂稱號</strong>
+                        <input id="customTitleName" placeholder="稱號名稱，例如：弒龍飛將" style="margin-top:8px; border-color:#ff8c00; color:#ff8c00;">
+                        <select id="customTitleRarity" style="margin-top:6px; border-color:#ffd700; color:#ffd700;">
+                            <option value="common">普通 common</option>
+                            <option value="rare">稀有 rare</option>
+                            <option value="epic">史詩 epic</option>
+                            <option value="legend">傳說 legend</option>
+                            <option value="myth">神話 myth</option>
+                        </select>
+                        <textarea id="customTitleDesc" class="title-admin-textarea" placeholder="稱號說明，例如：以飛將呂布之名，擊破 Boss 趙雲者方可獲得。" style="margin-top:6px;"></textarea>
+                        <div class="title-bonus-grid">
+                            <label>武力加成<input id="customTitlePower" type="number" value="0" step="1"></label>
+                            <label>暴擊率 +%<input id="customTitleCrit" type="number" value="0" step="0.1"></label>
+                            <label>閃避率 +%<input id="customTitleDodge" type="number" value="0" step="0.1"></label>
+                            <label>格擋率 +%<input id="customTitleBlock" type="number" value="0" step="0.1"></label>
+                            <label>破甲率 +%<input id="customTitleArmorPen" type="number" value="0" step="0.1"></label>
+                            <label>吸血率 +%<input id="customTitleLifesteal" type="number" value="0" step="0.1"></label>
+                            <label>HP 上限加成<input id="customTitleHp" type="number" value="0" step="1"></label>
+                        </div>
+                        <button onclick="cyberCreateCustomTitle()" style="margin-top:8px; border-color:#ff8c00; color:#ff8c00;">➕ 儲存自訂稱號</button>
+                    </div>
+                    <div class="custom-title-admin-box">
+                        <strong style="color:#ffd700;">授予稱號給自創武將</strong>
+                        <select id="grantTitleSelect" style="margin-top:8px; border-color:#ffd700; color:#ffd700;"></select>
+                        <select id="grantHeroSelect" style="margin-top:6px; border-color:#00ffff; color:#00ffff;"></select>
+                        <button onclick="cyberGrantSelectedTitleToHero()" style="margin-top:8px; border-color:#ffd700; color:#ffd700;">🎁 授予稱號</button>
+                        <div id="customTitleListBoard" class="title-admin-note" style="margin-top:8px; max-height:180px; overflow-y:auto;">自訂稱號載入中...</div>
+                    </div>
                 </div>
             </div>
             <div class="wargame-box">
@@ -2553,7 +2659,7 @@
     }
     // 將武將的神兵、技能、紅顏伴侶轉換為動態戰鬥變數
     function parseCombatStats(gen) {
-        let stats = { armorPen: 0, dodgeBonus: 0, lifesteal: 0, blockChance: 0, maxHpBonus: 0, hpRegen: 0, revives: [] };
+        let stats = { armorPen: 0, dodgeBonus: 0, lifesteal: 0, blockChance: 0, maxHpBonus: 0, hpRegen: 0, powerBonus: 0, critBonus: 0, revives: [] };
 
         if (gen && gen.isRPG) normalizeRpgSkillBuckets(gen);
 
@@ -2600,6 +2706,20 @@
                 if (wife.maxHpBonus) stats.maxHpBonus += wife.maxHpBonus;
                 if (wife.hpRegen) stats.hpRegen += wife.hpRegen;
             });
+        }
+
+        // 讀取目前裝備稱號：支援群主自訂稱號與活動稱號，並實際進入戰鬥計算。
+        if (gen && gen.inventory !== undefined && typeof cyberGetEquippedTitleCombatStats === 'function') {
+            const titleStats = cyberGetEquippedTitleCombatStats(gen.name);
+            if (titleStats) {
+                stats.powerBonus += titleStats.powerBonus || 0;
+                stats.critBonus += titleStats.critBonus || 0;
+                stats.dodgeBonus += titleStats.dodgeBonus || 0;
+                stats.blockChance += titleStats.blockChance || 0;
+                stats.armorPen += titleStats.armorPen || 0;
+                stats.lifesteal += titleStats.lifesteal || 0;
+                stats.maxHpBonus += titleStats.maxHpBonus || 0;
+            }
         }
 
         return stats;
@@ -3546,15 +3666,22 @@
             let learnedMasterSkillsHtml = gen.masteredSkills.length > 0 ? gen.masteredSkills.map(s =>
                 `<span class="tooltip" style="color:#ffd700;">${s}<span class="tooltiptext"><span class="title" style="color:#ffd700;">${s}</span>${skillDict[s] || '師承絕技'}</span></span>`
             ).join("、") : "尚未覺醒師承絕技";
+            const equippedTitleInfo = (typeof cyberGetEquippedTitleCombatStats === 'function') ? cyberGetEquippedTitleCombatStats(gen.name) : null;
+            const titlePowerBonus = equippedTitleInfo ? (equippedTitleInfo.powerBonus || 0) : 0;
+            const titleTotalPower = (gen.power || 0) + titlePowerBonus;
+            const titleCombatBonusHtml = equippedTitleInfo && typeof cyberBuildTitleEffectsList === 'function'
+                ? cyberBuildTitleEffectsList(equippedTitleInfo).join('、')
+                : '';
 
             document.getElementById('rpgStatsDisplay').innerHTML = `
-                <strong>武將：</strong> <span style="color:#00ff41;">${gen.name}</span> (異界修羅)<br>
+                <strong>武將：</strong> <span style="color:#00ff41;">${typeof cyberHeroNameHtml === 'function' ? cyberHeroNameHtml(gen.name) : gen.name}</span> (異界修羅)<br>
                 <strong>等級：</strong> LV.${gen.level} <span style="color:#aaa;">(EXP: ${gen.exp}/${gen.expNext})</span><br>
-                <strong>總和武力：</strong> <span style="color:#ff8c00;">${gen.power}</span> <br>
+                <strong>總和武力：</strong> <span style="color:#ff8c00;">${titleTotalPower}</span> <span style="color:#aaa;">（基礎 ${gen.power}${titlePowerBonus ? `＋稱號 ${titlePowerBonus}` : ''}）</span><br>
                 <strong style="color:#00ffff;">📣 自創轉發加成：</strong> <span style="color:#00ffff;">${gen.rpgSharePower}/2000</span>（${gen.rpgShareCount}/20 次）<br>
                 <strong style="color:#ffd700;">🥋 拜師學藝：</strong> 已切磋 <span style="color:#ffd700;">${gen.masterBattleCount}</span> 次｜已覺醒 <span style="color:#ffd700;">${gen.masteredSkills.length}/30</span> 招：${learnedMasterSkillsHtml}<br>
                 <strong>HP 上限加成：</strong> <span style="color:var(--accent-pink);">+${statsObj.maxHpBonus}</span> | 
                 <strong>自動治癒：</strong> <span style="color:var(--accent-pink);">+${statsObj.hpRegen}</span><br>
+                <strong>稱號戰鬥加成：</strong> <span class="title-tooltip-effect">${titleCombatBonusHtml || '無'}</span><br>
                 <strong>剩餘武力/技能點：</strong> <span style="color:#ff8c00;">${gen.statPoints}</span> / <span style="color:#00ffff;">${gen.skillPoints}</span><br>
                 <strong>已習得技能：</strong> ${skillsHtml}<br>
                 <div style="margin-top:8px; border-top:1px dashed #555; padding-top:8px;">
@@ -3580,14 +3707,17 @@
                 haremHtml = gen.harem.map(w => `<span style="color:var(--accent-pink);">${w.name}</span>`).join("、");
             }
 
+            const normalTitlePowerBonus = statsObj.powerBonus || 0;
             document.getElementById('rpgStatsDisplay').innerHTML = `
-                <strong>武將：</strong> <span style="color:#ff3131;">${gen.name}</span> (歷史遺珠)<br>
-                <strong>鎖定武力：</strong> <span style="color:#ff8c00;">${gen.power}</span><br>
+                <strong>武將：</strong> <span style="color:#ff3131;">${typeof cyberHeroNameHtml === 'function' ? cyberHeroNameHtml(gen.name) : gen.name}</span> (歷史遺珠)<br>
+                <strong>鎖定武力：</strong> <span style="color:#ff8c00;">${(gen.power || 0) + normalTitlePowerBonus}</span> <span style="color:#aaa;">（基礎 ${gen.power}${normalTitlePowerBonus ? `＋稱號 ${normalTitlePowerBonus}` : ''}）</span><br>
                 <strong style="color:var(--accent-pink);">🌸 銅雀深宮 (${gen.harem.length}/15)：</strong> ${haremHtml}<br>
                 <strong style="color:#aaa;">【階級壁壘】：凡人之軀，不具備神兵行囊與技能樹。</strong>
             `;
             document.getElementById('rpgActionButtons').nextElementSibling.style.display = "none";
         }
+
+        if (typeof cyberRenderRpgTitlePanel === 'function') cyberRenderRpgTitlePanel(gen);
 
         // 觸發業障監控更新
         updateAsuraUI();
@@ -4406,17 +4536,19 @@
         let p1ActualPower = p1.name === "趙雲" ? p1.power + 20 : p1.power;
         let p2ActualPower = p2.name === "趙雲" ? p2.power + 20 : p2.power;
 
-        // 【植入標籤系統】解析雙方神兵、技能與紅顏的真實戰鬥屬性
+        // 【植入標籤系統】解析雙方神兵、技能、紅顏與裝備稱號的真實戰鬥屬性
         let p1Stats = parseCombatStats(p1);
         let p2Stats = parseCombatStats(p2);
+        p1ActualPower += p1Stats.powerBonus || 0;
+        p2ActualPower += p2Stats.powerBonus || 0;
 
         // 破甲影響最終有效武力判定
         let effP1Power = p1ActualPower * (1 - p2Stats.armorPen);
         let effP2Power = p2ActualPower * (1 - p1Stats.armorPen);
 
-        document.getElementById('p1Name').innerText = p1.name;
+        document.getElementById('p1Name').innerHTML = (typeof cyberHeroNameHtml === 'function' ? cyberHeroNameHtml(p1.name) : cyberEscapeHtml(p1.name));
         document.getElementById('p1Rank').innerText = p1.rank;
-        document.getElementById('p2Name').innerText = p2.name;
+        document.getElementById('p2Name').innerHTML = (typeof cyberHeroNameHtml === 'function' ? cyberHeroNameHtml(p2.name) : cyberEscapeHtml(p2.name));
         document.getElementById('p2Rank').innerText = p2.rank;
 
         // 植入紅顏系統：最大 HP 上限擴充
@@ -4666,7 +4798,9 @@
                         dmg1 = Math.floor(dmg1 * 0.4);
                         applyDmg2(dmg1, `<span style="color:#b0c4de;">[第${round}合] 🛡️ 鏗鏘巨響！${p2.name} 成功格擋 ${p1.name}，僅承受 ${Math.floor(dmg1)} 點震傷。</span><br>`);
                     } else {
-                        applyDmg2(dmg1, `<span style="color:var(--text-color)">[第${round}合]</span> ${p1.name} ${moves[Math.floor(Math.random()*moves.length)]} 造成 ${Math.floor(dmg1)} 點損傷。<br>`);
+                        let p1CritHit = p1Stats.critBonus > 0 && Math.random() < p1Stats.critBonus;
+                        if (p1CritHit) dmg1 *= 2;
+                        applyDmg2(dmg1, `<span style="color:var(--text-color)">[第${round}合]</span> ${p1CritHit ? '💥【稱號暴擊】' : ''}${p1.name} ${moves[Math.floor(Math.random()*moves.length)]} 造成 ${Math.floor(dmg1)} 點損傷。<br>`);
                         if (p1Stats.lifesteal > 0 && h1 < maxHp1) {
                             let heal = dmg1 * p1Stats.lifesteal;
                             h1 = Math.min(maxHp1, h1 + heal);
@@ -4686,7 +4820,9 @@
                         dmg2 = Math.floor(dmg2 * 0.4);
                         applyDmg1(dmg2, `<span style="color:#b0c4de;">[第${round}合] 🛡️ 鏗鏘巨響！${p1.name} 成功格擋 ${p2.name}，僅承受 ${Math.floor(dmg2)} 點震傷。</span><br>`);
                     } else {
-                        applyDmg1(dmg2, `<span style="color:var(--accent-red)">[第${round}合]</span> ${p2.name} ${moves[Math.floor(Math.random()*moves.length)]} ${p1.name} 承受 ${Math.floor(dmg2)} 點破壞。<br>`);
+                        let p2CritHit = p2Stats.critBonus > 0 && Math.random() < p2Stats.critBonus;
+                        if (p2CritHit) dmg2 *= 2;
+                        applyDmg1(dmg2, `<span style="color:var(--accent-red)">[第${round}合]</span> ${p2CritHit ? '💥【稱號暴擊】' : ''}${p2.name} ${moves[Math.floor(Math.random()*moves.length)]} ${p1.name} 承受 ${Math.floor(dmg2)} 點破壞。<br>`);
                         // 吸血判定介入
                         if (p2Stats.lifesteal > 0 && h2 < maxHp2) {
                             let healAmount = dmg2 * p2Stats.lifesteal;
@@ -4833,20 +4969,20 @@
         buttons.forEach(b => b.disabled = true);
 
         const dGen = generals[dIdx];
-        const dActualPower = dGen.name === "趙雲" ? dGen.power + 20 : dGen.power; 
         const dStats = parseCombatStats(dGen); // 掛載標籤
+        const dActualPower = (dGen.name === "趙雲" ? dGen.power + 20 : dGen.power) + (dStats.powerBonus || 0); 
 
         let fighters = [];
         fighters.push({ id: 'D', team: 'A', name: dGen.name, power: dGen.power, rank: dGen.rank, actualPower: dActualPower, stats: dStats, hp: 100 + dStats.maxHpBonus, maxHp: 100 + dStats.maxHpBonus, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#00ff41' });
         
         for(let i=0; i<tIdxs.length; i++) {
             let g = generals[tIdxs[i]];
-            let p = g.name === "趙雲" ? g.power + 20 : g.power;
             let st = parseCombatStats(g); // 掛載標籤
+            let p = (g.name === "趙雲" ? g.power + 20 : g.power) + (st.powerBonus || 0);
             fighters.push({ id: 'T'+i, team: 'B', name: g.name, power: g.power, rank: g.rank, actualPower: p, stats: st, hp: 100 + st.maxHpBonus, maxHp: 100 + st.maxHpBonus, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#ff3131' });
         }
 
-        document.getElementById('p1Name').innerText = "狂龍: " + dGen.name;
+        document.getElementById('p1Name').innerHTML = "狂龍: " + cyberHeroNameHtml(dGen.name);
         document.getElementById('p1Rank').innerText = `極限挑戰・RPG標籤生效`;
         document.getElementById('p2Name').innerText = `群虎陣營 (${tIdxs.length}人)`;
         document.getElementById('p2Rank').innerText = "無差別圍剿戰術";
@@ -5264,12 +5400,12 @@
         for(let i=0; i<teamA_idxs.length; i++) {
             let g = generals[teamA_idxs[i]];
             let st = parseCombatStats(g);
-            fighters.push({ id: 'A'+i, team: 'A', name: g.name, power: g.power, rank: g.rank, actualPower: g.name === "趙雲" ? g.power + 20 : g.power, stats: st, hp: 100 + st.maxHpBonus, maxHp: 100 + st.maxHpBonus, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#00ff41' });
+            fighters.push({ id: 'A'+i, team: 'A', name: g.name, power: g.power, rank: g.rank, actualPower: (g.name === "趙雲" ? g.power + 20 : g.power) + (st.powerBonus || 0), stats: st, hp: 100 + st.maxHpBonus, maxHp: 100 + st.maxHpBonus, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#00ff41' });
         }
         for(let i=0; i<teamB_idxs.length; i++) {
             let g = generals[teamB_idxs[i]];
             let st = parseCombatStats(g);
-            fighters.push({ id: 'B'+i, team: 'B', name: g.name, power: g.power, rank: g.rank, actualPower: g.name === "趙雲" ? g.power + 20 : g.power, stats: st, hp: 100 + st.maxHpBonus, maxHp: 100 + st.maxHpBonus, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#ff3131' });
+            fighters.push({ id: 'B'+i, team: 'B', name: g.name, power: g.power, rank: g.rank, actualPower: (g.name === "趙雲" ? g.power + 20 : g.power) + (st.powerBonus || 0), stats: st, hp: 100 + st.maxHpBonus, maxHp: 100 + st.maxHpBonus, dodgeCount: 0, ult10Count: 0, ult30Used: false, customUltUsed: false, remnantDodgeUsed: false, godDefyUsed: false, fanYueHealUsed: false, nineSunsUsed: false, isDead: false, color: '#ff3131' });
         }
 
         document.getElementById('p1Name').innerText = "青龍陣營 (全軍)";
@@ -5563,6 +5699,8 @@
 
         let p1Stats = parseCombatStats(p1);
         let p2Stats = parseCombatStats(p2);
+        p1ActualPower += p1Stats.powerBonus || 0;
+        p2ActualPower += p2Stats.powerBonus || 0;
 
         let effP1Power = p1ActualPower * (1 - p2Stats.armorPen);
         let effP2Power = p2ActualPower * (1 - p1Stats.armorPen);
@@ -5637,6 +5775,7 @@
                     else if (eventRand < p2DodgeProb + 0.08) { } 
                     else if (eventRand < p2DodgeProb + 0.08 + p2Stats.blockChance) { qApplyDmg2(dmg1 * 0.4); } 
                     else { 
+                        if (p1Stats.critBonus > 0 && Math.random() < p1Stats.critBonus) dmg1 *= 2;
                         qApplyDmg2(dmg1); 
                         if (p1Stats.lifesteal > 0 && h1 < maxHp1) h1 = Math.min(maxHp1, h1 + dmg1 * p1Stats.lifesteal);
                     }
@@ -5647,6 +5786,7 @@
                     else if (eventRand < p1DodgeProb + 0.08) { } 
                     else if (eventRand < p1DodgeProb + 0.08 + p1Stats.blockChance) { qApplyDmg1(dmg2 * 0.4); } 
                     else { 
+                        if (p2Stats.critBonus > 0 && Math.random() < p2Stats.critBonus) dmg2 *= 2;
                         qApplyDmg1(dmg2); 
                         if (p2Stats.lifesteal > 0 && h2 < maxHp2) h2 = Math.min(maxHp2, h2 + dmg2 * p2Stats.lifesteal);
                     }
@@ -5859,14 +5999,14 @@
         let p1Stats = parseCombatStats(activeRpgGeneral);
         let p1MaxHp = 100 + p1Stats.maxHpBonus;
         let p1Hp = p1MaxHp;
-        let p1EffPower = activeRpgGeneral.power;
+        let p1EffPower = activeRpgGeneral.power + (p1Stats.powerBonus || 0);
 
         let jiangHp = 100;
         let jiangMaxHp = 100;
         let maoHp = 10000;
         let maoMaxHp = 10000;
         
-        document.getElementById('p1Name').innerText = activeRpgGeneral.name;
+        document.getElementById('p1Name').innerHTML = cyberHeroNameHtml(activeRpgGeneral.name);
         document.getElementById('p1Rank').innerText = "【逆天修羅】";
         document.getElementById('p2Name').innerText = "蔣大器 & 毛宗崗";
         document.getElementById('p2Rank').innerText = "【歷史的審判者】";
@@ -6235,7 +6375,7 @@
 
         let dGen = activeRpgGeneral;
         let dStats = parseCombatStats(dGen);
-        let dActualPower = dGen.power; // 握有真理之筆的 99999+ 戰力
+        let dActualPower = dGen.power + (dStats.powerBonus || 0); // 握有真理之筆的 99999+ 戰力
 
         let fighters = [];
         // 真神降臨
@@ -6244,8 +6384,8 @@
         // 😈 拔除 !g.isHidden 限制，將蔣大器與毛宗崗強行拖入戰局！
         let enemies = generals.filter(g => g.name !== dGen.name);
         enemies.forEach((g, i) => {
-            let p = g.name === "趙雲" ? g.power + 20 : g.power;
             let st = parseCombatStats(g);
+            let p = (g.name === "趙雲" ? g.power + 20 : g.power) + (st.powerBonus || 0);
             
             // 賦予舊神超高血量作為最後的尊嚴
             let eHp = (g.name === "蔣大器" || g.name === "毛宗崗") ? 99999 : (100 + st.maxHpBonus);
@@ -6253,7 +6393,7 @@
             fighters.push({ id: 'E'+i, team: 'B', name: g.name, power: g.power, rank: g.rank, actualPower: p, stats: st, hp: eHp, maxHp: eHp, nineSunsUsed: false, isDead: false, color: '#ff3131' });
         });
 
-        document.getElementById('p1Name').innerText = "創世真神: " + dGen.name;
+        document.getElementById('p1Name').innerHTML = "創世真神: " + cyberHeroNameHtml(dGen.name);
         document.getElementById('p1Rank').innerText = `凌駕天道`;
         document.getElementById('p2Name').innerText = `三國全宇宙 (${enemies.length}人)`;
         document.getElementById('p2Rank').innerText = "含舊日支配者";
@@ -6470,6 +6610,7 @@
             status.innerText = '尚未登入 Google 群主帳號';
             status.style.color = '#aaa';
         }
+        if (typeof cyberRefreshCustomTitleAdminUI === 'function') cyberRefreshCustomTitleAdminUI();
     }
 
     async function cyberGoogleOwnerLogin() {
@@ -7000,8 +7141,10 @@ box.innerHTML = pinnedHtml + arr.map(m => {
     }
 
     function cyberSimArenaDuel(champion, challenger) {
-        const a = { ...champion, hp: 120 + Math.floor((champion.power || 1) / 4) };
-        const b = { ...challenger, hp: 120 + Math.floor((challenger.power || 1) / 4) };
+        const aTitleStats = cyberGetEquippedTitleCombatStats(champion.name) || {};
+        const bTitleStats = cyberGetEquippedTitleCombatStats(challenger.name) || {};
+        const a = { ...champion, power: (champion.power || 1) + (aTitleStats.powerBonus || 0), hp: 120 + Math.floor(((champion.power || 1) + (aTitleStats.powerBonus || 0)) / 4) + (aTitleStats.maxHpBonus || 0), titleStats: aTitleStats };
+        const b = { ...challenger, power: (challenger.power || 1) + (bTitleStats.powerBonus || 0), hp: 120 + Math.floor(((challenger.power || 1) + (bTitleStats.powerBonus || 0)) / 4) + (bTitleStats.maxHpBonus || 0), titleStats: bTitleStats };
 
         // 復仇戰力加成：若其中一方對另一方有血仇，怨氣會轉成臨時武力加成。
         // 最高約 +15% 武力，只影響這場公開擂台，不會永久改武力。
@@ -7014,15 +7157,27 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         const logs = [];
         if (revengeBoostA > 0) logs.push(`🩸【血仇加成】${a.name} 怨氣燃燒，本場臨時武力 +${Math.round(revengeBoostA * 100)}%！`);
         if (revengeBoostB > 0) logs.push(`🩸【血仇加成】${b.name} 怨氣燃燒，本場臨時武力 +${Math.round(revengeBoostB * 100)}%！`);
+        if (aTitleStats && cyberBuildTitleEffectsList(aTitleStats).length) logs.push(`🏷️【稱號生效】${cyberGetHeroTitlePrefix(a.name)}${a.name}：${cyberBuildTitleEffectsList(aTitleStats).join('、')}`);
+        if (bTitleStats && cyberBuildTitleEffectsList(bTitleStats).length) logs.push(`🏷️【稱號生效】${cyberGetHeroTitlePrefix(b.name)}${b.name}：${cyberBuildTitleEffectsList(bTitleStats).join('、')}`);
         let round = 1;
         while (a.hp > 0 && b.hp > 0 && round <= 80) {
-            const atkA = Math.max(3, Math.floor((a.power || 1) / 18) + Math.floor(Math.random() * 9));
-            const atkB = Math.max(3, Math.floor((b.power || 1) / 18) + Math.floor(Math.random() * 9));
-            const critA = Math.random() < Math.min(0.32, (a.power || 1) / 1200);
-            const critB = Math.random() < Math.min(0.32, (b.power || 1) / 1200);
-            b.hp -= critA ? atkA * 2 : atkA;
-            if (b.hp <= 0) { logs.push(`第${round}合：${a.name} ${critA ? '爆發大絕' : '猛攻'}，${b.name} 倒地！`); break; }
-            a.hp -= critB ? atkB * 2 : atkB;
+            let atkA = Math.max(3, Math.floor((a.power || 1) / 18) + Math.floor(Math.random() * 9));
+            let atkB = Math.max(3, Math.floor((b.power || 1) / 18) + Math.floor(Math.random() * 9));
+            const critA = Math.random() < Math.min(0.75, Math.min(0.32, (a.power || 1) / 1200) + (a.titleStats.critBonus || 0));
+            const critB = Math.random() < Math.min(0.75, Math.min(0.32, (b.power || 1) / 1200) + (b.titleStats.critBonus || 0));
+            if (critA) atkA *= 2;
+            if (critB) atkB *= 2;
+            if (Math.random() < (b.titleStats.dodgeBonus || 0)) atkA = 0;
+            else if (Math.random() < (b.titleStats.blockChance || 0)) atkA = Math.floor(atkA * 0.4);
+            if (Math.random() < (a.titleStats.dodgeBonus || 0)) atkB = 0;
+            else if (Math.random() < (a.titleStats.blockChance || 0)) atkB = Math.floor(atkB * 0.4);
+            atkA = Math.floor(atkA * (1 + (a.titleStats.armorPen || 0)));
+            atkB = Math.floor(atkB * (1 + (b.titleStats.armorPen || 0)));
+            b.hp -= atkA;
+            if (a.titleStats.lifesteal && atkA > 0) a.hp = Math.min(maxA, a.hp + Math.floor(atkA * a.titleStats.lifesteal));
+            if (b.hp <= 0) { logs.push(`第${round}合：${a.name} ${critA ? '稱號暴擊' : '猛攻'}，${b.name} 倒地！`); break; }
+            a.hp -= atkB;
+            if (b.titleStats.lifesteal && atkB > 0) b.hp = Math.min(maxB, b.hp + Math.floor(atkB * b.titleStats.lifesteal));
             if (round % 3 === 1) logs.push(`第${round}合：${a.name} HP ${Math.max(0,a.hp)}/${maxA}，${b.name} HP ${Math.max(0,b.hp)}/${maxB}`);
             round++;
         }
@@ -7194,7 +7349,7 @@ function cyberRefreshArenaUI() {
             champBox.innerHTML = `
                 <div class="arena-champion-skin">
                     <div class="arena-champion-title">👑 目前擂台主 👑</div>
-                    <div class="arena-champion-name">${cyberEscapeHtml(cyberGetHeroTitlePrefix(state.champion.name))}${cyberEscapeHtml(state.champion.name)}</div>
+                    <div class="arena-champion-name">${cyberHeroNameHtml(state.champion.name)}</div>
                     <div>${cyberGetHeroFactionTag(state.champion.name)}</div>
                     <div class="arena-champion-meta">
                         武力 ${cyberEscapeHtml(state.champion.power)} ｜ ${cyberEscapeHtml(state.champion.rank || '自創武將')}
@@ -7231,7 +7386,7 @@ function cyberRefreshArenaUI() {
                 return `
                     <div class="rank-row rank-no1-skin">
                         <span class="rank-no1-text">
-                            🏆 第 ${idx + 1} 名｜${cyberEscapeHtml(cyberGetHeroTitlePrefix(p.name))}${cyberEscapeHtml(p.name)} ${cyberGetHeroFactionTag(p.name)}｜積分 ${p.score || 0}｜勝 ${p.win || 0}｜敗 ${p.lose || 0}｜連勝 <span class="${cyberGetStreakClass(p.currentStreak || 0)}">${p.currentStreak || 0}</span>｜最高 ${p.bestStreak || 0}｜出戰 ${p.fights || 0}${cdText}
+                            🏆 第 ${idx + 1} 名｜${cyberHeroNameHtml(p.name)} ${cyberGetHeroFactionTag(p.name)}｜積分 ${p.score || 0}｜勝 ${p.win || 0}｜敗 ${p.lose || 0}｜連勝 <span class="${cyberGetStreakClass(p.currentStreak || 0)}">${p.currentStreak || 0}</span>｜最高 ${p.bestStreak || 0}｜出戰 ${p.fights || 0}${cdText}
                         </span>
                         ${isChampion ? '<span class="rank-champion-badge">｜⚔️ 現任擂主</span>' : ''}
                     </div>
@@ -7242,7 +7397,7 @@ function cyberRefreshArenaUI() {
 
             return `
                 <div class="${cls}">
-                    第 ${idx + 1} 名｜${cyberEscapeHtml(cyberGetHeroTitlePrefix(p.name))}${cyberEscapeHtml(p.name)} ${cyberGetHeroFactionTag(p.name)}
+                    第 ${idx + 1} 名｜${cyberHeroNameHtml(p.name)} ${cyberGetHeroFactionTag(p.name)}
                     ${isChampion ? '<span class="rank-champion-badge">｜⚔️ 現任擂主</span>' : ''}
                     ｜積分 ${p.score || 0}｜勝 ${p.win || 0}｜敗 ${p.lose || 0}｜連勝 <span class="${cyberGetStreakClass(p.currentStreak || 0)}">${p.currentStreak || 0}</span>｜最高 ${p.bestStreak || 0}｜出戰 ${p.fights || 0}${cdText}
                 </div>
@@ -7261,8 +7416,11 @@ function cyberRefreshArenaUI() {
     const CYBER_DAILY_KEY = 'cyberDailyMissionState_v1';
     const CYBER_WORLD_BOSS_KEY = 'cyberWorldBossState_v1';
     const CYBER_LEGEND_HALL_KEY = 'cyberLegendHall_v1';
+    const CYBER_CUSTOM_TITLE_CATALOG_KEY = 'cyberCustomTitleCatalog_v1';
 
     const CYBER_TITLE_CATALOG = {
+        "弒龍飛將": { desc: "飛將弒龍挑戰成功者，使用呂布擊敗 Boss 趙雲者可獲得。", source: "飛將弒龍挑戰", rarity: "legend", powerBonus: 10, critBonus: 0.01 },
+        "初代弒龍飛將": { desc: "第一位完成飛將弒龍挑戰者專屬稱號。", source: "飛將弒龍挑戰首位成功者", rarity: "myth", powerBonus: 20, critBonus: 0.02, armorPen: 0.01 },
         "初登擂台": { desc: "第一次參與公開擂台。", rarity: "common" },
         "三連武者": { desc: "公開擂台目前連勝達 3 場。", rarity: "common" },
         "五連豪傑": { desc: "公開擂台目前連勝達 5 場。", rarity: "rare" },
@@ -7299,10 +7457,116 @@ function cyberRefreshArenaUI() {
         { streak: 50, title: "天下擂王", label: "神話級封神紀錄＋稱號【天下擂王】", bonusScore: 30 }
     ];
 
+    function cyberPctToDecimal(val) {
+        const n = Number(val || 0);
+        if (!isFinite(n)) return 0;
+        return n > 1 ? n / 100 : n;
+    }
+
+    function cyberNormalizeTitleInfo(raw, title = '') {
+        if (!raw) raw = {};
+        if (typeof raw === 'string') raw = { desc: raw };
+        return {
+            name: title,
+            desc: raw.desc || raw.description || '',
+            source: raw.source || raw.origin || '沙盤成就／群主授予',
+            rarity: raw.rarity || 'common',
+            powerBonus: Number(raw.powerBonus || raw.power || 0),
+            critBonus: cyberPctToDecimal(raw.critBonus || raw.critRate || 0),
+            dodgeBonus: cyberPctToDecimal(raw.dodgeBonus || raw.dodgeRate || 0),
+            blockChance: cyberPctToDecimal(raw.blockChance || raw.blockBonus || raw.blockRate || 0),
+            armorPen: cyberPctToDecimal(raw.armorPen || raw.armorPenBonus || raw.breakArmorRate || 0),
+            lifesteal: cyberPctToDecimal(raw.lifesteal || raw.lifestealBonus || raw.lifestealRate || 0),
+            maxHpBonus: Number(raw.maxHpBonus || raw.hpBonus || raw.hp || 0)
+        };
+    }
+
+    function cyberGetCustomTitleCatalog() {
+        return cyberReadJson(CYBER_CUSTOM_TITLE_CATALOG_KEY, {});
+    }
+
+    function cyberSaveCustomTitleCatalog(catalog) {
+        cyberWriteJson(CYBER_CUSTOM_TITLE_CATALOG_KEY, catalog || {});
+        cyberSyncCustomTitlesToCloudIfReady(catalog || {});
+    }
+
+    function cyberGetTitleCatalog() {
+        return { ...CYBER_TITLE_CATALOG, ...cyberGetCustomTitleCatalog() };
+    }
+
     function cyberGetTitleInfo(title) {
-        const raw = CYBER_TITLE_CATALOG[title];
-        if (!raw) return { desc: "", rarity: "common" };
-        return typeof raw === 'string' ? { desc: raw, rarity: "common" } : raw;
+        const raw = cyberGetTitleCatalog()[title];
+        return cyberNormalizeTitleInfo(raw, title);
+    }
+
+    function cyberFormatPercent(v) {
+        const n = Number(v || 0) * 100;
+        if (!n) return '';
+        return `${Number.isInteger(n) ? n : n.toFixed(1)}%`;
+    }
+
+    function cyberBuildTitleEffectsList(info) {
+        info = cyberNormalizeTitleInfo(info);
+        const arr = [];
+        if (info.powerBonus) arr.push(`武力 +${info.powerBonus}`);
+        if (info.critBonus) arr.push(`暴擊率 +${cyberFormatPercent(info.critBonus)}`);
+        if (info.dodgeBonus) arr.push(`閃避率 +${cyberFormatPercent(info.dodgeBonus)}`);
+        if (info.blockChance) arr.push(`格擋率 +${cyberFormatPercent(info.blockChance)}`);
+        if (info.armorPen) arr.push(`破甲率 +${cyberFormatPercent(info.armorPen)}`);
+        if (info.lifesteal) arr.push(`吸血率 +${cyberFormatPercent(info.lifesteal)}`);
+        if (info.maxHpBonus) arr.push(`HP 上限 +${info.maxHpBonus}`);
+        return arr;
+    }
+
+    function cyberBuildCompactTitleEffectText(statsObj, onlyTitleFields = false) {
+        if (!statsObj) return '';
+        const arr = [];
+        if (statsObj.powerBonus) arr.push(`武力 +${statsObj.powerBonus}`);
+        if (statsObj.critBonus) arr.push(`暴擊率 +${cyberFormatPercent(statsObj.critBonus)}`);
+        if (statsObj.dodgeBonus) arr.push(`閃避率 +${cyberFormatPercent(statsObj.dodgeBonus)}`);
+        if (statsObj.blockChance) arr.push(`格擋率 +${cyberFormatPercent(statsObj.blockChance)}`);
+        if (statsObj.armorPen) arr.push(`破甲率 +${cyberFormatPercent(statsObj.armorPen)}`);
+        if (statsObj.lifesteal) arr.push(`吸血率 +${cyberFormatPercent(statsObj.lifesteal)}`);
+        if (statsObj.maxHpBonus && onlyTitleFields) arr.push(`HP 上限 +${statsObj.maxHpBonus}`);
+        return arr.join('、');
+    }
+
+    function cyberTitleTooltipHtml(title) {
+        const info = cyberGetTitleInfo(title);
+        const effects = cyberBuildTitleEffectsList(info);
+        return `<span class="title">【${cyberEscapeHtml(title)}】</span>` +
+            `來源：${cyberEscapeHtml(info.source || '沙盤成就／群主授予')}<br>` +
+            `稀有度：${cyberEscapeHtml(info.rarity || 'common')}<br>` +
+            `效果：${effects.length ? cyberEscapeHtml(effects.join('、')) : '無加成'}<br>` +
+            `說明：${cyberEscapeHtml(info.desc || '無')}`;
+    }
+
+    function cyberTitleChipHtml(title, extraClass = '') {
+        if (!title) return '';
+        return `<span class="tooltip title-chip ${cyberGetTitleClass(title)} ${extraClass}">【${cyberEscapeHtml(title)}】<span class="tooltiptext">${cyberTitleTooltipHtml(title)}</span></span>`;
+    }
+
+    function cyberHeroNameHtml(name) {
+        const meta = cyberGetGameMeta();
+        const h = meta.heroes && meta.heroes[name];
+        if (h && h.currentTitle) {
+            const t = h.currentTitle;
+            return `<span class="tooltip title-chip ${cyberGetTitleClass(t)} current">${cyberEscapeHtml(t)}<span class="tooltiptext">${cyberTitleTooltipHtml(t)}</span></span><span style="color:#aaa;">｜</span>${cyberEscapeHtml(name)}`;
+        }
+        return cyberEscapeHtml(name);
+    }
+
+    function cyberGetEquippedTitleCombatStats(name) {
+        const meta = cyberGetGameMeta();
+        const h = meta.heroes && meta.heroes[name];
+        if (!h || !h.currentTitle) return null;
+        return cyberGetTitleInfo(h.currentTitle);
+    }
+
+    function cyberSyncCustomTitlesToCloudIfReady(catalog) {
+        // 後續若要開啟 Firebase 稱號同步，可在此處接 RTDB。
+        // 目前先依需求使用本機 localStorage 保存，避免干擾既有公開擂台資料。
+        return catalog;
     }
 
     function cyberGetTitleClass(title) {
@@ -7410,21 +7674,161 @@ function cyberRefreshArenaUI() {
     function cyberGetHeroTitlePrefix(name) {
         const meta = cyberGetGameMeta();
         const h = meta.heroes && meta.heroes[name];
-        return h && h.currentTitle ? `【${h.currentTitle}】` : '';
+        return h && h.currentTitle ? `${h.currentTitle}｜` : '';
+    }
+
+    function cyberEquipTitleForHero(name, title) {
+        if (!name || !title) return false;
+        const meta = cyberGetGameMeta();
+        if (!meta.heroes[name]) cyberEnsureHeroMeta(name);
+        if (!meta.heroes[name].titles) meta.heroes[name].titles = [];
+        if (!meta.heroes[name].titles.includes(title)) {
+            alert('此武將尚未取得該稱號，不能裝備。');
+            return false;
+        }
+        meta.heroes[name].currentTitle = title;
+        cyberSaveGameMeta(meta);
+        const gen = generals.find(g => g.name === name && g.inventory !== undefined);
+        if (gen && activeRpgGeneral && gen.name === activeRpgGeneral.name && typeof renderRpgPanel === 'function') renderRpgPanel(gen);
+        cyberRefreshEnhancedGameUI();
+        cyberRefreshArenaUI();
+        if (typeof cyberRefreshCustomTitleAdminUI === 'function') cyberRefreshCustomTitleAdminUI();
+        return true;
     }
 
     function cyberEquipSelectedTitle() {
         const name = cyberGetActiveHeroName();
         const sel = document.getElementById('titleSelect');
         if (!sel || !sel.value) { alert('此武將目前沒有可裝備稱號。'); return; }
+        if (cyberEquipTitleForHero(name, sel.value)) alert(`已為 ${name} 裝備稱號：${sel.value}｜${name}`);
+    }
 
-        const meta = cyberGetGameMeta();
-        if (!meta.heroes[name]) cyberEnsureHeroMeta(name);
-        meta.heroes[name].currentTitle = sel.value;
-        cyberSaveGameMeta(meta);
-        alert(`已為 ${name} 裝備稱號：【${sel.value}】`);
+    function cyberEquipRpgPanelTitle() {
+        if (!activeRpgGeneral) { alert('請先喚醒或選定自創武將。'); return; }
+        const sel = document.getElementById('rpgTitleSelect');
+        if (!sel || !sel.value) { alert('此武將目前沒有可裝備稱號。'); return; }
+        if (cyberEquipTitleForHero(activeRpgGeneral.name, sel.value)) alert(`已為 ${activeRpgGeneral.name} 裝備稱號：${sel.value}｜${activeRpgGeneral.name}`);
+    }
+
+    function cyberRenderRpgTitlePanel(gen) {
+        const box = document.getElementById('rpgTitleEquipPanel');
+        if (!box) return;
+        if (!gen || gen.inventory === undefined) {
+            box.style.display = 'none';
+            return;
+        }
+        box.style.display = 'block';
+        const heroMeta = cyberEnsureHeroMeta(gen.name);
+        const titles = heroMeta.titles || [];
+        const current = heroMeta.currentTitle || '';
+        const titleStats = current ? cyberGetTitleInfo(current) : null;
+        const effectText = titleStats ? (cyberBuildTitleEffectsList(titleStats).join('、') || '無加成') : '尚未裝備稱號';
+        box.innerHTML = `
+            <h5>🏷️ 自創武將稱號裝備</h5>
+            <div>目前裝備稱號：${current ? cyberTitleChipHtml(current, 'current') : '<span style="color:#777;">尚未裝備</span>'}</div>
+            <div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">
+                <select id="rpgTitleSelect" style="flex:2; min-width:180px; border-color:#00ffff; color:#00ffff;">
+                    ${titles.length ? titles.map(t => `<option value="${cyberEscapeHtml(t)}" ${t === current ? 'selected' : ''}>${cyberEscapeHtml(t)}｜${cyberEscapeHtml(cyberGetTitleInfo(t).desc || '無說明')}</option>`).join('') : '<option value="">尚未取得稱號</option>'}
+                </select>
+                <button onclick="cyberEquipRpgPanelTitle()" style="flex:1; min-width:120px; border-color:#ffd700; color:#ffd700;">裝備稱號</button>
+            </div>
+            <div style="margin-top:6px; color:#aaa;">稱號功能說明：裝備後名稱顯示為 <span style="color:#ffd700;">稱號｜武將名</span>，且稱號效果會進入單挑、擂台與沙盤戰鬥計算。</div>
+            <div style="margin-top:4px;">目前稱號效果：<span class="title-tooltip-effect">${cyberEscapeHtml(effectText)}</span></div>
+        `;
+    }
+
+    function cyberGetGrantableHeroNames() {
+        const names = new Set();
+        try {
+            const saved = cyberReadJson('rpgGenerals', {});
+            Object.keys(saved || {}).forEach(n => { if (n) names.add(n); });
+        } catch(e) {}
+        generals.filter(g => g && g.inventory !== undefined).forEach(g => names.add(g.name));
+        return [...names].sort((a,b)=>a.localeCompare(b, 'zh-Hant'));
+    }
+
+    function cyberCreateCustomTitle() {
+        if (!cyberIsRoomOwner()) { alert('只有登入群主 Gmail 才能新增自訂稱號。'); return; }
+        const name = (document.getElementById('customTitleName')?.value || '').trim();
+        if (!name) { alert('請輸入稱號名稱。'); return; }
+        const rarity = document.getElementById('customTitleRarity')?.value || 'common';
+        const desc = (document.getElementById('customTitleDesc')?.value || '').trim();
+        const num = id => Number(document.getElementById(id)?.value || 0) || 0;
+        const catalog = cyberGetCustomTitleCatalog();
+        catalog[name] = {
+            desc,
+            source: '群主自訂稱號',
+            rarity,
+            powerBonus: num('customTitlePower'),
+            critBonus: num('customTitleCrit') / 100,
+            dodgeBonus: num('customTitleDodge') / 100,
+            blockChance: num('customTitleBlock') / 100,
+            armorPen: num('customTitleArmorPen') / 100,
+            lifesteal: num('customTitleLifesteal') / 100,
+            maxHpBonus: num('customTitleHp')
+        };
+        cyberSaveCustomTitleCatalog(catalog);
+        alert(`自訂稱號已儲存：【${name}】`);
+        cyberRefreshCustomTitleAdminUI();
         cyberRefreshEnhancedGameUI();
-        cyberRefreshArenaUI();
+    }
+
+    function cyberGrantSelectedTitleToHero() {
+        if (!cyberIsRoomOwner()) { alert('只有登入群主 Gmail 才能授予稱號。'); return; }
+        const title = document.getElementById('grantTitleSelect')?.value || '';
+        const hero = document.getElementById('grantHeroSelect')?.value || '';
+        if (!title || !hero) { alert('請選擇要授予的稱號與自創武將。'); return; }
+        cyberAwardTitle(hero, title, true);
+        const savedData = cyberReadJson('rpgGenerals', {});
+        if (savedData[hero]) {
+            if (!savedData[hero].grantedTitles) savedData[hero].grantedTitles = [];
+            if (!savedData[hero].grantedTitles.includes(title)) savedData[hero].grantedTitles.push(title);
+            cyberWriteJson('rpgGenerals', savedData);
+        }
+        cyberAddLegendRecord('群主授予稱號', `群主授予【${hero}】稱號「${title}」`, 10);
+        cyberSendSystemChat(`【群主授予稱號】${hero} 永久取得稱號「${title}」！`);
+        alert(`已授予 ${hero} 稱號：${title}｜${hero}`);
+        cyberRefreshCustomTitleAdminUI();
+        cyberRefreshEnhancedGameUI();
+        if (activeRpgGeneral && activeRpgGeneral.name === hero) renderRpgPanel(activeRpgGeneral);
+    }
+
+    function cyberRefreshCustomTitleAdminUI() {
+        const panel = document.getElementById('customTitleAdminPanel');
+        if (!panel) return;
+        panel.style.display = cyberIsRoomOwner() ? 'block' : 'none';
+        if (!cyberIsRoomOwner()) return;
+
+        const titleSel = document.getElementById('grantTitleSelect');
+        if (titleSel) {
+            const currentVal = titleSel.value;
+            titleSel.innerHTML = '';
+            Object.keys(cyberGetTitleCatalog()).sort((a,b)=>a.localeCompare(b, 'zh-Hant')).forEach(t => {
+                const info = cyberGetTitleInfo(t);
+                titleSel.add(new Option(`${t}｜${info.rarity}｜${cyberBuildTitleEffectsList(info).join('、') || '無加成'}`, t));
+            });
+            if ([...titleSel.options].some(o => o.value === currentVal)) titleSel.value = currentVal;
+        }
+
+        const heroSel = document.getElementById('grantHeroSelect');
+        if (heroSel) {
+            const currentVal = heroSel.value;
+            heroSel.innerHTML = '';
+            const names = cyberGetGrantableHeroNames();
+            if (!names.length) heroSel.add(new Option('尚無可授予的自創武將，請先創角或喚醒', ''));
+            names.forEach(n => heroSel.add(new Option(n, n)));
+            if ([...heroSel.options].some(o => o.value === currentVal)) heroSel.value = currentVal;
+        }
+
+        const board = document.getElementById('customTitleListBoard');
+        if (board) {
+            const custom = cyberGetCustomTitleCatalog();
+            const names = Object.keys(custom);
+            board.innerHTML = names.length ? names.map(t => {
+                const info = cyberGetTitleInfo(t);
+                return `<div class="title-row">${cyberTitleChipHtml(t)}<br><span style="color:#aaa;">${cyberEscapeHtml(info.desc || '無說明')}｜${cyberBuildTitleEffectsList(info).join('、') || '無加成'}</span></div>`;
+            }).join('') : '目前尚無群主自訂稱號。預設活動稱號「弒龍飛將」「初代弒龍飛將」已內建於稱號庫。';
+        }
     }
 
     function cyberAddLegendRecord(type, text, score = 0) {
@@ -7570,9 +7974,10 @@ function cyberRefreshArenaUI() {
             return;
         }
 
+        const titleStats = cyberGetEquippedTitleCombatStats(name) || {};
         const titleBonus = cyberGetHeroTitlePrefix(name) ? 1.08 : 1;
-        const baseDamage = Math.max(50, Math.floor((hero.power || 1) * (5 + Math.random() * 5) * titleBonus));
-        const crit = Math.random() < Math.min(0.35, (hero.power || 1) / 2000);
+        const baseDamage = Math.max(50, Math.floor(((hero.power || 1) + (titleStats.powerBonus || 0)) * (5 + Math.random() * 5) * titleBonus * (1 + (titleStats.armorPen || 0))));
+        const crit = Math.random() < Math.min(0.75, Math.min(0.35, ((hero.power || 1) + (titleStats.powerBonus || 0)) / 2000) + (titleStats.critBonus || 0));
         const damage = crit ? baseDamage * 2 : baseDamage;
 
         state.hp = Math.max(0, state.hp - damage);
@@ -7685,17 +8090,14 @@ function cyberRefreshArenaUI() {
         if (titleBox) {
             const titles = heroMeta.titles || [];
             const currentTitleHtml = heroMeta.currentTitle
-                ? `<span class="title-chip current ${cyberGetTitleClass(heroMeta.currentTitle)}">【${cyberEscapeHtml(heroMeta.currentTitle)}】</span><br><span style="color:#aaa; font-size:12px;">${cyberEscapeHtml(cyberGetTitleInfo(heroMeta.currentTitle).desc)}</span>`
+                ? `${cyberTitleChipHtml(heroMeta.currentTitle, 'current')}<br><span style="color:#aaa; font-size:12px;">${cyberEscapeHtml(cyberGetTitleInfo(heroMeta.currentTitle).desc)}</span>`
                 : '尚未裝備稱號';
 
             titleBox.innerHTML = `
                 <div class="title-row">目前武將：<span style="color:#00ff41; font-weight:bold;">${cyberEscapeHtml(name)}</span></div>
                 <div class="title-row">目前稱號：${currentTitleHtml}</div>
                 <div class="title-row">
-                    ${titles.length ? titles.map(t => {
-                        const info = cyberGetTitleInfo(t);
-                        return `<span class="title-chip ${cyberGetTitleClass(t)} ${t === heroMeta.currentTitle ? 'current' : ''}" title="${cyberEscapeHtml(info.desc)}">【${cyberEscapeHtml(t)}】</span>`;
-                    }).join('') : '尚未取得稱號。可透過擂台、拜師、世界 Boss 取得。'}
+                    ${titles.length ? titles.map(t => cyberTitleChipHtml(t, t === heroMeta.currentTitle ? 'current' : '')).join('') : '尚未取得稱號。可透過擂台、拜師、世界 Boss 或群主活動授予取得。'}
                 </div>
                 <div class="streak-reward-table">
                     <strong style="color:#ffd700;">擂台連勝獎勵表</strong>
@@ -7710,10 +8112,12 @@ function cyberRefreshArenaUI() {
             titleSel.innerHTML = '';
             (heroMeta.titles || []).forEach(t => {
                 const info = cyberGetTitleInfo(t);
-                titleSel.add(new Option(`【${t}】${info.desc}`, t));
+                titleSel.add(new Option(`${t}｜${info.desc || '無說明'}`, t));
             });
             if (heroMeta.currentTitle && [...titleSel.options].some(o => o.value === heroMeta.currentTitle)) titleSel.value = heroMeta.currentTitle;
         }
+
+        if (typeof cyberRefreshCustomTitleAdminUI === 'function') cyberRefreshCustomTitleAdminUI();
 
         // 世界 Boss
         const bossBox = document.getElementById('worldBossBoard');
@@ -9492,6 +9896,7 @@ function cyberRefreshArenaUI() {
     document.addEventListener('DOMContentLoaded', () => {
         cyberRefreshAllPublicWarroom();
         cyberUpdateOwnerStatus();
+        if (typeof cyberRefreshCustomTitleAdminUI === 'function') cyberRefreshCustomTitleAdminUI();
         cyberInitFirebaseRealtime();
         const msgInput = document.getElementById('chatMessageInput');
         if (msgInput) msgInput.addEventListener('keydown', e => { if (e.key === 'Enter') cyberSendPublicChat(); });
@@ -9503,6 +9908,7 @@ function cyberRefreshArenaUI() {
         setInterval(cyberRefreshSocialEconomyUI, 3000);
         setInterval(cyberRefreshDestinyBondUI, 3000);
         setInterval(cyberRefreshFamilyRomanceUI, 3000);
+        setInterval(cyberRefreshCustomTitleAdminUI, 3000);
         cyberInitEncounterControls();
     });
 
