@@ -1339,7 +1339,7 @@
             </div>
             <div class="wargame-box custom-title-admin-panel" id="customTitleAdminPanel" style="display:none;">
                 <h4>👑 群主專用｜自訂稱號管理</h4>
-                <p class="title-admin-note">只有 Google 群主登入後可使用。稱號建立後會保存於本機 localStorage，並預留 Firebase 上雲接口。</p>
+                <p class="title-admin-note">只有 Google 群主登入後可使用。授予名單會包含本機自創武將、公開擂台名冊、現任擂主與排行榜中的其他玩家自創武將；Firebase 連線時會同步授予紀錄。</p>
                 <div class="custom-title-admin-grid">
                     <div class="custom-title-admin-box">
                         <strong style="color:#ff8c00;">新增／覆寫自訂稱號</strong>
@@ -6559,6 +6559,8 @@
     let cyberRemotePinnedMessage = null;
     let cyberRemoteMutedUsers = {};
     let cyberRemoteArenaState = null;
+    let cyberRemoteCustomTitleCatalog = {};
+    let cyberRemoteTitleGrants = {};
 
     function cyberEscapeHtml(str) {
         return String(str ?? '')
@@ -6567,6 +6569,17 @@
             .replaceAll('>', '&gt;')
             .replaceAll('"', '&quot;')
             .replaceAll("'", '&#039;');
+    }
+
+
+    function cyberSafeFirebaseKey(str) {
+        return encodeURIComponent(String(str ?? ''))
+            .replaceAll('.', '%2E')
+            .replaceAll('#', '%23')
+            .replaceAll('$', '%24')
+            .replaceAll('[', '%5B')
+            .replaceAll(']', '%5D')
+            .replaceAll('/', '%2F');
     }
 
     function cyberNowTime(ts = Date.now()) {
@@ -7482,11 +7495,14 @@ function cyberRefreshArenaUI() {
     }
 
     function cyberGetCustomTitleCatalog() {
-        return cyberReadJson(CYBER_CUSTOM_TITLE_CATALOG_KEY, {});
+        const localCatalog = cyberReadJson(CYBER_CUSTOM_TITLE_CATALOG_KEY, {});
+        // Firebase 版本優先覆蓋本機舊資料，確保群主更新後玩家端能取得最新稱號效果。
+        return { ...(localCatalog || {}), ...(cyberRemoteCustomTitleCatalog || {}) };
     }
 
     function cyberSaveCustomTitleCatalog(catalog) {
         cyberWriteJson(CYBER_CUSTOM_TITLE_CATALOG_KEY, catalog || {});
+        cyberRemoteCustomTitleCatalog = { ...(cyberRemoteCustomTitleCatalog || {}), ...(catalog || {}) };
         cyberSyncCustomTitlesToCloudIfReady(catalog || {});
     }
 
@@ -7564,9 +7580,22 @@ function cyberRefreshArenaUI() {
     }
 
     function cyberSyncCustomTitlesToCloudIfReady(catalog) {
-        // 後續若要開啟 Firebase 稱號同步，可在此處接 RTDB。
-        // 目前先依需求使用本機 localStorage 保存，避免干擾既有公開擂台資料。
+        if (cyberFirebaseReady && cyberDb) {
+            cyberDb.ref(`${CYBER_ROOM_PATH}/customTitleCatalog`).set(catalog || {}).catch(err => {
+                console.warn('自訂稱號同步雲端失敗：', err);
+            });
+        }
         return catalog;
+    }
+
+    function cyberApplyRemoteCustomTitleCatalog(catalog) {
+        cyberRemoteCustomTitleCatalog = catalog || {};
+        const localCatalog = cyberReadJson(CYBER_CUSTOM_TITLE_CATALOG_KEY, {});
+        cyberWriteJson(CYBER_CUSTOM_TITLE_CATALOG_KEY, { ...(localCatalog || {}), ...(catalog || {}) });
+        cyberRefreshEnhancedGameUI();
+        cyberRefreshArenaUI();
+        if (typeof cyberRefreshCustomTitleAdminUI === 'function') cyberRefreshCustomTitleAdminUI();
+        if (activeRpgGeneral && typeof renderRpgPanel === 'function') renderRpgPanel(activeRpgGeneral);
     }
 
     function cyberGetTitleClass(title) {
@@ -7737,14 +7766,109 @@ function cyberRefreshArenaUI() {
         `;
     }
 
-    function cyberGetGrantableHeroNames() {
-        const names = new Set();
+    function cyberGetGrantableHeroEntries() {
+        const map = new Map();
+        const put = (name, data = {}) => {
+            if (!name) return;
+            const old = map.get(name) || { name };
+            map.set(name, { ...old, ...data, name });
+        };
+
         try {
             const saved = cyberReadJson('rpgGenerals', {});
-            Object.keys(saved || {}).forEach(n => { if (n) names.add(n); });
+            Object.values(saved || {}).forEach(g => {
+                if (!g || !g.name) return;
+                put(g.name, {
+                    source: cyberIsMyOwnedGeneral(g) ? '本機我的武將' : '本機封存武將',
+                    owner: g.owner || (cyberIsMyOwnedGeneral(g) ? cyberGetNick() : ''),
+                    ownerId: g.ownerId || '',
+                    power: Number(g.power || 1),
+                    rank: g.rank || (g.isRPG ? '異界修羅' : '自創武將'),
+                    local: true
+                });
+            });
         } catch(e) {}
-        generals.filter(g => g && g.inventory !== undefined).forEach(g => names.add(g.name));
-        return [...names].sort((a,b)=>a.localeCompare(b, 'zh-Hant'));
+
+        try {
+            if (activeRpgGeneral && activeRpgGeneral.name) {
+                put(activeRpgGeneral.name, {
+                    source: '目前喚醒武將',
+                    owner: activeRpgGeneral.owner || cyberGetNick(),
+                    ownerId: activeRpgGeneral.ownerId || cyberGetMyOwnerId(),
+                    power: Number(activeRpgGeneral.power || 1),
+                    rank: activeRpgGeneral.rank || (activeRpgGeneral.isRPG ? '異界修羅' : '自創武將'),
+                    local: true
+                });
+            }
+        } catch(e) {}
+
+        try {
+            generals.filter(g => g && g.inventory !== undefined).forEach(g => {
+                put(g.name, {
+                    source: cyberIsMyOwnedGeneral(g) ? '本機我的武將' : '本機自創武將',
+                    owner: g.owner || '',
+                    ownerId: g.ownerId || '',
+                    power: Number(g.power || 1),
+                    rank: g.rank || (g.isRPG ? '異界修羅' : '自創武將'),
+                    local: true
+                });
+            });
+        } catch(e) {}
+
+        try {
+            const state = cyberGetArenaState();
+            Object.values(state.roster || {}).forEach(g => {
+                if (!g || !g.name) return;
+                put(g.name, {
+                    source: '公開擂台名冊',
+                    owner: g.owner || g.nick || '',
+                    ownerId: g.ownerId || g.clientTag || '',
+                    power: Number(g.power || 1),
+                    rank: g.rank || (g.isRPG ? '異界修羅' : '自創武將'),
+                    public: true
+                });
+            });
+            if (state.champion && state.champion.name) {
+                const g = state.champion;
+                put(g.name, {
+                    source: '現任擂主',
+                    owner: g.owner || g.nick || '',
+                    ownerId: g.ownerId || g.clientTag || '',
+                    power: Number(g.power || 1),
+                    rank: g.rank || (g.isRPG ? '異界修羅' : '自創武將'),
+                    public: true
+                });
+            }
+            Object.values(state.scores || {}).forEach(s => {
+                if (!s || !s.name) return;
+                put(s.name, {
+                    source: '擂台排行榜',
+                    owner: s.owner || '',
+                    power: Number(s.power || 0),
+                    rank: s.rank || '自創武將',
+                    public: true
+                });
+            });
+        } catch(e) {}
+
+        return [...map.values()].sort((a,b) => {
+            const ap = Number(a.power || 0);
+            const bp = Number(b.power || 0);
+            return bp - ap || a.name.localeCompare(b.name, 'zh-Hant');
+        });
+    }
+
+    function cyberGetGrantableHeroNames() {
+        return cyberGetGrantableHeroEntries().map(e => e.name);
+    }
+
+    function cyberFormatGrantableHeroOption(e) {
+        const parts = [e.name];
+        if (e.owner) parts.push(`玩家 ${e.owner}`);
+        if (e.power) parts.push(`武力 ${e.power}`);
+        if (e.rank) parts.push(e.rank);
+        if (e.source) parts.push(e.source);
+        return parts.join('｜');
     }
 
     function cyberCreateCustomTitle() {
@@ -7773,24 +7897,89 @@ function cyberRefreshArenaUI() {
         cyberRefreshEnhancedGameUI();
     }
 
-    function cyberGrantSelectedTitleToHero() {
-        if (!cyberIsRoomOwner()) { alert('只有登入群主 Gmail 才能授予稱號。'); return; }
-        const title = document.getElementById('grantTitleSelect')?.value || '';
-        const hero = document.getElementById('grantHeroSelect')?.value || '';
-        if (!title || !hero) { alert('請選擇要授予的稱號與自創武將。'); return; }
-        cyberAwardTitle(hero, title, true);
+    function cyberApplyTitleToGameMetaSilently(hero, title, autoEquip = true) {
+        if (!hero || !title) return false;
+        const meta = cyberGetGameMeta();
+        if (!meta.heroes) meta.heroes = {};
+        if (!meta.heroes[hero]) {
+            meta.heroes[hero] = {
+                titles: [],
+                currentTitle: '',
+                arenaWins: 0,
+                arenaFights: 0,
+                masterTrains: 0,
+                masterWins: 0,
+                bossDamageTotal: 0,
+                bossKills: 0,
+                bestStreak: 0
+            };
+        }
+        if (!Array.isArray(meta.heroes[hero].titles)) meta.heroes[hero].titles = [];
+        const added = !meta.heroes[hero].titles.includes(title);
+        if (added) meta.heroes[hero].titles.push(title);
+        if (autoEquip && !meta.heroes[hero].currentTitle) meta.heroes[hero].currentTitle = title;
+        cyberSaveGameMeta(meta);
+        return added;
+    }
+
+    function cyberSaveGrantToLocalHeroIfExists(hero, title) {
         const savedData = cyberReadJson('rpgGenerals', {});
         if (savedData[hero]) {
             if (!savedData[hero].grantedTitles) savedData[hero].grantedTitles = [];
             if (!savedData[hero].grantedTitles.includes(title)) savedData[hero].grantedTitles.push(title);
             cyberWriteJson('rpgGenerals', savedData);
         }
-        cyberAddLegendRecord('群主授予稱號', `群主授予【${hero}】稱號「${title}」`, 10);
-        cyberSendSystemChat(`【群主授予稱號】${hero} 永久取得稱號「${title}」！`);
-        alert(`已授予 ${hero} 稱號：${title}｜${hero}`);
-        cyberRefreshCustomTitleAdminUI();
+    }
+
+    function cyberPushTitleGrantToCloudIfReady(hero, title) {
+        if (!cyberFirebaseReady || !cyberDb || !hero || !title) return Promise.resolve(false);
+        const key = cyberSafeFirebaseKey(hero);
+        const item = {
+            hero,
+            title,
+            grantedBy: cyberGetNick(),
+            grantedByEmail: cyberFirebaseUser && cyberFirebaseUser.email ? cyberFirebaseUser.email : '',
+            time: Date.now()
+        };
+        return cyberDb.ref(`${CYBER_ROOM_PATH}/titleGrants/${key}`).push(item).then(() => true).catch(err => {
+            console.warn('稱號授予同步雲端失敗：', err);
+            return false;
+        });
+    }
+
+    function cyberApplyIncomingTitleGrants() {
+        const grants = cyberRemoteTitleGrants || {};
+        Object.values(grants).forEach(bucket => {
+            Object.values(bucket || {}).forEach(g => {
+                if (!g || !g.hero || !g.title) return;
+                cyberApplyTitleToGameMetaSilently(g.hero, g.title, true);
+                cyberSaveGrantToLocalHeroIfExists(g.hero, g.title);
+            });
+        });
         cyberRefreshEnhancedGameUI();
-        if (activeRpgGeneral && activeRpgGeneral.name === hero) renderRpgPanel(activeRpgGeneral);
+        cyberRefreshArenaUI();
+        if (typeof cyberRefreshCustomTitleAdminUI === 'function') cyberRefreshCustomTitleAdminUI();
+        if (activeRpgGeneral && typeof renderRpgPanel === 'function') renderRpgPanel(activeRpgGeneral);
+    }
+
+    function cyberGrantSelectedTitleToHero() {
+        if (!cyberIsRoomOwner()) { alert('只有登入群主 Gmail 才能授予稱號。'); return; }
+        const title = document.getElementById('grantTitleSelect')?.value || '';
+        const hero = document.getElementById('grantHeroSelect')?.value || '';
+        if (!title || !hero) { alert('請選擇要授予的稱號與自創武將。'); return; }
+
+        cyberApplyTitleToGameMetaSilently(hero, title, true);
+        cyberSaveGrantToLocalHeroIfExists(hero, title);
+        cyberPushTitleGrantToCloudIfReady(hero, title).then(cloudOk => {
+            cyberAddLegendRecord('群主授予稱號', `群主授予【${hero}】稱號「${title}」`, 10);
+            cyberSendSystemChat(`【群主授予稱號】${hero} 永久取得稱號「${title}」！`);
+            const cloudText = cloudOk ? '，並已同步到 Firebase，對方連線後可取得' : '。目前為本機紀錄；若未連 Firebase，請讓對方刷新或稍後再同步';
+            alert(`已授予 ${hero} 稱號：${title}｜${hero}${cloudText}`);
+            cyberRefreshCustomTitleAdminUI();
+            cyberRefreshEnhancedGameUI();
+            cyberRefreshArenaUI();
+            if (activeRpgGeneral && activeRpgGeneral.name === hero) renderRpgPanel(activeRpgGeneral);
+        });
     }
 
     function cyberRefreshCustomTitleAdminUI() {
@@ -7814,9 +8003,9 @@ function cyberRefreshArenaUI() {
         if (heroSel) {
             const currentVal = heroSel.value;
             heroSel.innerHTML = '';
-            const names = cyberGetGrantableHeroNames();
-            if (!names.length) heroSel.add(new Option('尚無可授予的自創武將，請先創角或喚醒', ''));
-            names.forEach(n => heroSel.add(new Option(n, n)));
+            const entries = cyberGetGrantableHeroEntries();
+            if (!entries.length) heroSel.add(new Option('尚無可授予的自創武將，請先創角、喚醒或請玩家登錄擂台', ''));
+            entries.forEach(e => heroSel.add(new Option(cyberFormatGrantableHeroOption(e), e.name)));
             if ([...heroSel.options].some(o => o.value === currentVal)) heroSel.value = currentVal;
         }
 
@@ -9885,6 +10074,14 @@ function cyberRefreshArenaUI() {
             cyberDb.ref(`${CYBER_ROOM_PATH}/arenaState`).on('value', snap => {
                 cyberRemoteArenaState = snap.val() || cyberGetDefaultArenaState();
                 cyberRefreshArenaUI();
+                if (typeof cyberRefreshCustomTitleAdminUI === 'function') cyberRefreshCustomTitleAdminUI();
+            });
+            cyberDb.ref(`${CYBER_ROOM_PATH}/customTitleCatalog`).on('value', snap => {
+                cyberApplyRemoteCustomTitleCatalog(snap.val() || {});
+            });
+            cyberDb.ref(`${CYBER_ROOM_PATH}/titleGrants`).on('value', snap => {
+                cyberRemoteTitleGrants = snap.val() || {};
+                cyberApplyIncomingTitleGrants();
             });
         } catch (e) {
             console.warn('Firebase 初始化失敗：', e);
@@ -9902,6 +10099,7 @@ function cyberRefreshArenaUI() {
         if (msgInput) msgInput.addEventListener('keydown', e => { if (e.key === 'Enter') cyberSendPublicChat(); });
         setInterval(cyberRefreshArenaUI, 1000);
         setInterval(cyberRefreshArenaSelect, 3000);
+        setInterval(cyberRefreshCustomTitleAdminUI, 3000);
         setInterval(cyberRefreshEnhancedGameUI, 3000);
         setInterval(cyberRefreshThreeSystemsUI, 3000);
         setInterval(cyberRefreshAdvancedSystemsUI, 3000);
