@@ -1100,6 +1100,129 @@
         .firebase-on { color: #00ff41; text-shadow: 0 0 5px #00ff41; }
         @media (max-width: 760px) { .public-warroom-grid { grid-template-columns: 1fr; } }
 
+
+
+        /* ==============================================================
+           🛡️ 群主專用：玩家ID與天梯管理後台
+           ============================================================== */
+        .owner-arena-admin-panel {
+            border: 2px solid #ff3131;
+            padding: 15px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, rgba(255,49,49,0.12), rgba(255,215,0,0.07), rgba(0,255,255,0.05));
+            box-shadow: 0 0 20px rgba(255,49,49,0.22);
+            display: none;
+            margin-bottom: 20px;
+        }
+        .owner-arena-admin-panel h3 {
+            margin: 0 0 8px 0;
+            color: #ff3131;
+            text-shadow: 0 0 8px #ff3131;
+        }
+        .owner-admin-grid {
+            display: grid;
+            grid-template-columns: 1.05fr 1.2fr;
+            gap: 14px;
+        }
+        .owner-admin-box {
+            border: 1px solid #333;
+            background: rgba(0,0,0,0.74);
+            padding: 10px;
+            border-radius: 6px;
+            min-height: 180px;
+        }
+        .owner-admin-box h4 {
+            margin: 0 0 8px 0;
+            color: #ffd700;
+            text-shadow: 0 0 5px rgba(255,215,0,0.55);
+        }
+        .owner-admin-list {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #333;
+            background: #050505;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .owner-admin-player-row {
+            border-bottom: 1px solid #222;
+            padding: 7px 4px;
+            color: #ddd;
+            font-size: 12px;
+            line-height: 1.55;
+            cursor: pointer;
+            word-break: break-all;
+        }
+        .owner-admin-player-row:hover {
+            background: rgba(255,215,0,0.08);
+        }
+        .owner-admin-player-row.selected {
+            border: 1px solid #ffd700;
+            background: rgba(255,215,0,0.12);
+            box-shadow: 0 0 10px rgba(255,215,0,0.18);
+        }
+        .owner-admin-ban-badge {
+            display: inline-block;
+            border: 1px solid #ff3131;
+            color: #ff3131;
+            padding: 1px 6px;
+            border-radius: 999px;
+            font-size: 11px;
+            text-shadow: 0 0 5px #ff3131;
+            margin-left: 4px;
+        }
+        .owner-admin-ban-meta {
+            border: 1px solid rgba(255,49,49,0.45);
+            background: rgba(255,49,49,0.08);
+            color: #ffb3b3;
+            padding: 6px 8px;
+            border-radius: 6px;
+            margin-top: 6px;
+            font-size: 12px;
+            line-height: 1.6;
+            word-break: break-word;
+        }
+        .owner-admin-ban-meta strong {
+            color: #ff3131;
+            text-shadow: 0 0 5px #ff3131;
+        }
+        .owner-admin-form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(130px, 1fr));
+            gap: 7px;
+        }
+        .owner-admin-form-grid label {
+            color: #aaa;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+        .owner-admin-form-grid input,
+        .owner-admin-form-grid select,
+        textarea.owner-admin-textarea {
+            font-size: 13px;
+            padding: 7px;
+        }
+        textarea.owner-admin-textarea {
+            width: 100%;
+            min-height: 110px;
+            box-sizing: border-box;
+            background: #000;
+            color: #00ffff;
+            border: 1px solid #00ffff;
+            font-family: 'Courier New', Courier, monospace, "Microsoft JhengHei";
+            resize: vertical;
+            word-break: break-all;
+        }
+        .owner-admin-danger-btn {
+            border-color: #ff3131 !important;
+            color: #ff3131 !important;
+        }
+        .owner-admin-safe-btn {
+            border-color: #00ff41 !important;
+            color: #00ff41 !important;
+        }
+        @media (max-width: 900px) { .owner-admin-grid { grid-template-columns: 1fr; } }
+
     </style>
 </head>
 <body>
@@ -1316,6 +1439,74 @@
         </div>
     </div>
 
+
+
+
+    <!-- 群主專用：玩家ID與天梯管理後台（只有 Google 群主登入後顯示） -->
+    <div class="controls owner-arena-admin-panel" id="ownerArenaAdminPanel">
+        <h3>🛡️ 群主專用｜玩家 ID・PLAYID・天梯管理後台</h3>
+        <p style="font-size:12px; color:#aaa; margin:0 0 12px 0; line-height:1.6;">
+            此介面只在群主 Google 帳號登入後顯示。一般玩家看不到。可查看公開擂台名冊中所有玩家的 playerID / arenaKey / 武力 / 稱號 / 技能快照 / 戰績，並可調整擂台資料或封號禁賽。
+        </p>
+        <div class="owner-admin-grid">
+            <div class="owner-admin-box">
+                <h4>📋 玩家與自創武將名冊</h4>
+                <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
+                    <input id="ownerAdminSearchInput" placeholder="搜尋：武將名 / playerID / 稱號" oninput="cyberRefreshOwnerArenaAdminUI()" style="flex:2; min-width:180px; border-color:#ff3131; color:#ff3131;">
+                    <button onclick="cyberRefreshOwnerArenaAdminUI()" style="flex:1; min-width:90px; border-color:#ffd700; color:#ffd700;">刷新</button>
+                </div>
+                <div id="ownerArenaPlayerListBoard" class="owner-admin-list">群主登入後載入玩家名冊。</div>
+            </div>
+            <div class="owner-admin-box">
+                <h4>🧾 選中玩家資料與管理</h4>
+                <input id="ownerAdminSelectedKey" readonly placeholder="尚未選擇玩家" style="margin-bottom:7px; border-color:#777; color:#aaa;">
+                <div class="owner-admin-form-grid">
+                    <label>playerID / PLAYID<input id="ownerAdminPlayerId" readonly style="border-color:#777; color:#aaa;"></label>
+                    <label>玩家暱稱<input id="ownerAdminOwnerName" readonly style="border-color:#777; color:#aaa;"></label>
+                    <label>武將名<input id="ownerAdminHeroName" readonly style="border-color:#777; color:#aaa;"></label>
+                    <label>目前稱號<input id="ownerAdminCurrentTitle" placeholder="例如：弒龍飛將" style="border-color:#ffd700; color:#ffd700;"></label>
+                    <label>基礎武力<input id="ownerAdminPower" type="number" step="1" style="border-color:#ff8c00; color:#ff8c00;"></label>
+                    <label>等級<input id="ownerAdminLevel" type="number" step="1" style="border-color:#00ffff; color:#00ffff;"></label>
+                    <label>階級 / 身份<input id="ownerAdminRank" placeholder="異界修羅 / 自創武將" style="border-color:#00ffff; color:#00ffff;"></label>
+                    <label>擂台戰力<input id="ownerAdminArenaPower" readonly style="border-color:#777; color:#aaa;"></label>
+                    <label>積分<input id="ownerAdminScore" type="number" step="1" style="border-color:#ffd700; color:#ffd700;"></label>
+                    <label>勝場<input id="ownerAdminWin" type="number" step="1" style="border-color:#00ff41; color:#00ff41;"></label>
+                    <label>敗場<input id="ownerAdminLose" type="number" step="1" style="border-color:#ff3131; color:#ff3131;"></label>
+                    <label>出戰<input id="ownerAdminFights" type="number" step="1" style="border-color:#aaa; color:#aaa;"></label>
+                    <label>目前連勝<input id="ownerAdminCurrentStreak" type="number" step="1" style="border-color:#ffd700; color:#ffd700;"></label>
+                    <label>最高連勝<input id="ownerAdminBestStreak" type="number" step="1" style="border-color:#ffd700; color:#ffd700;"></label>
+                </div>
+                <label style="display:block; color:#aaa; font-size:12px; margin-top:8px;">封號原因 / 管理備註</label>
+                <select id="ownerAdminBanPreset" onchange="cyberOwnerUseBanPreset()" style="border-color:#ff3131; color:#ff3131; margin-top:4px;">
+                    <option value="">-- 選擇常用封號原因，可再自行修改 --</option>
+                    <option value="偷改武力">偷改武力</option>
+                    <option value="異常戰力">異常戰力</option>
+                    <option value="惡意洗榜">惡意洗榜</option>
+                    <option value="使用不正常稱號">使用不正常稱號</option>
+                    <option value="冒用他人資料">冒用他人資料</option>
+                    <option value="聊天室違規">聊天室違規</option>
+                    <option value="活動違規">活動違規</option>
+                    <option value="其他作弊">其他作弊</option>
+                </select>
+                <input id="ownerAdminBanReason" placeholder="例如：疑似竄改武力、活動違規、惡意洗榜" style="border-color:#ff3131; color:#ff3131; margin-top:4px;">
+                <div class="owner-admin-form-grid" style="margin-top:7px;">
+                    <label>封號狀態<input id="ownerAdminBanStatus" readonly style="border-color:#777; color:#aaa;"></label>
+                    <label>封號時間<input id="ownerAdminBanAt" readonly style="border-color:#777; color:#aaa;"></label>
+                    <label>封號人<input id="ownerAdminBanBy" readonly style="border-color:#777; color:#aaa;"></label>
+                    <label>封號類型<input id="ownerAdminBanCategory" readonly style="border-color:#777; color:#aaa;"></label>
+                </div>
+                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">
+                    <button onclick="cyberOwnerApplyPlayerChanges()" class="owner-admin-safe-btn" style="flex:1; min-width:130px;">💾 套用資料修改</button>
+                    <button onclick="cyberOwnerBanSelectedPlayer()" class="owner-admin-danger-btn" style="flex:1; min-width:130px;">⛔ 封號禁賽</button>
+                    <button onclick="cyberOwnerUnbanSelectedPlayer()" style="flex:1; min-width:130px; border-color:#00ffff; color:#00ffff;">✅ 解除封號</button>
+                    <button onclick="cyberOwnerClearCooldownSelected()" style="flex:1; min-width:130px; border-color:#aaa; color:#aaa;">🧹 清除冷卻</button>
+                    <button onclick="cyberOwnerDeleteSelectedRoster()" class="owner-admin-danger-btn" style="flex:1; min-width:130px;">🗑️ 移出名冊</button>
+                </div>
+                <label style="display:block; color:#aaa; font-size:12px; margin-top:8px;">完整公開擂台快照 / JSON</label>
+                <textarea id="ownerAdminRawJson" class="owner-admin-textarea" readonly></textarea>
+            </div>
+        </div>
+    </div>
 
     <!-- 武神養成擴充：每日任務＋稱號＋連勝＋世界Boss＋封神榜 -->
     <div class="controls wargame-expansion-panel" id="wargameExpansionPanel">
@@ -6583,6 +6774,15 @@
         return s.trim();
     }
 
+    function cyberRawEscapeHtml(str) {
+        return String(str ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+    }
+
     function cyberEscapeHtml(str) {
         return cyberDisplaySafeText(str)
             .replaceAll('&', '&amp;')
@@ -6634,6 +6834,7 @@
             status.style.color = '#aaa';
         }
         if (typeof cyberRefreshCustomTitleAdminUI === 'function') cyberRefreshCustomTitleAdminUI();
+        if (typeof cyberRefreshOwnerArenaAdminUI === 'function') cyberRefreshOwnerArenaAdminUI();
     }
 
     async function cyberGoogleOwnerLogin() {
@@ -6748,13 +6949,13 @@
     }
 
     function cyberGetDefaultArenaState() {
-        return { champion: null, scores: {}, cooldowns: {}, roster: {}, lastUpdated: Date.now() };
+        return { champion: null, scores: {}, cooldowns: {}, roster: {}, bans: {}, adminOverrides: {}, lastUpdated: Date.now() };
     }
 
     function cyberGetArenaState() {
         const base = cyberGetDefaultArenaState();
         const state = cyberFirebaseReady ? (cyberRemoteArenaState || {}) : cyberReadJson(CYBER_ARENA_KEY, base);
-        const merged = { ...base, ...state, scores: state.scores || {}, cooldowns: state.cooldowns || {}, roster: state.roster || {} };
+        const merged = { ...base, ...state, scores: state.scores || {}, cooldowns: state.cooldowns || {}, roster: state.roster || {}, bans: state.bans || {}, adminOverrides: state.adminOverrides || {} };
         return cyberNormalizeArenaState(merged);
     }
 
@@ -7085,6 +7286,68 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         return `${name}`;
     }
 
+
+    function cyberGetArenaBanRecord(state, fighterOrKey) {
+        const key = cyberGetFighterArenaKey(fighterOrKey);
+        if (!key) return null;
+        const rec = state && state.bans ? state.bans[key] : null;
+        return rec && rec.banned !== false ? rec : null;
+    }
+
+    function cyberIsArenaBanned(state, fighterOrKey) {
+        return !!cyberGetArenaBanRecord(state, fighterOrKey);
+    }
+
+    function cyberArenaBanMessage(state, fighterOrKey) {
+        const rec = cyberGetArenaBanRecord(state, fighterOrKey);
+        if (!rec) return '';
+        return rec.reason ? `此武將已被群主封號禁賽：${rec.reason}` : '此武將已被群主封號，禁止參加天梯。';
+    }
+
+    function cyberApplyOwnerAdminOverrideToFighter(fighter, state, explicitKey = '') {
+        if (!fighter || typeof fighter !== 'object') return fighter;
+        const key = explicitKey || cyberGetFighterArenaKey(fighter);
+        const ov = state && state.adminOverrides ? state.adminOverrides[key] : null;
+        if (!ov || typeof ov !== 'object') return fighter;
+        const f = { ...fighter };
+        if (ov.power !== undefined && ov.power !== '') f.power = Math.max(1, Math.floor(Number(ov.power) || 1));
+        if (ov.level !== undefined && ov.level !== '') f.level = Math.max(1, Math.floor(Number(ov.level) || 1));
+        if (ov.rank !== undefined) f.rank = String(ov.rank || f.rank || '自創武將');
+        if (ov.currentTitle !== undefined) f.currentTitle = String(ov.currentTitle || '');
+        f.adminOverride = { ...ov };
+
+        if (f.arenaSnapshot && typeof f.arenaSnapshot === 'object') {
+            f.arenaSnapshot = { ...f.arenaSnapshot };
+            f.arenaSnapshot.power = f.power;
+            f.arenaSnapshot.level = f.level;
+            f.arenaSnapshot.rank = f.rank;
+            f.arenaSnapshot.currentTitle = f.currentTitle || '';
+            if (f.currentTitle && typeof cyberGetTitleInfo === 'function') {
+                f.arenaSnapshot.titleStats = cyberNormalizeTitleInfo(cyberGetTitleInfo(f.currentTitle), f.currentTitle);
+            } else if (!f.currentTitle) {
+                f.arenaSnapshot.titleStats = null;
+            }
+            f.arenaSnapshot.adminOverride = { ...ov };
+        }
+
+        try {
+            const full = cyberBuildArenaFullCombatStats(f);
+            f.arenaPower = full.power;
+            f.arenaMaxHp = full.maxHp;
+            if (f.arenaSnapshot) {
+                f.arenaSnapshot.arenaPower = full.power;
+                f.arenaSnapshot.arenaMaxHp = full.maxHp;
+                f.arenaSnapshot.arenaEffectText = cyberArenaStatsEffectText(full);
+            }
+        } catch(e) {}
+        return f;
+    }
+
+    function cyberArenaFailMessage(cd) {
+        if (cd && cd.banned) return cd.reason || '此武將已被群主封號，禁止參加天梯。';
+        return `敗者冷卻中，還要 ${cd && cd.remain ? cd.remain : 0} 秒才能再次挑戰。`;
+    }
+
     function cyberNormalizeArenaFighter(fighter, rawKey = '') {
         if (!fighter || typeof fighter !== 'object') return fighter;
         const f = { ...fighter };
@@ -7135,7 +7398,29 @@ box.innerHTML = pinnedHtml + arr.map(m => {
             cooldowns[key] = value;
         });
 
-        return { ...src, roster, champion, scores, cooldowns };
+        const bans = {};
+        Object.entries(src.bans || {}).forEach(([rawKey, value]) => {
+            const related = roster[rawKey] || Object.values(roster).find(f => f.name === rawKey) || null;
+            const key = String(rawKey).includes('::') ? rawKey : (related ? related.arenaKey : rawKey);
+            bans[key] = value;
+        });
+
+        const adminOverrides = {};
+        Object.entries(src.adminOverrides || {}).forEach(([rawKey, value]) => {
+            const related = roster[rawKey] || Object.values(roster).find(f => f.name === rawKey) || null;
+            const key = String(rawKey).includes('::') ? rawKey : (related ? related.arenaKey : rawKey);
+            adminOverrides[key] = value;
+        });
+
+        const normalized = { ...src, roster, champion, scores, cooldowns, bans, adminOverrides };
+        Object.keys(normalized.roster || {}).forEach(k => {
+            normalized.roster[k] = cyberApplyOwnerAdminOverrideToFighter(normalized.roster[k], normalized, k);
+        });
+        if (normalized.champion && normalized.champion.name) {
+            normalized.champion = cyberApplyOwnerAdminOverrideToFighter(normalized.champion, normalized, cyberGetFighterArenaKey(normalized.champion));
+        }
+
+        return normalized;
     }
 
     function cyberStampMyGeneral(g) {
@@ -7351,7 +7636,8 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         const found = Object.values(locals).find(g => cyberArenaKey(g.ownerId || cyberGetMyOwnerId(), g.name) === arenaKey || g.name === arenaKey);
         if (!found) return null;
         const stamped = cyberStampMyGeneral(found);
-        const fresh = cyberCompactFighter(stamped);
+        let fresh = cyberCompactFighter(stamped);
+        fresh = cyberApplyOwnerAdminOverrideToFighter(fresh, state, fresh.arenaKey);
         cyberRemoveLegacyArenaEntriesFor(state, fresh);
         state.roster[fresh.arenaKey] = fresh;
         if (state.champion && cyberGetFighterArenaKey(state.champion) === fresh.arenaKey) state.champion = fresh;
@@ -7368,7 +7654,8 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         const state = cyberGetArenaState();
         names.forEach(name => {
             const owned = cyberStampMyGeneral(locals[name]);
-            const fighter = cyberCompactFighter(owned);
+            let fighter = cyberCompactFighter(owned);
+            fighter = cyberApplyOwnerAdminOverrideToFighter(fighter, state, fighter.arenaKey);
             cyberRemoveLegacyArenaEntriesFor(state, fighter);
             state.roster[fighter.arenaKey] = fighter;
         });
@@ -7381,6 +7668,7 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         if (!sel) return;
         const current = sel.value;
         const map = cyberGetMyArenaFighterMap();
+        const state = cyberGetArenaState();
         const keys = Object.keys(map).sort((a,b) => (map[b].arenaPower || map[b].power || 0) - (map[a].arenaPower || map[a].power || 0));
         sel.innerHTML = '';
         if (keys.length === 0) {
@@ -7390,7 +7678,10 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         keys.forEach(key => {
             const g = map[key];
             const shownPower = g.arenaPower && g.arenaPower !== g.power ? `${g.power}／戰力 ${g.arenaPower}` : g.power;
-            sel.add(new Option(`${g.name}｜武力 ${shownPower}｜${g.rank || '自創武將'}｜我的`, key));
+            const banned = cyberIsArenaBanned(state, key);
+            const opt = new Option(`${g.name}｜武力 ${shownPower}｜${g.rank || '自創武將'}｜我的${banned ? '｜已封號禁賽' : ''}`, key);
+            if (banned) opt.disabled = true;
+            sel.add(opt);
         });
         if (keys.includes(current)) sel.value = current;
     }
@@ -7415,6 +7706,8 @@ box.innerHTML = pinnedHtml + arr.map(m => {
     function cyberCanFight(fighterOrKey) {
         const state = cyberGetArenaState();
         const key = cyberGetFighterArenaKey(fighterOrKey);
+        const banMsg = cyberArenaBanMessage(state, key);
+        if (banMsg) return { ok: false, banned: true, reason: banMsg };
         const until = Number((state.cooldowns || {})[key] || 0);
         if (Date.now() >= until) return { ok: true };
         const remain = Math.ceil((until - Date.now()) / 1000);
@@ -7426,11 +7719,12 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         const key = sel ? sel.value : '';
         if (!key) { alert('請先選擇一名自創武將。'); return; }
         const fighters = cyberGetMyArenaFighterMap();
-        const fighter = fighters[key];
+        let fighter = fighters[key];
         if (!fighter) { alert('這不是你本機擁有的自創武將，不能登台。'); return; }
-        const cd = cyberCanFight(fighter);
-        if (!cd.ok) { alert(`敗者冷卻中，還要 ${cd.remain} 秒才能再次挑戰。`); return; }
         const state = cyberGetArenaState();
+        fighter = cyberApplyOwnerAdminOverrideToFighter(fighter, state, cyberGetFighterArenaKey(fighter));
+        const cd = cyberCanFight(fighter);
+        if (!cd.ok) { alert(cyberArenaFailMessage(cd)); return; }
         if (state.champion && state.champion.name) { alert(`目前已有擂主：${cyberArenaFighterLabel(state.champion)}，請使用挑戰擂主。`); return; }
         state.champion = fighter;
         state.roster[fighter.arenaKey] = fighter;
@@ -7572,9 +7866,10 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         }
         if (!challenger) { alert('這不是你本機擁有的自創武將，不能拿來挑戰。請先創建/喚醒/封存自己的武將。'); return; }
 
+        challenger = cyberApplyOwnerAdminOverrideToFighter(challenger, state, cyberGetFighterArenaKey(challenger));
         const freshChallengerKey = cyberGetFighterArenaKey(challenger);
         const cd = cyberCanFight(challenger);
-        if (!cd.ok) { alert(`敗者冷卻中，還要 ${cd.remain} 秒才能再次挑戰。`); return; }
+        if (!cd.ok) { alert(cyberArenaFailMessage(cd)); return; }
 
         const oldChampionKey = cyberGetFighterArenaKey(state.champion);
         const oldChampionName = state.champion && state.champion.name ? state.champion.name : '';
@@ -7714,6 +8009,282 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         if (feed) feed.innerHTML = cyberEscapeHtml(msg);
         cyberSendArenaChat(msg);
     }
+
+
+function cyberOwnerFormatAdminTime(ts) {
+    if (!ts) return '';
+    try {
+        const d = new Date(Number(ts));
+        if (Number.isNaN(d.getTime())) return '';
+        return d.toLocaleString('zh-TW', { hour12: false });
+    } catch (e) {
+        return '';
+    }
+}
+
+function cyberOwnerGetBanByText(ban) {
+    if (!ban) return '';
+    return ban.byName || ban.by || ban.ownerEmail || '';
+}
+
+function cyberOwnerUseBanPreset() {
+    const preset = document.getElementById('ownerAdminBanPreset')?.value || '';
+    const input = document.getElementById('ownerAdminBanReason');
+    if (!input || !preset) return;
+    if (!input.value.trim() || ['偷改武力','異常戰力','惡意洗榜','使用不正常稱號','冒用他人資料','聊天室違規','活動違規','其他作弊','群主封號禁賽'].includes(input.value.trim())) {
+        input.value = preset;
+    } else if (!input.value.includes(preset)) {
+        input.value = `${preset}｜${input.value.trim()}`;
+    }
+}
+
+function cyberOwnerGetAdminRows() {
+    const state = cyberGetArenaState();
+    const rows = {};
+    Object.entries(state.roster || {}).forEach(([key, fighter]) => {
+        const f = cyberNormalizeArenaFighter(fighter, key);
+        const score = (state.scores || {})[key] || {};
+        const ban = cyberGetArenaBanRecord(state, key);
+        const snap = f.arenaSnapshot || {};
+        rows[key] = { key, fighter: f, score, ban, snapshot: snap };
+    });
+    Object.entries(state.scores || {}).forEach(([key, score]) => {
+        if (rows[key]) return;
+        const ban = cyberGetArenaBanRecord(state, key);
+        rows[key] = { key, fighter: null, score, ban, snapshot: {} };
+    });
+    return Object.values(rows).sort((a, b) => {
+        const as = Number((a.score && a.score.score) || 0);
+        const bs = Number((b.score && b.score.score) || 0);
+        const ap = Number((a.fighter && (a.fighter.arenaPower || a.fighter.power)) || 0);
+        const bp = Number((b.fighter && (b.fighter.arenaPower || b.fighter.power)) || 0);
+        return bs - as || bp - ap || String(a.key).localeCompare(String(b.key));
+    });
+}
+
+function cyberRefreshOwnerArenaAdminUI() {
+    const panel = document.getElementById('ownerArenaAdminPanel');
+    if (!panel) return;
+    const isOwner = cyberIsRoomOwner();
+    panel.style.display = isOwner ? 'block' : 'none';
+    if (!isOwner) return;
+
+    const board = document.getElementById('ownerArenaPlayerListBoard');
+    if (!board) return;
+    const selectedKey = document.getElementById('ownerAdminSelectedKey')?.value || '';
+    const q = (document.getElementById('ownerAdminSearchInput')?.value || '').trim().toLowerCase();
+    const rows = cyberOwnerGetAdminRows().filter(row => {
+        if (!q) return true;
+        const f = row.fighter || {};
+        const s = row.score || {};
+        const snap = row.snapshot || {};
+        const ban = row.ban || {};
+        const raw = [row.key, f.name, f.owner, f.ownerId, f.playerId, f.currentTitle, snap.currentTitle, s.name, ban.reason, ban.category, ban.by, ban.byName, cyberOwnerFormatAdminTime(ban.time)].join(' ').toLowerCase();
+        return raw.includes(q);
+    });
+    board.innerHTML = rows.length ? rows.map(row => {
+        const f = row.fighter || {};
+        const sc = row.score || {};
+        const snap = row.snapshot || {};
+        const playerId = f.playerId || f.ownerId || (String(row.key).includes('::') ? String(row.key).split('::')[0] : '');
+        const name = f.name || sc.name || cyberArenaNameFromKey(row.key);
+        const title = f.currentTitle || snap.currentTitle || '';
+        const banBadge = row.ban ? `<span class="owner-admin-ban-badge">封號禁賽</span>` : '';
+        const banDetail = row.ban ? `<div class="owner-admin-ban-meta"><strong>封號原因：</strong>${cyberRawEscapeHtml(row.ban.reason || row.ban.category || '群主封號禁賽')}<br><strong>封號時間：</strong>${cyberRawEscapeHtml(cyberOwnerFormatAdminTime(row.ban.time) || '未記錄')}｜<strong>封號人：</strong>${cyberRawEscapeHtml(cyberOwnerGetBanByText(row.ban) || '群主')}</div>` : '';
+        const selected = row.key === selectedKey ? ' selected' : '';
+        return `<div class="owner-admin-player-row${selected}" onclick="cyberOwnerSelectArenaPlayer('${cyberRawEscapeHtml(row.key)}')">
+            <div style="color:#ffd700; font-weight:bold;">${cyberRawEscapeHtml(name)} ${banBadge}</div>
+            <div>playerID：<span style="color:#00ffff;">${cyberRawEscapeHtml(playerId)}</span></div>
+            <div>arenaKey：<span style="color:#aaa;">${cyberRawEscapeHtml(row.key)}</span></div>
+            <div>武力 ${cyberRawEscapeHtml(f.power ?? sc.power ?? '')}｜戰力 ${cyberRawEscapeHtml(f.arenaPower ?? sc.arenaPower ?? '')}｜稱號 ${cyberRawEscapeHtml(title || '無')}｜積分 ${sc.score || 0}｜勝 ${sc.win || 0}｜敗 ${sc.lose || 0}</div>
+            ${banDetail}
+        </div>`;
+    }).join('') : '<span style="color:#777;">目前公開擂台名冊尚無玩家資料。</span>';
+}
+
+function cyberOwnerSelectArenaPlayer(key) {
+    if (!cyberIsRoomOwner()) return;
+    const state = cyberGetArenaState();
+    const fighter = (state.roster || {})[key] || null;
+    const score = (state.scores || {})[key] || {};
+    const ban = cyberGetArenaBanRecord(state, key);
+    const snap = fighter && fighter.arenaSnapshot ? fighter.arenaSnapshot : {};
+    const playerId = (fighter && (fighter.playerId || fighter.ownerId)) || (String(key).includes('::') ? String(key).split('::')[0] : '');
+    const name = (fighter && fighter.name) || score.name || cyberArenaNameFromKey(key);
+    const owner = (fighter && fighter.owner) || score.owner || '';
+    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val ?? ''; };
+    setVal('ownerAdminSelectedKey', key);
+    setVal('ownerAdminPlayerId', playerId);
+    setVal('ownerAdminOwnerName', owner);
+    setVal('ownerAdminHeroName', name);
+    setVal('ownerAdminCurrentTitle', (fighter && fighter.currentTitle) || snap.currentTitle || '');
+    setVal('ownerAdminPower', (fighter && fighter.power) || snap.power || score.power || 1);
+    setVal('ownerAdminLevel', (fighter && fighter.level) || snap.level || 1);
+    setVal('ownerAdminRank', (fighter && fighter.rank) || snap.rank || '自創武將');
+    setVal('ownerAdminArenaPower', (fighter && fighter.arenaPower) || snap.arenaPower || score.arenaPower || '');
+    setVal('ownerAdminScore', score.score || 0);
+    setVal('ownerAdminWin', score.win || 0);
+    setVal('ownerAdminLose', score.lose || 0);
+    setVal('ownerAdminFights', score.fights || 0);
+    setVal('ownerAdminCurrentStreak', score.currentStreak || 0);
+    setVal('ownerAdminBestStreak', score.bestStreak || 0);
+    setVal('ownerAdminBanPreset', ban ? (ban.category || '') : '');
+    setVal('ownerAdminBanReason', ban ? (ban.reason || '') : '');
+    setVal('ownerAdminBanStatus', ban ? '已封號禁賽' : '未封號');
+    setVal('ownerAdminBanAt', ban ? (cyberOwnerFormatAdminTime(ban.time) || '') : '');
+    setVal('ownerAdminBanBy', ban ? (cyberOwnerGetBanByText(ban) || '') : '');
+    setVal('ownerAdminBanCategory', ban ? (ban.category || '') : '');
+    const banHistory = state.banHistory && state.banHistory[key] ? state.banHistory[key] : [];
+    setVal('ownerAdminRawJson', JSON.stringify({ arenaKey: key, playerId, fighter, score, ban, banHistory, snapshot: snap }, null, 2));
+    cyberRefreshOwnerArenaAdminUI();
+}
+
+function cyberOwnerGetSelectedKeyOrAlert() {
+    if (!cyberIsRoomOwner()) { alert('只有群主登入後可使用此後台。'); return ''; }
+    const key = document.getElementById('ownerAdminSelectedKey')?.value || '';
+    if (!key) alert('請先在左側名冊選擇一名玩家 / 武將。');
+    return key;
+}
+
+function cyberOwnerApplyPlayerChanges() {
+    const key = cyberOwnerGetSelectedKeyOrAlert();
+    if (!key) return;
+    const state = cyberGetArenaState();
+    const fighter = (state.roster || {})[key] || null;
+    const score = (state.scores || {})[key] || { arenaKey: key, rosterKey: key, name: cyberArenaNameFromKey(key), owner: '' };
+    const power = Math.max(1, Math.floor(Number(document.getElementById('ownerAdminPower')?.value || (fighter && fighter.power) || 1)));
+    const level = Math.max(1, Math.floor(Number(document.getElementById('ownerAdminLevel')?.value || (fighter && fighter.level) || 1)));
+    const rank = document.getElementById('ownerAdminRank')?.value || (fighter && fighter.rank) || '自創武將';
+    const currentTitle = document.getElementById('ownerAdminCurrentTitle')?.value || '';
+    if (!state.adminOverrides) state.adminOverrides = {};
+    state.adminOverrides[key] = { power, level, rank, currentTitle, updatedAt: Date.now(), by: CYBER_OWNER_EMAIL };
+
+    let edited = fighter ? { ...fighter } : null;
+    if (edited) {
+        edited.power = power;
+        edited.level = level;
+        edited.rank = rank;
+        edited.currentTitle = currentTitle;
+        edited = cyberApplyOwnerAdminOverrideToFighter(edited, state, key);
+        state.roster[key] = edited;
+        if (state.champion && cyberGetFighterArenaKey(state.champion) === key) state.champion = edited;
+    }
+
+    state.scores[key] = {
+        ...score,
+        arenaKey: key,
+        rosterKey: key,
+        name: (edited && edited.name) || score.name || cyberArenaNameFromKey(key),
+        owner: (edited && edited.owner) || score.owner || '',
+        power,
+        arenaPower: edited ? edited.arenaPower : score.arenaPower,
+        currentTitle,
+        score: Math.max(0, Math.floor(Number(document.getElementById('ownerAdminScore')?.value || 0))),
+        win: Math.max(0, Math.floor(Number(document.getElementById('ownerAdminWin')?.value || 0))),
+        lose: Math.max(0, Math.floor(Number(document.getElementById('ownerAdminLose')?.value || 0))),
+        fights: Math.max(0, Math.floor(Number(document.getElementById('ownerAdminFights')?.value || 0))),
+        currentStreak: Math.max(0, Math.floor(Number(document.getElementById('ownerAdminCurrentStreak')?.value || 0))),
+        bestStreak: Math.max(0, Math.floor(Number(document.getElementById('ownerAdminBestStreak')?.value || 0))),
+        lastAdminEdit: Date.now()
+    };
+
+    cyberSaveArenaState(state).then(() => {
+        cyberOwnerSelectArenaPlayer(key);
+        cyberSendSystemChat(`【群主後台】已修改天梯資料：${state.scores[key].name}`);
+        alert('資料已套用到公開擂台狀態。');
+    });
+}
+
+function cyberOwnerBanSelectedPlayer() {
+    const key = cyberOwnerGetSelectedKeyOrAlert();
+    if (!key) return;
+    const category = document.getElementById('ownerAdminBanPreset')?.value || '';
+    const reasonInput = (document.getElementById('ownerAdminBanReason')?.value || '').trim();
+    const reason = reasonInput || category || '群主封號禁賽';
+    const state = cyberGetArenaState();
+    const now = Date.now();
+    const by = cyberFirebaseUser?.email || CYBER_OWNER_EMAIL;
+    const byName = cyberFirebaseUser?.displayName || CYBER_OWNER_NAME || '群主';
+    const targetName = cyberArenaNameFromKey(key);
+    const banRecord = { banned: true, category, reason, time: now, by, byName, targetName, arenaKey: key };
+    if (!state.bans) state.bans = {};
+    if (!state.banHistory) state.banHistory = {};
+    if (!Array.isArray(state.banHistory[key])) state.banHistory[key] = [];
+    state.bans[key] = banRecord;
+    state.banHistory[key].push({ action: 'ban', ...banRecord });
+    state.banHistory[key] = state.banHistory[key].slice(-20);
+    if (state.scores && state.scores[key]) {
+        state.scores[key].banned = true;
+        state.scores[key].banReason = reason;
+        state.scores[key].banCategory = category;
+        state.scores[key].banAt = now;
+        state.scores[key].banBy = by;
+    }
+    if (state.champion && cyberGetFighterArenaKey(state.champion) === key) state.champion = null;
+    cyberSaveArenaState(state).then(() => {
+        cyberOwnerSelectArenaPlayer(key);
+        cyberSendArenaChat(`【群主裁定】${targetName} 已被封號禁賽，原因：${reason}。`);
+        alert(`已封號：${targetName}
+原因：${reason}
+時間：${cyberOwnerFormatAdminTime(now)}
+封號人：${by}`);
+    });
+}
+
+function cyberOwnerUnbanSelectedPlayer() {
+    const key = cyberOwnerGetSelectedKeyOrAlert();
+    if (!key) return;
+    const state = cyberGetArenaState();
+    const now = Date.now();
+    const by = cyberFirebaseUser?.email || CYBER_OWNER_EMAIL;
+    const byName = cyberFirebaseUser?.displayName || CYBER_OWNER_NAME || '群主';
+    const oldBan = state.bans && state.bans[key] ? { ...state.bans[key] } : null;
+    if (!state.banHistory) state.banHistory = {};
+    if (!Array.isArray(state.banHistory[key])) state.banHistory[key] = [];
+    state.banHistory[key].push({ action: 'unban', time: now, by, byName, oldBan, arenaKey: key, targetName: cyberArenaNameFromKey(key) });
+    state.banHistory[key] = state.banHistory[key].slice(-20);
+    if (state.bans) delete state.bans[key];
+    if (state.scores && state.scores[key]) {
+        delete state.scores[key].banned;
+        delete state.scores[key].banReason;
+        delete state.scores[key].banCategory;
+        delete state.scores[key].banAt;
+        delete state.scores[key].banBy;
+    }
+    cyberSaveArenaState(state).then(() => {
+        cyberOwnerSelectArenaPlayer(key);
+        cyberSendSystemChat(`【群主後台】已解除天梯封號：${cyberArenaNameFromKey(key)}`);
+        alert(`已解除封號。
+時間：${cyberOwnerFormatAdminTime(now)}
+處理人：${by}`);
+    });
+}
+
+function cyberOwnerClearCooldownSelected() {
+    const key = cyberOwnerGetSelectedKeyOrAlert();
+    if (!key) return;
+    const state = cyberGetArenaState();
+    if (state.cooldowns) delete state.cooldowns[key];
+    cyberSaveArenaState(state).then(() => {
+        cyberOwnerSelectArenaPlayer(key);
+        alert('已清除冷卻。');
+    });
+}
+
+function cyberOwnerDeleteSelectedRoster() {
+    const key = cyberOwnerGetSelectedKeyOrAlert();
+    if (!key) return;
+    if (!confirm('確定要把此玩家 / 武將移出公開擂台名冊？此操作不會刪除玩家本機存檔。')) return;
+    const state = cyberGetArenaState();
+    if (state.roster) delete state.roster[key];
+    if (state.champion && cyberGetFighterArenaKey(state.champion) === key) state.champion = null;
+    cyberSaveArenaState(state).then(() => {
+        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val ?? ''; };
+        ['ownerAdminSelectedKey','ownerAdminPlayerId','ownerAdminOwnerName','ownerAdminHeroName','ownerAdminCurrentTitle','ownerAdminPower','ownerAdminLevel','ownerAdminRank','ownerAdminArenaPower','ownerAdminScore','ownerAdminWin','ownerAdminLose','ownerAdminFights','ownerAdminCurrentStreak','ownerAdminBestStreak','ownerAdminBanReason','ownerAdminRawJson'].forEach(id => setVal(id, ''));
+        cyberRefreshOwnerArenaAdminUI();
+        alert('已移出公開擂台名冊。');
+    });
+}
 
 function cyberRefreshArenaUI() {
     const state = cyberGetArenaState();
@@ -10441,6 +11012,7 @@ function cyberRefreshArenaUI() {
         if (nickInput && !nickInput.value) nickInput.value = localStorage.getItem(CYBER_NICK_KEY) || CYBER_OWNER_NAME;
         cyberRefreshChatLog();
         cyberRefreshArenaUI();
+        if (typeof cyberRefreshOwnerArenaAdminUI === 'function') cyberRefreshOwnerArenaAdminUI();
         if (typeof cyberRefreshEnhancedGameUI === 'function') cyberRefreshEnhancedGameUI();
         if (typeof cyberRefreshThreeSystemsUI === 'function') cyberRefreshThreeSystemsUI();
         if (typeof cyberRefreshAdvancedSystemsUI === 'function') cyberRefreshAdvancedSystemsUI();
