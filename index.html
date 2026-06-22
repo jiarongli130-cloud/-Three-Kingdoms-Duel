@@ -7442,10 +7442,15 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         });
 
         let champion = src.champion || null;
+        if (typeof champion === 'string') {
+            const rawChampionKey = champion;
+            const rawChampionName = cyberArenaNameFromKey(champion);
+            champion = roster[rawChampionKey] || Object.values(roster).find(f => f.name === rawChampionName || f.name === rawChampionKey) || null;
+        }
         if (champion && champion.name) {
-            champion = cyberNormalizeArenaFighter(champion, champion.arenaKey || '');
+            champion = cyberNormalizeArenaFighter(champion, champion.arenaKey || champion.rosterKey || '');
             const champKey = cyberGetFighterArenaKey(champion);
-            const sameRoster = roster[champKey] || Object.values(roster).find(f => f.name === champion.name && f.ownerId === champion.ownerId);
+            const sameRoster = roster[champKey] || Object.values(roster).find(f => f.name === champion.name && (f.ownerId === champion.ownerId || !champion.ownerId));
             if (sameRoster) champion = { ...sameRoster, ...champion, arenaSnapshot: sameRoster.arenaSnapshot || champion.arenaSnapshot };
         }
 
@@ -7499,10 +7504,26 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         return g;
     }
 
+    function cyberLooksLikeLocalCustomGeneral(g) {
+        // 只要存在於本機 rpgGenerals / activeRpgGeneral，且有自創武將常見欄位，就視為本機可參戰角色。
+        // 這是天梯終極容錯：避免升級 playerID / 群主管理後台後，舊存檔因 ownerId 不合而無法登台。
+        return !!(g && g.name && (
+            g.isRPG === true ||
+            g.inventory !== undefined ||
+            g.harem !== undefined ||
+            g.statPoints !== undefined ||
+            g.skillPoints !== undefined ||
+            g.exp !== undefined ||
+            g.masteries !== undefined ||
+            g.masteredSkills !== undefined ||
+            g.localOwnerVersion !== undefined
+        ));
+    }
+
     function cyberIsLegacyLocalGeneral(g) {
         // 舊版自創武將可能沒有 ownerId / playerId / clientTag。
-        // 這類資料若存在本機 rpgGenerals / activeRpgGeneral，就視為本機本人擁有，避免升級 playerID 後擂台選單空白、不能登台或挑戰。
-        return !!(g && g.name && g.inventory !== undefined && !g.ownerId && !g.playerId && !g.clientTag);
+        // 只要是本機自創武將，就允許自動綁定目前 playerID。
+        return cyberLooksLikeLocalCustomGeneral(g) && (!g.ownerId || !g.playerId || !g.clientTag);
     }
 
     function cyberBindGeneralToCurrentPlayer(g) {
@@ -7511,15 +7532,19 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         g.ownerId = myId;
         g.playerId = myId;
         g.clientTag = myId;
-        g.owner = g.owner || cyberGetNick();
-        g.localOwnerVersion = 4;
+        g.owner = cyberGetNick();
+        g.localOwnerVersion = 5;
         g.lastLocalTouch = Date.now();
+        if (!Array.isArray(g.inventory)) g.inventory = [];
+        if (!Array.isArray(g.harem)) g.harem = [];
+        if (!Array.isArray(g.skills)) g.skills = [];
+        if (!Array.isArray(g.masteredSkills)) g.masteredSkills = [];
         return g;
     }
 
     function cyberIsMyOwnedGeneral(g) {
-        if (!g || !g.name || g.inventory === undefined) return false;
-        if (cyberIsLegacyLocalGeneral(g)) return true;
+        if (!g || !g.name) return false;
+        if (cyberLooksLikeLocalCustomGeneral(g)) return true;
         const aliases = cyberGetMyOwnerIdAliases();
         return aliases.includes(g.ownerId) || aliases.includes(g.playerId) || aliases.includes(g.clientTag);
     }
@@ -7530,34 +7555,34 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         let changed = false;
 
         Object.entries(saved || {}).forEach(([slotKey, g]) => {
-            if (!g || !g.name || g.inventory === undefined) return;
-            if (cyberIsLegacyLocalGeneral(g)) {
-                cyberBindGeneralToCurrentPlayer(g);
-                saved[slotKey] = g;
-                changed = true;
-            }
-            if (cyberIsMyOwnedGeneral(g)) map[g.name] = g;
+            if (!cyberLooksLikeLocalCustomGeneral(g)) return;
+            cyberBindGeneralToCurrentPlayer(g);
+            saved[slotKey] = g;
+            map[g.name] = g;
+            changed = true;
         });
 
-        if (changed) {
-            cyberWriteJson('rpgGenerals', saved);
-        }
-
         try {
-            if (activeRpgGeneral && cyberIsLegacyLocalGeneral(activeRpgGeneral)) {
+            if (cyberLooksLikeLocalCustomGeneral(activeRpgGeneral)) {
                 cyberBindGeneralToCurrentPlayer(activeRpgGeneral);
                 map[activeRpgGeneral.name] = activeRpgGeneral;
-            } else if (cyberIsMyOwnedGeneral(activeRpgGeneral)) {
-                map[activeRpgGeneral.name] = activeRpgGeneral;
+                saved[activeRpgGeneral.name] = activeRpgGeneral;
+                changed = true;
             }
         } catch(e) {}
 
         try {
             generals
-                .filter(g => cyberIsMyOwnedGeneral(g))
-                .forEach(g => map[g.name] = cyberBindGeneralToCurrentPlayer(g));
+                .filter(g => cyberLooksLikeLocalCustomGeneral(g))
+                .forEach(g => {
+                    cyberBindGeneralToCurrentPlayer(g);
+                    map[g.name] = g;
+                    saved[g.name] = g;
+                    changed = true;
+                });
         } catch(e) {}
 
+        if (changed) cyberWriteJson('rpgGenerals', saved);
         return map;
     }
 
@@ -7740,14 +7765,26 @@ box.innerHTML = pinnedHtml + arr.map(m => {
 
     function cyberRefreshMyArenaSnapshotForKey(state, arenaKey) {
         const locals = cyberGetLocalRpgGenerals();
-        const found = Object.values(locals).find(g => cyberArenaKey(g.ownerId || cyberGetMyOwnerId(), g.name) === arenaKey || g.name === arenaKey);
+        const wantedName = cyberArenaNameFromKey(arenaKey);
+        const myId = cyberGetMyOwnerId();
+        const found = Object.values(locals).find(g => {
+            if (!g || !g.name) return false;
+            const gKey = cyberArenaKey(g.ownerId || g.playerId || myId, g.name);
+            return gKey === arenaKey || g.name === arenaKey || g.name === wantedName;
+        });
         if (!found) return null;
-        const stamped = cyberStampMyGeneral(found);
+        const stamped = cyberBindGeneralToCurrentPlayer(found);
         let fresh = cyberCompactFighter(stamped);
         fresh = cyberApplyOwnerAdminOverrideToFighter(fresh, state, fresh.arenaKey);
         cyberRemoveLegacyArenaEntriesFor(state, fresh);
         state.roster[fresh.arenaKey] = fresh;
         if (state.champion && cyberGetFighterArenaKey(state.champion) === fresh.arenaKey) state.champion = fresh;
+
+        try {
+            const saved = cyberReadJson('rpgGenerals', {});
+            saved[stamped.name] = stamped;
+            cyberWriteJson('rpgGenerals', saved);
+        } catch(e) {}
         return fresh;
     }
 
@@ -7825,10 +7862,14 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         const sel = document.getElementById('arenaFighterSelect');
         const key = sel ? sel.value : '';
         if (!key) { alert('請先選擇一名自創武將。'); return; }
-        const fighters = cyberGetMyArenaFighterMap();
-        let fighter = fighters[key];
-        if (!fighter) { alert('這不是你本機擁有的自創武將，不能登台。'); return; }
         const state = cyberGetArenaState();
+        const fighters = cyberGetMyArenaFighterMap();
+        let fighter = fighters[key] || cyberRefreshMyArenaSnapshotForKey(state, key);
+        if (!fighter) {
+            const firstKey = Object.keys(fighters)[0];
+            fighter = firstKey ? fighters[firstKey] : null;
+        }
+        if (!fighter) { alert('這不是你本機擁有的自創武將，不能登台。請先喚醒或封存自己的自創武將。'); return; }
         fighter = cyberApplyOwnerAdminOverrideToFighter(fighter, state, cyberGetFighterArenaKey(fighter));
         const cd = cyberCanFight(fighter);
         if (!cd.ok) { alert(cyberArenaFailMessage(cd)); return; }
@@ -7963,6 +8004,10 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         if (!challengerKey) { alert('請先選擇一名自創武將。'); return; }
 
         const state = cyberGetArenaState();
+        if (state.champion && typeof state.champion === 'string') {
+            const champKey = state.champion;
+            state.champion = (state.roster || {})[champKey] || Object.values(state.roster || {}).find(f => f.name === cyberArenaNameFromKey(champKey) || f.name === champKey) || null;
+        }
         if (!state.champion || !state.champion.name) { cyberEnterArenaAsChampion(); return; }
 
         // 按「挑戰擂主」前，自動用本機最新角色資料重建快照，不需要玩家再手動按登錄。
@@ -7971,7 +8016,11 @@ box.innerHTML = pinnedHtml + arr.map(m => {
             const fighters = cyberGetMyArenaFighterMap();
             challenger = fighters[challengerKey];
         }
-        if (!challenger) { alert('這不是你本機擁有的自創武將，不能拿來挑戰。請先創建/喚醒/封存自己的武將。'); return; }
+        if (!challenger) {
+            const firstKey = Object.keys(cyberGetMyArenaFighterMap())[0];
+            challenger = firstKey ? cyberRefreshMyArenaSnapshotForKey(state, firstKey) || cyberGetMyArenaFighterMap()[firstKey] : null;
+        }
+        if (!challenger) { alert('這不是你本機擁有的自創武將，不能拿來挑戰。請先創建、喚醒或封存自己的武將。'); return; }
 
         challenger = cyberApplyOwnerAdminOverrideToFighter(challenger, state, cyberGetFighterArenaKey(challenger));
         const freshChallengerKey = cyberGetFighterArenaKey(challenger);
