@@ -223,7 +223,7 @@
             line-height: 1.55;
             box-sizing: border-box;
         }
-        #arenaBattleFeed { height: 150px; }
+        #arenaBattleFeed { height: 320px; }
         #arenaRankBoard { height: 260px; }
         .chat-row { border-bottom: 1px solid #222; padding: 4px 0; word-break: break-word; }
         .chat-row .name { color: #ffd700; font-weight: bold; }
@@ -7280,77 +7280,126 @@ box.innerHTML = pinnedHtml + arr.map(m => {
 
         const logs = [];
         const countOf = (obj, key) => Array.isArray(obj && obj[key]) ? obj[key].length : 0;
+        const snapOf = (fighter) => cyberGetArenaSnapshotSource(fighter) || {};
+        const itemName = (x) => typeof x === 'string' ? x : (x && x.name ? x.name : '');
+        const pick = (arr, fallback = '') => {
+            const pool = (arr || []).filter(Boolean);
+            return pool.length ? pool[Math.floor(Math.random() * pool.length)] : fallback;
+        };
         const arenaSummary = (fighter, stats) => {
-            const snap = cyberGetArenaSnapshotSource(fighter);
+            const snap = snapOf(fighter);
             const titleText = stats.currentTitle ? `｜稱號：${stats.currentTitle}` : '';
             const effectText = cyberArenaStatsEffectText(stats);
             return `🧮【完整養成戰力】${fighter.name}｜基礎武力 ${stats.basePower}｜擂台戰力 ${stats.power}｜HP ${stats.maxHp}${titleText}｜技能 ${countOf(snap,'skills')}｜拜師 ${countOf(snap,'masteredSkills')}｜神兵 ${countOf(snap,'inventory')}｜紅顏 ${countOf(snap,'harem')}${effectText ? `｜${effectText}` : ''}`;
         };
+        const hpText = (fighter) => `${Math.max(0, Math.floor(fighter.hp))}/${fighter.maxHp}`;
+        const movePool = ['踏步搶中線', '旋身壓上', '長驅直入', '側翼切入', '連環急攻', '怒喝突進', '反手搶攻', '貼身猛擊', '破陣衝鋒'];
+        const weaponPool = ['槍影如龍', '刀光裂陣', '戟風橫掃', '重拳破甲', '劍氣直入', '鐵騎踏陣', '鋒刃逼命', '雷霆一擊'];
+        const defensePool = ['沉肩硬接', '橫兵封門', '退半步卸力', '護住命門', '借勢翻身', '提氣穩住下盤'];
+
+        logs.push(`⚔️【天梯擂台開戰】${champion.name} 守擂迎戰 ${challenger.name}。勝者留場，敗者冷卻。`);
         logs.push(arenaSummary(champion, aStats));
         logs.push(arenaSummary(challenger, bStats));
         if (revengeBoostA > 0) logs.push(`🩸【血仇加成】${a.name} 怨氣燃燒，本場臨時攻擊力 +${Math.round(revengeBoostA * 100)}%！`);
         if (revengeBoostB > 0) logs.push(`🩸【血仇加成】${b.name} 怨氣燃燒，本場臨時攻擊力 +${Math.round(revengeBoostB * 100)}%！`);
         if (aStats.titleStats && cyberBuildTitleEffectsList(aStats.titleStats).length) logs.push(`🏷️【稱號生效】${aStats.currentTitle}｜${a.name}：${cyberBuildTitleEffectsList(aStats.titleStats).join('、')}`);
         if (bStats.titleStats && cyberBuildTitleEffectsList(bStats.titleStats).length) logs.push(`🏷️【稱號生效】${bStats.currentTitle}｜${b.name}：${cyberBuildTitleEffectsList(bStats.titleStats).join('、')}`);
+        logs.push(`🔥【戰鬥過程】雙方氣勢升至極限，開始逐合交鋒。`);
 
         const rate = (v, max = 0.85) => Math.max(0, Math.min(max, Number(v || 0)));
         const critRate = (fighter) => Math.min(0.75, Math.min(0.32, (fighter.power || 1) / 1200) + rate(fighter.fullStats.critBonus, 0.45));
+        const activeSkillText = (fighter) => {
+            const snap = snapOf(fighter);
+            const skillList = [
+                ...(Array.isArray(snap.skills) ? snap.skills : []),
+                ...(Array.isArray(snap.masteredSkills) ? snap.masteredSkills : [])
+            ].map(itemName).filter(Boolean);
+            if (skillList.length && Math.random() < 0.38) return `發動「${pick(skillList)}」`;
+            const invList = (Array.isArray(snap.inventory) ? snap.inventory : []).map(itemName).filter(Boolean);
+            if (invList.length && Math.random() < 0.28) return `祭出「${pick(invList)}」`;
+            return pick(weaponPool, '正面強攻');
+        };
         const applyRevive = (fighter) => {
             if (fighter.hp > 0) return false;
             const list = fighter.fullStats && fighter.fullStats.revives ? fighter.fullStats.revives : [];
             if (!list.length) return false;
             const r = list.pop();
             fighter.hp = Math.min(fighter.maxHp, Math.max(1, Number(r.hp || 1)));
-            logs.push(`✨【逆轉生死】${fighter.name} 觸發「${r.name || '復活效果'}」，恢復至 ${Math.floor(fighter.hp)} HP 繼續守擂！`);
+            logs.push(`✨【逆轉生死】${fighter.name} 觸發「${r.name || '復活效果'}」，恢復至 ${Math.floor(fighter.hp)} HP，硬是從敗局邊緣殺回擂台！`);
             return true;
         };
-        const endRoundRegen = (fighter) => {
+        const endRoundRegen = (fighter, roundLabel) => {
             const regen = Number(fighter.fullStats.hpRegen || 0);
             if (regen > 0 && fighter.hp > 0 && fighter.hp < fighter.maxHp) {
                 const before = fighter.hp;
                 fighter.hp = Math.min(fighter.maxHp, fighter.hp + regen);
                 const healed = Math.floor(fighter.hp - before);
-                if (healed > 0) logs.push(`💖【紅顏回血】${fighter.name} 回復 ${healed} HP。`);
+                if (healed > 0) logs.push(`💖【第${roundLabel}合・紅顏回血】${fighter.name} 氣息回穩，回復 ${healed} HP，目前 HP ${hpText(fighter)}。`);
             }
         };
-        const attackOnce = (attacker, defender, label) => {
+        const attackOnce = (attacker, defender, roundLabel, orderLabel) => {
+            const opening = pick(movePool, '搶攻');
+            const activeText = activeSkillText(attacker);
             let dmg = Math.max(3, Math.floor((attacker.power || 1) / 18) + Math.floor(Math.random() * 9));
             const crit = Math.random() < critRate(attacker);
             if (crit) dmg *= 2;
 
+            logs.push(`第${roundLabel}合・${orderLabel}：${attacker.name} ${opening}，${activeText}，直逼 ${defender.name}！`);
+
             if (Math.random() < rate(defender.fullStats.dodgeBonus)) {
-                logs.push(`第${label}合：${defender.name} 觸發閃避，完全避開 ${attacker.name} 的攻勢。`);
+                logs.push(`🌀【第${roundLabel}合・閃避】${defender.name} 身影一晃，避開 ${attacker.name} 的殺招，毫髮無傷。`);
                 return;
             }
+
+            let blocked = false;
             if (Math.random() < rate(defender.fullStats.blockChance)) {
-                dmg = Math.floor(dmg * 0.4);
-                logs.push(`第${label}合：${defender.name} 觸發格擋，只承受 ${dmg} 點震傷。`);
+                blocked = true;
+                dmg = Math.max(1, Math.floor(dmg * 0.4));
+                logs.push(`🛡️【第${roundLabel}合・格擋】${defender.name} ${pick(defensePool, '格擋')}，硬吃衝擊，只承受 ${dmg} 點震傷。`);
             }
 
-            dmg = Math.max(0, Math.floor(dmg * (1 + Math.max(0, Number(attacker.fullStats.armorPen || 0)))));
+            const armorPen = Math.max(0, Number(attacker.fullStats.armorPen || 0));
+            const rawBeforePen = dmg;
+            dmg = Math.max(0, Math.floor(dmg * (1 + armorPen)));
             defender.hp -= dmg;
-            if (crit) logs.push(`第${label}合：${attacker.name} 觸發暴擊，造成 ${dmg} 點傷害！`);
+
+            const tags = [];
+            if (crit) tags.push('暴擊');
+            if (armorPen > 0) tags.push(`破甲+${Math.round(armorPen * 100)}%`);
+            if (blocked) tags.push('被格擋後仍破防');
+            const tagText = tags.length ? `（${tags.join('／')}）` : '';
+            if (crit) {
+                logs.push(`💥【第${roundLabel}合・暴擊】${attacker.name} 攻勢爆裂${tagText}，造成 ${dmg} 點傷害！${defender.name} HP ${hpText(defender)}。`);
+            } else if (armorPen > 0 && dmg > rawBeforePen) {
+                logs.push(`⚔️【第${roundLabel}合・破甲命中】${attacker.name} 撕開防線${tagText}，造成 ${dmg} 點傷害，${defender.name} HP ${hpText(defender)}。`);
+            } else {
+                logs.push(`⚔️【第${roundLabel}合・命中】${attacker.name} 斬出有效傷害 ${dmg} 點，${defender.name} HP ${hpText(defender)}。`);
+            }
 
             if (attacker.fullStats.lifesteal && dmg > 0) {
                 const heal = Math.floor(dmg * Math.max(0, Number(attacker.fullStats.lifesteal || 0)));
-                if (heal > 0 && attacker.hp > 0) attacker.hp = Math.min(attacker.maxHp, attacker.hp + heal);
+                if (heal > 0 && attacker.hp > 0) {
+                    attacker.hp = Math.min(attacker.maxHp, attacker.hp + heal);
+                    logs.push(`🩸【第${roundLabel}合・吸血】${attacker.name} 借勢回氣 ${heal} HP，目前 HP ${hpText(attacker)}。`);
+                }
             }
             if (defender.hp <= 0) applyRevive(defender);
         };
 
         let round = 1;
         while (a.hp > 0 && b.hp > 0 && round <= 120) {
+            logs.push(`—— 第 ${round} 合 ——`);
             // 雙方每回合互攻一次；先手隨機，避免固定擂主或挑戰者永遠先出手。
             if (Math.random() < 0.5) {
-                attackOnce(a, b, round);
-                if (b.hp > 0) attackOnce(b, a, round);
+                attackOnce(a, b, round, '先手');
+                if (b.hp > 0) attackOnce(b, a, round, '反擊');
             } else {
-                attackOnce(b, a, round);
-                if (a.hp > 0) attackOnce(a, b, round);
+                attackOnce(b, a, round, '先手');
+                if (a.hp > 0) attackOnce(a, b, round, '反擊');
             }
-            endRoundRegen(a);
-            endRoundRegen(b);
-            if (round % 3 === 1) logs.push(`第${round}合結算：${a.name} HP ${Math.max(0,Math.floor(a.hp))}/${a.maxHp}，${b.name} HP ${Math.max(0,Math.floor(b.hp))}/${b.maxHp}`);
+            endRoundRegen(a, round);
+            endRoundRegen(b, round);
+            logs.push(`📊【第${round}合結算】${a.name} HP ${hpText(a)}｜${b.name} HP ${hpText(b)}`);
             round++;
         }
 
@@ -7358,22 +7407,21 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         if (a.hp === b.hp) {
             winner = (a.power >= b.power) ? champion : challenger;
             loser = (winner.name === champion.name) ? challenger : champion;
+            logs.push(`⚖️【極限判定】雙方鏖戰至極限，HP 相同；系統依擂台戰力判定 ${winner.name} 佔上風。`);
         } else if (a.hp > b.hp) {
             winner = champion; loser = challenger;
         } else {
             winner = challenger; loser = champion;
         }
-        logs.push(`🏆 勝者：${winner.name}｜敗者：${loser.name}`);
+        const finalA = winner.name === champion.name ? a : b;
+        const finalL = loser.name === champion.name ? a : b;
+        logs.push(`🏆【擂台結果】勝者：${winner.name}｜敗者：${loser.name}`);
+        logs.push(`📌【戰鬥摘要】共鏖戰 ${round - 1} 合｜${winner.name} 剩餘 HP ${Math.max(0, Math.floor(finalA.hp))}｜${loser.name} 最終 HP ${Math.max(0, Math.floor(finalL.hp))}`);
         return { winner, loser, logs };
     }
 
-    // ==============================================================
-    // ⚔️ 挑戰擂主前：自動更新自己的最新擂台快照
-    // 只更新「本機本人擁有」且正在挑戰的自創武將；不改擂台主、不改他人資料。
-    // 目的：玩家換稱號、拜師、拿神兵、紅顏、升級、分配武力後，
-    //      不必重按「登錄我的武將」，按挑戰前會自動把最新狀態封存進 roster。
-    // ==============================================================
-    function cyberRefreshMyArenaSnapshotBeforeChallenge(state, fighterName) {
+    // ============================================================== 
+function cyberRefreshMyArenaSnapshotBeforeChallenge(state, fighterName) {
         if (!state || !fighterName) return null;
 
         let latest = null;
