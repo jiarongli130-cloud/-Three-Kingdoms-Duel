@@ -6619,7 +6619,7 @@
             status.innerText = `目前登入：${cyberFirebaseUser.email}${cyberIsFirebaseRoomOwner ? '｜群主權限已啟用' : '｜一般帳號，無群主權限'}`;
             status.style.color = cyberIsFirebaseRoomOwner ? '#ffd700' : '#aaa';
         } else {
-            status.innerText = '尚未登入 Google 群主帳號｜playerID：' + cyberGetPlayerId();
+            status.innerText = '尚未登入 Google 群主帳號';
             status.style.color = '#aaa';
         }
         if (typeof cyberRefreshCustomTitleAdminUI === 'function') cyberRefreshCustomTitleAdminUI();
@@ -6743,8 +6743,7 @@
     function cyberGetArenaState() {
         const base = cyberGetDefaultArenaState();
         const state = cyberFirebaseReady ? (cyberRemoteArenaState || {}) : cyberReadJson(CYBER_ARENA_KEY, base);
-        const merged = { ...base, ...state, scores: state.scores || {}, cooldowns: state.cooldowns || {}, roster: state.roster || {} };
-        return cyberNormalizeArenaState(merged);
+        return { ...base, ...state, scores: state.scores || {}, cooldowns: state.cooldowns || {}, roster: state.roster || {} };
     }
 
     function cyberSaveArenaState(state) {
@@ -7001,155 +7000,34 @@ box.innerHTML = pinnedHtml + arr.map(m => {
     }
 
     /* ==============================================================
-       🛡️ 擂台身份主鍵升級：playerID::武將名
-       1. 每台裝置永久產生 playerID，不再只用武將名當公開擂台主鍵。
-       2. roster / scores / cooldowns 皆以 arenaKey = playerID::武將名 儲存，避免同名武將互相覆蓋。
-       3. 玩家按「挑戰擂主」前，會自動用本機最新資料重建自己的擂台快照。
+       🛡️ 擂台防冒名補丁：選將只讀取「本機本人建立的自創武將」
+       不能再從公開 roster 選到別人登錄過的武將。
        ============================================================== */
-    const CYBER_PLAYER_ID_KEY = 'cyberPlayerId_v1';
-
-    function cyberGetPlayerId() {
-        let id = localStorage.getItem(CYBER_PLAYER_ID_KEY);
-        if (!id) {
-            id = 'P_' + Math.random().toString(36).slice(2, 10).toUpperCase() + '_' + Date.now().toString(36).toUpperCase();
-            localStorage.setItem(CYBER_PLAYER_ID_KEY, id);
-        }
-        return id;
-    }
-
     function cyberGetMyOwnerId() {
-        return cyberGetPlayerId();
-    }
-
-    function cyberGetMyOwnerIdAliases() {
-        const arr = [cyberGetPlayerId()];
-        try {
-            const legacy = localStorage.getItem('cyberClientIpTag_v1');
-            if (legacy) arr.push(legacy);
-        } catch(e) {}
-        return [...new Set(arr.filter(Boolean))];
-    }
-
-    function cyberArenaSafeKeyPart(v) {
-        return String(v || '').trim()
-            .replace(/[.#$\[\]\/]/g, '＿')
-            .replace(/\s+/g, ' ')
-            || 'unknown';
-    }
-
-    function cyberArenaKey(ownerId, heroName) {
-        return `${cyberArenaSafeKeyPart(ownerId || 'unknown')}::${cyberArenaSafeKeyPart(heroName || '無名武者')}`;
-    }
-
-    function cyberArenaNameFromKey(key) {
-        const str = String(key || '');
-        return str.includes('::') ? str.split('::').slice(1).join('::') : str;
-    }
-
-    function cyberGetFighterArenaKey(fighterOrKey, fallbackOwnerId = '') {
-        if (!fighterOrKey) return '';
-        if (typeof fighterOrKey === 'string') {
-            return fighterOrKey.includes('::') ? fighterOrKey : cyberArenaKey(fallbackOwnerId || cyberGetMyOwnerId(), fighterOrKey);
-        }
-        return fighterOrKey.arenaKey || fighterOrKey.rosterKey || cyberArenaKey(
-            fighterOrKey.playerId || fighterOrKey.ownerId || fighterOrKey.clientTag || fallbackOwnerId || 'unknown',
-            fighterOrKey.name || fighterOrKey.displayName || fighterOrKey.heroName || '無名武者'
-        );
-    }
-
-    function cyberGetFighterDisplayName(fighterOrKey) {
-        if (!fighterOrKey) return '';
-        if (typeof fighterOrKey === 'string') return cyberArenaNameFromKey(fighterOrKey);
-        return fighterOrKey.name || fighterOrKey.displayName || fighterOrKey.heroName || cyberArenaNameFromKey(fighterOrKey.arenaKey || '');
-    }
-
-    function cyberGetFighterOwnerName(fighter) {
-        if (!fighter || typeof fighter === 'string') return '';
-        return fighter.owner || fighter.nick || fighter.playerName || '';
-    }
-
-    function cyberArenaFighterLabel(fighter) {
-        if (!fighter) return '';
-        const name = cyberGetFighterDisplayName(fighter);
-        const owner = cyberGetFighterOwnerName(fighter);
-        const ownerId = fighter.ownerId || fighter.playerId || '';
-        const ownerTail = owner ? `｜玩家 ${owner}` : (ownerId ? `｜ID ${String(ownerId).slice(0, 10)}` : '');
-        return `${name}${ownerTail}`;
-    }
-
-    function cyberNormalizeArenaFighter(fighter, rawKey = '') {
-        if (!fighter || typeof fighter !== 'object') return fighter;
-        const f = { ...fighter };
-        const nameFromKey = rawKey ? cyberArenaNameFromKey(rawKey) : '';
-        f.name = f.name || f.displayName || f.heroName || nameFromKey || '無名武者';
-        f.ownerId = f.ownerId || f.playerId || f.clientTag || (String(rawKey).includes('::') ? String(rawKey).split('::')[0] : 'legacy');
-        f.playerId = f.playerId || f.ownerId;
-        f.clientTag = f.clientTag || f.ownerId;
-        f.arenaKey = f.arenaKey || f.rosterKey || (String(rawKey).includes('::') ? rawKey : cyberArenaKey(f.ownerId, f.name));
-        f.rosterKey = f.arenaKey;
-        f.displayName = f.displayName || f.name;
-        if (f.arenaSnapshot && typeof f.arenaSnapshot === 'object') {
-            f.arenaSnapshot = { ...f.arenaSnapshot, name: f.name, owner: f.owner, ownerId: f.ownerId, playerId: f.playerId, arenaKey: f.arenaKey, rosterKey: f.arenaKey };
-        }
-        return f;
-    }
-
-    function cyberNormalizeArenaState(state) {
-        const base = cyberGetDefaultArenaState();
-        const src = { ...base, ...(state || {}) };
-        const roster = {};
-        Object.entries(src.roster || {}).forEach(([rawKey, rawFighter]) => {
-            if (!rawFighter) return;
-            const f = cyberNormalizeArenaFighter(rawFighter, rawKey);
-            roster[f.arenaKey] = f;
-        });
-
-        let champion = src.champion || null;
-        if (champion && champion.name) {
-            champion = cyberNormalizeArenaFighter(champion, champion.arenaKey || '');
-            const champKey = cyberGetFighterArenaKey(champion);
-            const sameRoster = roster[champKey] || Object.values(roster).find(f => f.name === champion.name && f.ownerId === champion.ownerId);
-            if (sameRoster) champion = { ...sameRoster, ...champion, arenaSnapshot: sameRoster.arenaSnapshot || champion.arenaSnapshot };
-        }
-
-        const scores = {};
-        Object.entries(src.scores || {}).forEach(([rawKey, score]) => {
-            if (!score) return;
-            const related = roster[rawKey] || Object.values(roster).find(f => f.name === score.name) || null;
-            const key = (score.arenaKey || score.rosterKey || (String(rawKey).includes('::') ? rawKey : (related ? related.arenaKey : rawKey)));
-            scores[key] = { ...score, arenaKey: key, rosterKey: key, name: score.name || cyberArenaNameFromKey(key), owner: score.owner || (related && related.owner) || '' };
-        });
-
-        const cooldowns = {};
-        Object.entries(src.cooldowns || {}).forEach(([rawKey, value]) => {
-            const related = roster[rawKey] || Object.values(roster).find(f => f.name === rawKey) || null;
-            const key = String(rawKey).includes('::') ? rawKey : (related ? related.arenaKey : rawKey);
-            cooldowns[key] = value;
-        });
-
-        return { ...src, roster, champion, scores, cooldowns };
+        // 直接沿用聊天室的裝置標記；同一台裝置會固定，不會跟 Firebase 公開名冊混淆。
+        return cyberGetClientIpTag();
     }
 
     function cyberStampMyGeneral(g) {
         if (!g || !g.name) return g;
         g.ownerId = cyberGetMyOwnerId();
-        g.playerId = g.ownerId;
         g.owner = cyberGetNick();
-        g.localOwnerVersion = 3;
+        g.localOwnerVersion = 2;
         g.lastLocalTouch = Date.now();
         return g;
     }
 
     function cyberIsMyOwnedGeneral(g) {
         if (!g || !g.name || g.inventory === undefined) return false;
-        const aliases = cyberGetMyOwnerIdAliases();
-        return aliases.includes(g.ownerId) || aliases.includes(g.playerId) || aliases.includes(g.clientTag);
+        return g.ownerId === cyberGetMyOwnerId();
     }
 
     function cyberGetLocalRpgGenerals() {
         const saved = cyberReadJson('rpgGenerals', {});
         const map = {};
 
+        // 只允許有 ownerId 且屬於本裝置的武將進入「我的擂台選將」。
+        // 舊版未蓋 ownerId 的存檔不自動當作本人，避免共用電腦或公開資料被誤認成自己的武將。
         Object.values(saved || {}).forEach(g => {
             if (cyberIsMyOwnedGeneral(g)) map[g.name] = g;
         });
@@ -7181,8 +7059,7 @@ box.innerHTML = pinnedHtml + arr.map(m => {
 
     function cyberBuildArenaBattleSnapshot(g, ownerName = cyberGetNick()) {
         if (!g || !g.name) return null;
-        const ownerId = g.ownerId || g.playerId || cyberGetMyOwnerId();
-        const arenaKey = cyberArenaKey(ownerId, g.name);
+        const ownerId = g.ownerId || cyberGetMyOwnerId();
         const currentTitle = g.currentTitle || cyberGetHeroCurrentTitleName(g.name);
         let titleStats = null;
         if (currentTitle && typeof cyberGetTitleInfo === 'function') {
@@ -7190,15 +7067,11 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         }
 
         const snapshot = {
-            schema: 'arenaFullSnapshot_v2_playerKey',
+            schema: 'arenaFullSnapshot_v1',
             name: g.name,
-            displayName: g.name,
             owner: ownerName,
             ownerId,
-            playerId: ownerId,
             clientTag: ownerId,
-            arenaKey,
-            rosterKey: arenaKey,
             power: Number(g.power || 1),
             rank: g.rank || (g.isRPG ? '異界修羅' : '自創武將'),
             level: Number(g.level || 1),
@@ -7240,8 +7113,7 @@ box.innerHTML = pinnedHtml + arr.map(m => {
     function cyberGetArenaSnapshotSource(fighter) {
         const snap = fighter && fighter.arenaSnapshot ? fighter.arenaSnapshot : fighter;
         if (!snap) return {};
-        const key = cyberGetFighterArenaKey(fighter || snap);
-        return { ...snap, name: fighter.name || snap.name, owner: fighter.owner || snap.owner, ownerId: fighter.ownerId || snap.ownerId || snap.playerId, playerId: fighter.playerId || snap.playerId || snap.ownerId, arenaKey: key, rosterKey: key };
+        return { ...snap, name: fighter.name || snap.name, owner: fighter.owner || snap.owner, ownerId: fighter.ownerId || snap.ownerId };
     }
 
     function cyberBuildArenaFullCombatStats(fighter) {
@@ -7257,46 +7129,39 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         };
 
         const stats = parseCombatStats(gen);
-        const titleName = source.currentTitle || '';
-        let titleStats = source.titleStats || null;
-        if (!titleStats && titleName && typeof cyberGetTitleInfo === 'function') titleStats = cyberGetTitleInfo(titleName);
-        titleStats = titleStats ? cyberNormalizeTitleInfo(titleStats, titleName) : null;
-
+        const titleName = source.currentTitle || (source.titleStats && source.titleStats.name) || '';
+        let titleStats = null;
+        if (source.titleStats) {
+            titleStats = cyberNormalizeTitleInfo(source.titleStats, titleName);
+        } else if (titleName && typeof cyberGetTitleInfo === 'function') {
+            titleStats = cyberNormalizeTitleInfo(cyberGetTitleInfo(titleName), titleName);
+        }
         if (titleStats) {
-            stats.powerBonus = (stats.powerBonus || 0) + (titleStats.powerBonus || 0);
-            stats.critBonus = (stats.critBonus || 0) + (titleStats.critBonus || 0);
-            stats.dodgeBonus = (stats.dodgeBonus || 0) + (titleStats.dodgeBonus || 0);
-            stats.blockChance = (stats.blockChance || 0) + (titleStats.blockChance || 0);
-            stats.armorPen = (stats.armorPen || 0) + (titleStats.armorPen || 0);
-            stats.lifesteal = (stats.lifesteal || 0) + (titleStats.lifesteal || 0);
-            stats.maxHpBonus = (stats.maxHpBonus || 0) + (titleStats.maxHpBonus || 0);
-            stats.currentTitle = titleName;
+            stats.powerBonus += titleStats.powerBonus || 0;
+            stats.critBonus += titleStats.critBonus || 0;
+            stats.dodgeBonus += titleStats.dodgeBonus || 0;
+            stats.blockChance += titleStats.blockChance || 0;
+            stats.armorPen += titleStats.armorPen || 0;
+            stats.lifesteal += titleStats.lifesteal || 0;
+            stats.maxHpBonus += titleStats.maxHpBonus || 0;
         }
 
-        stats.basePower = Number(source.power || 1);
-        stats.power = stats.basePower + (stats.powerBonus || 0);
-        stats.maxHp = Math.max(80, 120 + Math.floor((stats.power || 1) / 4) + (stats.maxHpBonus || 0));
-        stats.hpRegen = Math.max(0, Number(stats.hpRegen || 0));
-        stats.revives = Array.isArray(stats.revives) ? stats.revives.slice(0, 5) : [];
-        return stats;
+        const basePower = Number(source.power || fighter.power || 1);
+        const power = Math.max(1, Math.floor(basePower + (stats.powerBonus || 0)));
+        const maxHp = Math.max(1, Math.floor(120 + Math.floor(power / 4) + (stats.maxHpBonus || 0)));
+        return { ...stats, basePower, power, maxHp, currentTitle: titleName, titleStats, revives: cyberArenaClone(stats.revives || [], []) };
     }
 
     function cyberCompactFighter(g, ownerName = cyberGetNick()) {
-        const ownerId = g.ownerId || g.playerId || cyberGetMyOwnerId();
-        const arenaKey = cyberArenaKey(ownerId, g.name);
-        const snapshot = cyberBuildArenaBattleSnapshot({ ...g, ownerId, playerId: ownerId }, ownerName);
+        const ownerId = g.ownerId || cyberGetMyOwnerId();
+        const snapshot = cyberBuildArenaBattleSnapshot(g, ownerName);
         return {
             name: g.name,
-            displayName: g.name,
             owner: ownerName,
             ownerId,
-            playerId: ownerId,
             clientTag: ownerId,
-            arenaKey,
-            rosterKey: arenaKey,
             power: Number(g.power || 1),
             arenaPower: snapshot && snapshot.arenaPower ? snapshot.arenaPower : Number(g.power || 1),
-            arenaMaxHp: snapshot && snapshot.arenaMaxHp ? snapshot.arenaMaxHp : 0,
             rank: g.rank || (g.isRPG ? '異界修羅' : '自創武將'),
             level: Number(g.level || 1),
             skills: Array.isArray(g.skills) ? g.skills.slice(0, 6) : [],
@@ -7311,10 +7176,7 @@ box.innerHTML = pinnedHtml + arr.map(m => {
 
     function cyberGetMyArenaFighterMap() {
         return Object.fromEntries(
-            Object.entries(cyberGetLocalRpgGenerals()).map(([k, v]) => {
-                const compact = cyberCompactFighter(cyberStampMyGeneral(v));
-                return [compact.arenaKey, compact];
-            })
+            Object.entries(cyberGetLocalRpgGenerals()).map(([k, v]) => [k, cyberCompactFighter(v)])
         );
     }
 
@@ -7328,28 +7190,6 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         return cyberGetPublicArenaFighterMap();
     }
 
-    function cyberRemoveLegacyArenaEntriesFor(state, fighter) {
-        if (!state || !state.roster || !fighter) return;
-        const key = cyberGetFighterArenaKey(fighter);
-        Object.keys(state.roster).forEach(k => {
-            const f = cyberNormalizeArenaFighter(state.roster[k], k);
-            if (k !== key && f.name === fighter.name && f.ownerId === fighter.ownerId) delete state.roster[k];
-        });
-        if (state.roster[fighter.name]) delete state.roster[fighter.name];
-    }
-
-    function cyberRefreshMyArenaSnapshotForKey(state, arenaKey) {
-        const locals = cyberGetLocalRpgGenerals();
-        const found = Object.values(locals).find(g => cyberArenaKey(g.ownerId || cyberGetMyOwnerId(), g.name) === arenaKey || g.name === arenaKey);
-        if (!found) return null;
-        const stamped = cyberStampMyGeneral(found);
-        const fresh = cyberCompactFighter(stamped);
-        cyberRemoveLegacyArenaEntriesFor(state, fresh);
-        state.roster[fresh.arenaKey] = fresh;
-        if (state.champion && cyberGetFighterArenaKey(state.champion) === fresh.arenaKey) state.champion = fresh;
-        return fresh;
-    }
-
     function cyberRegisterMyGenerals() {
         const locals = cyberGetLocalRpgGenerals();
         const names = Object.keys(locals);
@@ -7360,12 +7200,10 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         const state = cyberGetArenaState();
         names.forEach(name => {
             const owned = cyberStampMyGeneral(locals[name]);
-            const fighter = cyberCompactFighter(owned);
-            cyberRemoveLegacyArenaEntriesFor(state, fighter);
-            state.roster[fighter.arenaKey] = fighter;
+            state.roster[name] = cyberCompactFighter(owned);
         });
         cyberSaveArenaState(state);
-        alert(`已登錄 ${names.length} 名「我的自創武將」到擂台名冊。\nplayerID：${cyberGetPlayerId()}\n底層主鍵已升級為 playerID::武將名，並保存完整養成戰鬥快照。`);
+        alert(`已登錄 ${names.length} 名「我的自創武將」到擂台名冊，並保存完整養成戰鬥快照：技能、拜師技能、神兵、紅顏、裝備稱號都會進入天梯擂台計算。`);
     }
 
     function cyberRefreshArenaSelect() {
@@ -7373,41 +7211,28 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         if (!sel) return;
         const current = sel.value;
         const map = cyberGetMyArenaFighterMap();
-        const keys = Object.keys(map).sort((a,b) => (map[b].arenaPower || map[b].power || 0) - (map[a].arenaPower || map[a].power || 0));
+        const names = Object.keys(map).sort((a,b) => (map[b].power || 0) - (map[a].power || 0));
         sel.innerHTML = '';
-        if (keys.length === 0) {
+        if (names.length === 0) {
             sel.add(new Option('-- 尚無「我的自創武將」可參戰 --', ''));
             return;
         }
-        keys.forEach(key => {
-            const g = map[key];
+        names.forEach(name => {
+            const g = map[name];
             const shownPower = g.arenaPower && g.arenaPower !== g.power ? `${g.power}／戰力 ${g.arenaPower}` : g.power;
-            sel.add(new Option(`${g.name}｜武力 ${shownPower}｜${g.rank || '自創武將'}｜我的｜${g.arenaKey}`, key));
+            sel.add(new Option(`${g.name}｜武力 ${shownPower}｜${g.rank || '自創武將'}｜我的`, name));
         });
-        if (keys.includes(current)) sel.value = current;
+        if (names.includes(current)) sel.value = current;
     }
 
-    function cyberEnsureScore(state, fighterOrKey) {
-        const key = cyberGetFighterArenaKey(fighterOrKey);
-        const name = cyberGetFighterDisplayName(fighterOrKey);
-        const owner = cyberGetFighterOwnerName(fighterOrKey);
-        if (!state.scores[key]) state.scores[key] = { arenaKey: key, rosterKey: key, name, owner, score: 0, win: 0, lose: 0, fights: 0, lastFight: 0 };
-        state.scores[key].arenaKey = key;
-        state.scores[key].rosterKey = key;
-        state.scores[key].name = state.scores[key].name || name;
-        state.scores[key].owner = state.scores[key].owner || owner;
-        if (fighterOrKey && typeof fighterOrKey === 'object') {
-            state.scores[key].power = fighterOrKey.power;
-            state.scores[key].arenaPower = fighterOrKey.arenaPower;
-            state.scores[key].currentTitle = fighterOrKey.currentTitle || (fighterOrKey.arenaSnapshot && fighterOrKey.arenaSnapshot.currentTitle) || state.scores[key].currentTitle || '';
-        }
-        return state.scores[key];
+    function cyberEnsureScore(state, name) {
+        if (!state.scores[name]) state.scores[name] = { name, score: 0, win: 0, lose: 0, fights: 0, lastFight: 0 };
+        return state.scores[name];
     }
 
-    function cyberCanFight(fighterOrKey) {
+    function cyberCanFight(name) {
         const state = cyberGetArenaState();
-        const key = cyberGetFighterArenaKey(fighterOrKey);
-        const until = Number((state.cooldowns || {})[key] || 0);
+        const until = Number(state.cooldowns[name] || 0);
         if (Date.now() >= until) return { ok: true };
         const remain = Math.ceil((until - Date.now()) / 1000);
         return { ok: false, remain };
@@ -7415,36 +7240,33 @@ box.innerHTML = pinnedHtml + arr.map(m => {
 
     function cyberEnterArenaAsChampion() {
         const sel = document.getElementById('arenaFighterSelect');
-        const key = sel ? sel.value : '';
-        if (!key) { alert('請先選擇一名自創武將。'); return; }
-        const fighters = cyberGetMyArenaFighterMap();
-        const fighter = fighters[key];
-        if (!fighter) { alert('這不是你本機擁有的自創武將，不能登台。'); return; }
-        const cd = cyberCanFight(fighter);
+        const name = sel ? sel.value : '';
+        if (!name) { alert('請先選擇一名自創武將。'); return; }
+        const cd = cyberCanFight(name);
         if (!cd.ok) { alert(`敗者冷卻中，還要 ${cd.remain} 秒才能再次挑戰。`); return; }
         const state = cyberGetArenaState();
-        if (state.champion && state.champion.name) { alert(`目前已有擂主：${cyberArenaFighterLabel(state.champion)}，請使用挑戰擂主。`); return; }
-        state.champion = fighter;
-        state.roster[fighter.arenaKey] = fighter;
-        const s = cyberEnsureScore(state, fighter);
+        if (state.champion && state.champion.name) { alert(`目前已有擂主：${state.champion.name}，請使用挑戰擂主。`); return; }
+        const fighters = cyberGetMyArenaFighterMap();
+        if (!fighters[name]) { alert('這不是你本機擁有的自創武將，不能登台。'); return; }
+        state.champion = fighters[name];
+        state.roster[name] = fighters[name];
+        const s = cyberEnsureScore(state, name);
         s.fights += 0;
         s.currentStreak = s.currentStreak || 0;
         s.bestStreak = s.bestStreak || 0;
-        cyberUpdateTitleAchievementsFromArena(fighter.name, s);
+        cyberUpdateTitleAchievementsFromArena(name, s);
         cyberSaveArenaState(state);
-        cyberArenaLog(`👑 ${cyberArenaFighterLabel(fighter)} 登上公開擂台，成為第一任擂主！`);
-        cyberAddFactionResult(fighter.name, 'win', 1);
-        cyberSeasonAdd(fighter.name, 'arenaEnter', 3);
-        cyberAddCoins(fighter.name, 3, '登上公開擂台');
-        cyberTryAdventure('battle', fighter.name);
+        cyberArenaLog(`👑 ${name} 登上公開擂台，成為第一任擂主！`);
+        cyberAddFactionResult(name, 'win', 1);
+        cyberSeasonAdd(name, 'arenaEnter', 3);
+        cyberAddCoins(name, 3, '登上公開擂台');
+        cyberTryAdventure('battle', name);
         cyberRefreshEnhancedGameUI();
         cyberRefreshThreeSystemsUI();
         cyberRefreshSocialEconomyUI();
     }
 
     function cyberSimArenaDuel(champion, challenger) {
-        const championKey = cyberGetFighterArenaKey(champion);
-        const challengerKey = cyberGetFighterArenaKey(challenger);
         const aStats = cyberBuildArenaFullCombatStats(champion);
         const bStats = cyberBuildArenaFullCombatStats(challenger);
         const a = { ...champion, power: aStats.power, hp: aStats.maxHp, maxHp: aStats.maxHp, fullStats: aStats };
@@ -7535,56 +7357,40 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         let winner, loser;
         if (a.hp === b.hp) {
             winner = (a.power >= b.power) ? champion : challenger;
-            loser = (cyberGetFighterArenaKey(winner) === championKey) ? challenger : champion;
+            loser = (winner.name === champion.name) ? challenger : champion;
         } else if (a.hp > b.hp) {
             winner = champion; loser = challenger;
         } else {
             winner = challenger; loser = champion;
         }
-        const winnerKey = cyberGetFighterArenaKey(winner);
-        const loserKey = cyberGetFighterArenaKey(loser);
         logs.push(`🏆 勝者：${winner.name}｜敗者：${loser.name}`);
-        return { winner, loser, winnerKey, loserKey, logs };
+        return { winner, loser, logs };
     }
-
 
     function cyberChallengeArenaChampion() {
         const sel = document.getElementById('arenaFighterSelect');
-        const challengerKey = sel ? sel.value : '';
-        if (!challengerKey) { alert('請先選擇一名自創武將。'); return; }
-
+        const challengerName = sel ? sel.value : '';
+        if (!challengerName) { alert('請先選擇一名自創武將。'); return; }
+        const cd = cyberCanFight(challengerName);
+        if (!cd.ok) { alert(`敗者冷卻中，還要 ${cd.remain} 秒才能再次挑戰。`); return; }
         const state = cyberGetArenaState();
         if (!state.champion || !state.champion.name) { cyberEnterArenaAsChampion(); return; }
+        if (state.champion.name === challengerName) { alert('你已經是擂主，不能挑戰自己。'); return; }
+        const fighters = cyberGetMyArenaFighterMap();
+        const challenger = fighters[challengerName];
+        if (!challenger) { alert('這不是你本機擁有的自創武將，不能拿來挑戰。請先創建/喚醒/封存自己的武將，再登錄我的武將。'); return; }
+        state.roster[challengerName] = challenger;
+        if (state.champion.name && !state.roster[state.champion.name]) state.roster[state.champion.name] = state.champion;
 
-        // 按「挑戰擂主」前，自動用本機最新角色資料重建快照，不需要玩家再手動按登錄。
-        let challenger = cyberRefreshMyArenaSnapshotForKey(state, challengerKey);
-        if (!challenger) {
-            const fighters = cyberGetMyArenaFighterMap();
-            challenger = fighters[challengerKey];
-        }
-        if (!challenger) { alert('這不是你本機擁有的自創武將，不能拿來挑戰。請先創建/喚醒/封存自己的武將。'); return; }
-
-        const freshChallengerKey = cyberGetFighterArenaKey(challenger);
-        const cd = cyberCanFight(challenger);
-        if (!cd.ok) { alert(`敗者冷卻中，還要 ${cd.remain} 秒才能再次挑戰。`); return; }
-
-        const oldChampionKey = cyberGetFighterArenaKey(state.champion);
         const oldChampionName = state.champion && state.champion.name ? state.champion.name : '';
-        if (oldChampionKey === freshChallengerKey) { alert('你已經是擂主，不能挑戰自己。'); return; }
-
-        state.roster[freshChallengerKey] = challenger;
-        if (oldChampionKey && !state.roster[oldChampionKey]) state.roster[oldChampionKey] = state.champion;
-
         const result = cyberSimArenaDuel(state.champion, challenger);
-        const winnerKey = result.winnerKey || cyberGetFighterArenaKey(result.winner);
-        const loserKey = result.loserKey || cyberGetFighterArenaKey(result.loser);
-        const winScore = cyberEnsureScore(state, result.winner);
-        const loseScore = cyberEnsureScore(state, result.loser);
+        const winScore = cyberEnsureScore(state, result.winner.name);
+        const loseScore = cyberEnsureScore(state, result.loser.name);
         winScore.score += 3; winScore.win += 1; winScore.fights += 1; winScore.lastFight = Date.now();
         loseScore.score += 1; loseScore.lose += 1; loseScore.fights += 1; loseScore.lastFight = Date.now();
 
         // 擂台連勝獎勵：守擂成功累加，挑戰者奪擂從 1 連勝開始，敗者歸零。
-        if (winnerKey === oldChampionKey) {
+        if (result.winner.name === oldChampionName) {
             winScore.currentStreak = (winScore.currentStreak || 0) + 1;
         } else {
             winScore.currentStreak = 1;
@@ -7620,25 +7426,25 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         cyberEventAdd(result.winner.name, 'arena', 1);
         cyberEventAdd(result.loser.name, 'arena', 1);
         cyberAwardBondFromBattle(result.winner.name, result.loser.name, result.winner.name);
-        cyberResolveCheerBets(winnerKey, oldChampionKey, freshChallengerKey, result.winner.name);
+        cyberResolveCheerBets(result.winner.name, oldChampionName, challenger.name);
         cyberRecordArenaRevengeResult(result.winner.name, result.loser.name);
         cyberTryAdventure('battle', result.winner.name);
         cyberTryAdventure('battle', result.loser.name);
 
-        state.cooldowns[loserKey] = Date.now() + CYBER_COOLDOWN_MS;
-        state.champion = winnerKey === freshChallengerKey ? challenger : state.champion;
+        state.cooldowns[result.loser.name] = Date.now() + CYBER_COOLDOWN_MS;
+        state.champion = result.winner.name === challenger.name ? challenger : state.champion;
         cyberSaveArenaState(state);
 
         const feed = document.getElementById('arenaBattleFeed');
         if (feed) {
-            feed.innerHTML = `<div style="color:#ffd700; font-weight:bold;">⚔️ ${cyberEscapeHtml(cyberArenaFighterLabel(state.champion))} 的擂台戰報</div>` + result.logs.map(x => `<div>${cyberEscapeHtml(x)}</div>`).join('');
+            feed.innerHTML = `<div style="color:#ffd700; font-weight:bold;">⚔️ ${cyberEscapeHtml(state.champion.name)} 的擂台戰報</div>` + result.logs.map(x => `<div>${cyberEscapeHtml(x)}</div>`).join('');
             feed.scrollTop = feed.scrollHeight;
         }
         if (typeof battleLog !== 'undefined') {
             battleLog.innerHTML += `<br><span style="color:#00ffff; font-weight:bold;">🌐【公開擂台】${result.winner.name} 擊敗 ${result.loser.name}，勝者繼續留在擂台！敗者冷卻 5 分鐘。</span><br>`;
             battleLog.scrollTop = battleLog.scrollHeight;
         }
-        cyberSendArenaChat(`【公開擂台】${cyberArenaFighterLabel(result.winner)} 擊敗 ${cyberArenaFighterLabel(result.loser)}，勝者留場，敗者冷卻 5 分鐘。`);
+        cyberSendArenaChat(`【公開擂台】${result.winner.name} 擊敗 ${result.loser.name}，勝者留場，敗者冷卻 5 分鐘。`);
     }
 
 // ==============================================================
@@ -7713,23 +7519,20 @@ function cyberRefreshArenaUI() {
     const champBox = document.getElementById('arenaChampionBox');
     if (champBox) {
         if (state.champion && state.champion.name) {
-            const champKey = cyberGetFighterArenaKey(state.champion);
-            const champScore = ((state.scores || {})[champKey] || {});
             champBox.innerHTML = `
                 <div class="arena-champion-skin">
                     <div class="arena-champion-title">👑 目前擂台主 👑</div>
                     <div class="arena-champion-name">${cyberHeroNameHtml(state.champion.name)}</div>
                     <div>${cyberGetHeroFactionTag(state.champion.name)}</div>
                     <div class="arena-champion-meta">
-                        玩家 ${cyberEscapeHtml(cyberGetFighterOwnerName(state.champion) || '未命名')}｜playerID ${cyberEscapeHtml((state.champion.ownerId || '').slice(0, 14))}<br>
-                        武力 ${cyberEscapeHtml(state.champion.power)}${state.champion.arenaPower ? `｜擂台戰力 ${cyberEscapeHtml(state.champion.arenaPower)}` : ''} ｜ ${cyberEscapeHtml(state.champion.rank || '自創武將')}
+                        武力 ${cyberEscapeHtml(state.champion.power)} ｜ ${cyberEscapeHtml(state.champion.rank || '自創武將')}
                     </div>
-                    <div class="arena-champion-meta streak-glow ${cyberGetStreakClass(champScore.currentStreak || 0)}">
-                        目前連勝 ${champScore.currentStreak || 0}｜最高連勝 ${champScore.bestStreak || 0}
-                        ${cyberGetStreakStage(champScore.currentStreak || 0) ? `<span class="streak-stage-label">${cyberGetStreakStage(champScore.currentStreak || 0).streak}連賞</span>` : ''}
+                    <div class="arena-champion-meta streak-glow ${cyberGetStreakClass(((state.scores || {})[state.champion.name] || {}).currentStreak || 0)}">
+                        目前連勝 ${((state.scores || {})[state.champion.name] || {}).currentStreak || 0}｜最高連勝 ${((state.scores || {})[state.champion.name] || {}).bestStreak || 0}
+                        ${cyberGetStreakStage(((state.scores || {})[state.champion.name] || {}).currentStreak || 0) ? `<span class="streak-stage-label">${cyberGetStreakStage(((state.scores || {})[state.champion.name] || {}).currentStreak || 0).streak}連賞</span>` : ''}
                     </div>
                     <div style="font-size:12px; color:#bbb; margin-top:6px;">
-                        勝者繼續留場，直到被下一位挑戰者擊敗。底層主鍵：${cyberEscapeHtml(champKey)}
+                        勝者繼續留場，直到被下一位挑戰者擊敗。
                     </div>
                 </div>
             `;
@@ -7743,26 +7546,20 @@ function cyberRefreshArenaUI() {
         const rows = Object.values(state.scores || {}).sort(
             (a, b) => (b.score || 0) - (a.score || 0) || (b.win || 0) - (a.win || 0)
         );
-        const championKey = state.champion && state.champion.name ? cyberGetFighterArenaKey(state.champion) : '';
 
         board.innerHTML = rows.length ? rows.map((p, idx) => {
-            const scoreKey = p.arenaKey || p.rosterKey || p.name;
-            const cdUntil = Number((state.cooldowns || {})[scoreKey] || 0);
+            const cdUntil = Number((state.cooldowns || {})[p.name] || 0);
             const cdText = Date.now() < cdUntil
                 ? `｜冷卻 ${Math.ceil((cdUntil - Date.now()) / 1000)}秒`
                 : '';
 
-            const isChampion = championKey && championKey === scoreKey;
-            const ownerText = p.owner ? `｜玩家 ${cyberEscapeHtml(p.owner)}` : '';
-            const fighter = (state.roster || {})[scoreKey] || null;
-            const powerText = fighter && fighter.arenaPower ? `｜戰力 ${fighter.arenaPower}` : (p.arenaPower ? `｜戰力 ${p.arenaPower}` : '');
-            const heroHtml = `${cyberHeroNameHtml(p.name)}${ownerText}${powerText}`;
+            const isChampion = state.champion && state.champion.name === p.name;
 
             if (idx === 0) {
                 return `
                     <div class="rank-row rank-no1-skin">
                         <span class="rank-no1-text">
-                            🏆 第 ${idx + 1} 名｜${heroHtml} ${cyberGetHeroFactionTag(p.name)}｜積分 ${p.score || 0}｜勝 ${p.win || 0}｜敗 ${p.lose || 0}｜連勝 <span class="${cyberGetStreakClass(p.currentStreak || 0)}">${p.currentStreak || 0}</span>｜最高 ${p.bestStreak || 0}｜出戰 ${p.fights || 0}${cdText}
+                            🏆 第 ${idx + 1} 名｜${cyberHeroNameHtml(p.name)} ${cyberGetHeroFactionTag(p.name)}｜積分 ${p.score || 0}｜勝 ${p.win || 0}｜敗 ${p.lose || 0}｜連勝 <span class="${cyberGetStreakClass(p.currentStreak || 0)}">${p.currentStreak || 0}</span>｜最高 ${p.bestStreak || 0}｜出戰 ${p.fights || 0}${cdText}
                         </span>
                         ${isChampion ? '<span class="rank-champion-badge">｜⚔️ 現任擂主</span>' : ''}
                     </div>
@@ -7773,7 +7570,7 @@ function cyberRefreshArenaUI() {
 
             return `
                 <div class="${cls}">
-                    第 ${idx + 1} 名｜${heroHtml} ${cyberGetHeroFactionTag(p.name)}
+                    第 ${idx + 1} 名｜${cyberHeroNameHtml(p.name)} ${cyberGetHeroFactionTag(p.name)}
                     ${isChampion ? '<span class="rank-champion-badge">｜⚔️ 現任擂主</span>' : ''}
                     ｜積分 ${p.score || 0}｜勝 ${p.win || 0}｜敗 ${p.lose || 0}｜連勝 <span class="${cyberGetStreakClass(p.currentStreak || 0)}">${p.currentStreak || 0}</span>｜最高 ${p.bestStreak || 0}｜出戰 ${p.fights || 0}${cdText}
                 </div>
@@ -9469,7 +9266,7 @@ function cyberRefreshArenaUI() {
 
     function cyberGetCurrentArenaMatchId() {
         const state = cyberGetArenaState();
-        const champ = state.champion && state.champion.name ? cyberGetFighterArenaKey(state.champion) : '無擂主';
+        const champ = state.champion && state.champion.name ? state.champion.name : '無擂主';
         const challengerSel = document.getElementById('arenaFighterSelect');
         const challenger = challengerSel && challengerSel.value ? challengerSel.value : '未選挑戰者';
         return `${champ}__VS__${challenger}`;
@@ -9505,34 +9302,33 @@ function cyberRefreshArenaUI() {
         cyberRefreshSocialEconomyUI();
     }
 
-    function cyberResolveCheerBets(winnerKey, oldChampionKey, challengerKey, winnerDisplayName = '') {
-        const matchId = `${oldChampionKey || '無擂主'}__VS__${challengerKey || '未選挑戰者'}`;
+    function cyberResolveCheerBets(winnerName, oldChampionName, challengerName) {
+        const matchId = `${oldChampionName || '無擂主'}__VS__${challengerName || '未選挑戰者'}`;
         const s = cyberGetCheerState();
         const betPack = s.bets[matchId];
         if (!betPack) return;
 
-        const winnerSide = winnerKey === oldChampionKey ? 'champion' : 'challenger';
+        const winnerSide = winnerName === oldChampionName ? 'champion' : 'challenger';
         const loserSide = winnerSide === 'champion' ? 'challenger' : 'champion';
-        const shownWinner = winnerDisplayName || cyberArenaNameFromKey(winnerKey);
 
         const cheerCount = Object.keys(betPack[winnerSide] || {}).length;
         const bonusCoins = cheerCount >= 10 ? 15 : cheerCount >= 3 ? 5 : 2;
 
         Object.entries(betPack[winnerSide] || {}).forEach(([nick, data]) => {
             const payout = (data.bet || 0) * 2 + bonusCoins;
-            cyberAddCoins(nick, payout, `押中 ${shownWinner} 勝利`);
+            cyberAddCoins(nick, payout, `押中 ${winnerName} 勝利`);
         });
 
         Object.entries(betPack[loserSide] || {}).forEach(([nick, data]) => {
             if ((data.bet || 0) === 0) cyberAddCoins(nick, 1, '參與觀戰助威');
         });
 
-        s.resolved.unshift({ matchId, winnerName: shownWinner, winnerKey, winnerSide, time: Date.now() });
+        s.resolved.unshift({ matchId, winnerName, winnerSide, time: Date.now() });
         delete s.bets[matchId];
         cyberSaveCheerState(s);
 
-        if (cheerCount >= 3) cyberSendSystemChat(`【助威奏效】${shownWinner} 得到 ${cheerCount} 名觀眾助威，全場氣勢暴漲！`);
-        if (cheerCount >= 10) cyberAddLegendRecord('觀戰助威', `${shownWinner} 獲得 ${cheerCount} 人助威，人氣爆棚`, cheerCount);
+        if (cheerCount >= 3) cyberSendSystemChat(`【助威奏效】${winnerName} 得到 ${cheerCount} 名觀眾助威，全場氣勢暴漲！`);
+        if (cheerCount >= 10) cyberAddLegendRecord('觀戰助威', `${winnerName} 獲得 ${cheerCount} 人助威，人氣爆棚`, cheerCount);
     }
 
     function cyberGetEventId() {
@@ -9642,10 +9438,7 @@ function cyberRefreshArenaUI() {
             cyberAwardTitle(name, item.title, true);
         } else if (item.type === 'ticket') {
             const state = cyberGetArenaState();
-            if (state.cooldowns) {
-                state.cooldowns[name] = 0; // 舊版兼容
-                state.cooldowns[cyberArenaKey(cyberGetMyOwnerId(), name)] = 0;
-            }
+            if (state.cooldowns) state.cooldowns[name] = 0;
             cyberSaveArenaState(state);
         } else if (item.type === 'bossBurst') {
             const boss = cyberGetWorldBossState();
