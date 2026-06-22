@@ -6572,19 +6572,8 @@
     let cyberRemoteMutedUsers = {};
     let cyberRemoteArenaState = null;
 
-    function cyberDisplaySafeText(str) {
-        let s = String(str ?? '');
-        // 介面層專用：隱藏 playerID / deviceID / arenaKey，只保留玩家看得懂的武將名。
-        // 底層 roster / score / cooldown 仍保留 playerID::武將名，避免同名武將互相覆蓋。
-        s = s.replace(/\b(?:P_[A-Za-z0-9_]+|device_[A-Za-z0-9_]+|client_[A-Za-z0-9_]+|legacy|unknown)::/g, '');
-        s = s.replace(/\b(?:P_[A-Za-z0-9_]{6,}|device_[A-Za-z0-9_]{6,}|client_[A-Za-z0-9_]{6,})\b/g, '');
-        s = s.replace(/底層主鍵：[^\n<]*/g, '');
-        s = s.replace(/玩家\s*(?:P_[A-Za-z0-9_]{6,}|device_[A-Za-z0-9_]{6,}|client_[A-Za-z0-9_]{6,})/g, '玩家');
-        return s.trim();
-    }
-
     function cyberEscapeHtml(str) {
-        return cyberDisplaySafeText(str)
+        return String(str ?? '')
             .replaceAll('&', '&amp;')
             .replaceAll('<', '&lt;')
             .replaceAll('>', '&gt;')
@@ -6630,7 +6619,7 @@
             status.innerText = `目前登入：${cyberFirebaseUser.email}${cyberIsFirebaseRoomOwner ? '｜群主權限已啟用' : '｜一般帳號，無群主權限'}`;
             status.style.color = cyberIsFirebaseRoomOwner ? '#ffd700' : '#aaa';
         } else {
-            status.innerText = '尚未登入 Google 群主帳號';
+            status.innerText = '尚未登入 Google 群主帳號｜playerID：' + cyberGetPlayerId();
             status.style.color = '#aaa';
         }
         if (typeof cyberRefreshCustomTitleAdminUI === 'function') cyberRefreshCustomTitleAdminUI();
@@ -7082,7 +7071,10 @@ box.innerHTML = pinnedHtml + arr.map(m => {
     function cyberArenaFighterLabel(fighter) {
         if (!fighter) return '';
         const name = cyberGetFighterDisplayName(fighter);
-        return `${name}`;
+        const owner = cyberGetFighterOwnerName(fighter);
+        const ownerId = fighter.ownerId || fighter.playerId || '';
+        const ownerTail = owner ? `｜玩家 ${owner}` : (ownerId ? `｜ID ${String(ownerId).slice(0, 10)}` : '');
+        return `${name}${ownerTail}`;
     }
 
     function cyberNormalizeArenaFighter(fighter, rawKey = '') {
@@ -7373,7 +7365,7 @@ box.innerHTML = pinnedHtml + arr.map(m => {
             state.roster[fighter.arenaKey] = fighter;
         });
         cyberSaveArenaState(state);
-        alert(`已登錄 ${names.length} 名「我的自創武將」到擂台名冊，並保存完整養成戰鬥快照。`);
+        alert(`已登錄 ${names.length} 名「我的自創武將」到擂台名冊。\nplayerID：${cyberGetPlayerId()}\n底層主鍵已升級為 playerID::武將名，並保存完整養成戰鬥快照。`);
     }
 
     function cyberRefreshArenaSelect() {
@@ -7390,7 +7382,7 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         keys.forEach(key => {
             const g = map[key];
             const shownPower = g.arenaPower && g.arenaPower !== g.power ? `${g.power}／戰力 ${g.arenaPower}` : g.power;
-            sel.add(new Option(`${g.name}｜武力 ${shownPower}｜${g.rank || '自創武將'}｜我的`, key));
+            sel.add(new Option(`${g.name}｜武力 ${shownPower}｜${g.rank || '自創武將'}｜我的｜${g.arenaKey}`, key));
         });
         if (keys.includes(current)) sel.value = current;
     }
@@ -7729,6 +7721,7 @@ function cyberRefreshArenaUI() {
                     <div class="arena-champion-name">${cyberHeroNameHtml(state.champion.name)}</div>
                     <div>${cyberGetHeroFactionTag(state.champion.name)}</div>
                     <div class="arena-champion-meta">
+                        玩家 ${cyberEscapeHtml(cyberGetFighterOwnerName(state.champion) || '未命名')}｜playerID ${cyberEscapeHtml((state.champion.ownerId || '').slice(0, 14))}<br>
                         武力 ${cyberEscapeHtml(state.champion.power)}${state.champion.arenaPower ? `｜擂台戰力 ${cyberEscapeHtml(state.champion.arenaPower)}` : ''} ｜ ${cyberEscapeHtml(state.champion.rank || '自創武將')}
                     </div>
                     <div class="arena-champion-meta streak-glow ${cyberGetStreakClass(champScore.currentStreak || 0)}">
@@ -7736,7 +7729,7 @@ function cyberRefreshArenaUI() {
                         ${cyberGetStreakStage(champScore.currentStreak || 0) ? `<span class="streak-stage-label">${cyberGetStreakStage(champScore.currentStreak || 0).streak}連賞</span>` : ''}
                     </div>
                     <div style="font-size:12px; color:#bbb; margin-top:6px;">
-                        勝者繼續留場，直到被下一位挑戰者擊敗。
+                        勝者繼續留場，直到被下一位挑戰者擊敗。底層主鍵：${cyberEscapeHtml(champKey)}
                     </div>
                 </div>
             `;
@@ -7760,9 +7753,10 @@ function cyberRefreshArenaUI() {
                 : '';
 
             const isChampion = championKey && championKey === scoreKey;
+            const ownerText = p.owner ? `｜玩家 ${cyberEscapeHtml(p.owner)}` : '';
             const fighter = (state.roster || {})[scoreKey] || null;
             const powerText = fighter && fighter.arenaPower ? `｜戰力 ${fighter.arenaPower}` : (p.arenaPower ? `｜戰力 ${p.arenaPower}` : '');
-            const heroHtml = `${cyberHeroNameHtml(p.name)}${powerText}`;
+            const heroHtml = `${cyberHeroNameHtml(p.name)}${ownerText}${powerText}`;
 
             if (idx === 0) {
                 return `
@@ -7994,16 +7988,10 @@ function cyberRefreshArenaUI() {
     }
 
     function cyberGetActiveHeroName() {
-        if (activeRpgGeneral && activeRpgGeneral.name) return cyberGetFighterDisplayName(activeRpgGeneral);
+        if (activeRpgGeneral && activeRpgGeneral.name) return activeRpgGeneral.name;
         const sel = document.getElementById('arenaFighterSelect');
-        if (sel && sel.value) {
-            const myMap = (typeof cyberGetMyArenaFighterMap === 'function') ? cyberGetMyArenaFighterMap() : {};
-            if (myMap[sel.value]) return cyberGetFighterDisplayName(myMap[sel.value]);
-            const publicMap = (typeof cyberGetPublicArenaFighterMap === 'function') ? cyberGetPublicArenaFighterMap() : {};
-            if (publicMap[sel.value]) return cyberGetFighterDisplayName(publicMap[sel.value]);
-            return cyberArenaNameFromKey(sel.value);
-        }
-        return cyberDisplaySafeText(cyberGetNick());
+        if (sel && sel.value) return sel.value;
+        return cyberGetNick();
     }
 
     function cyberGetActiveHero() {
@@ -8430,7 +8418,7 @@ function cyberRefreshArenaUI() {
             heroSel.innerHTML = '';
             const names = cyberGetGrantableHeroNames();
             if (!names.length) heroSel.add(new Option('尚無可授予的自創武將，請先創角或喚醒', ''));
-            names.forEach(n => heroSel.add(new Option(cyberDisplaySafeText(n), n))); 
+            names.forEach(n => heroSel.add(new Option(n, n)));
             if ([...heroSel.options].some(o => o.value === currentVal)) heroSel.value = currentVal;
         }
 
@@ -8744,7 +8732,7 @@ function cyberRefreshArenaUI() {
                 <div class="boss-hp-wrap"><div class="boss-hp-fill" style="width:${pct}%"></div></div>
                 <div class="boss-row">HP：${boss.hp}/${boss.maxHp}｜${boss.defeated ? '✅ 已擊破' : '戰鬥中'}</div>
                 <div class="boss-row"><strong style="color:#ffd700;">今日傷害榜</strong><br>
-                    ${board.length ? board.map((x,i)=>`${i+1}. ${cyberEscapeHtml(cyberArenaNameFromKey(x[0]))}：${x[1]} 傷害`).join('<br>') : '尚無挑戰紀錄'}
+                    ${board.length ? board.map((x,i)=>`${i+1}. ${cyberEscapeHtml(x[0])}：${x[1]} 傷害`).join('<br>') : '尚無挑戰紀錄'}
                 </div>
             `;
         }
@@ -9364,7 +9352,7 @@ function cyberRefreshArenaUI() {
             seasonBox.innerHTML = `
                 <div class="season-row">目前賽季：<span class="season-badge">${cyberEscapeHtml(season.seasonId)}</span></div>
                 <div class="season-row">目前武將：<span style="color:#00ff41; font-weight:bold;">${cyberEscapeHtml(name)}</span><br>賽季分 ${my.score || 0}｜擂台勝 ${my.arenaWins || 0}｜章節 ${my.chapters || 0}｜重鑄 ${my.reforges || 0}</div>
-                <div class="season-row"><strong style="color:#ffd700;">賽季榜</strong><br>${rows.length ? rows.map((r,i)=>`#${i+1} ${cyberEscapeHtml(cyberArenaNameFromKey(r[0]))}：${r[1].score || 0} 分`).join('<br>') : '尚無賽季紀錄'}</div>
+                <div class="season-row"><strong style="color:#ffd700;">賽季榜</strong><br>${rows.length ? rows.map((r,i)=>`#${i+1} ${cyberEscapeHtml(r[0])}：${r[1].score || 0} 分`).join('<br>') : '尚無賽季紀錄'}</div>
             `;
         }
 
@@ -9698,7 +9686,7 @@ function cyberRefreshArenaUI() {
             const champBet = Object.values(pack.champion || {}).reduce((a,b)=>a+(b.bet||0),0);
             const challengerBet = Object.values(pack.challenger || {}).reduce((a,b)=>a+(b.bet||0),0);
             cheerBox.innerHTML = `
-                <div class="cheer-row">目前場次：<br><span style="color:#ffd700;">${cyberEscapeHtml(matchId.split('__VS__').map(part => cyberArenaNameFromKey(part)).join(' VS '))}</span></div>
+                <div class="cheer-row">目前場次：<br><span style="color:#ffd700;">${cyberEscapeHtml(matchId.replace('__VS__',' VS '))}</span></div>
                 <div class="cheer-row"><span class="cheer-side">擂主方</span> 助威 ${champCount} 人｜押注 ${champBet} 武神幣</div>
                 <div class="cheer-row"><span class="cheer-side red">挑戰者方</span> 助威 ${challengerCount} 人｜押注 ${challengerBet} 武神幣</div>
                 <div class="cheer-row">你的武神幣：<span class="coin-badge">${coin.coins || 0}</span></div>
@@ -9960,7 +9948,7 @@ function cyberRefreshArenaUI() {
                 <div class="bond-row">目前武將：<span style="color:#00ff41; font-weight:bold;">${cyberEscapeHtml(name)}</span></div>
                 ${rows.length ? rows.map(([p, v]) => {
                     const lv = cyberBondLevel(v.exp || 0);
-                    return `<div class="bond-row"><span class="bond-chip">${cyberEscapeHtml(cyberArenaNameFromKey(p))}</span> <span class="bond-level">Lv.${lv}</span><br>羈絆值 ${v.exp || 0}/500</div>`;
+                    return `<div class="bond-row"><span class="bond-chip">${cyberEscapeHtml(p)}</span> <span class="bond-level">Lv.${lv}</span><br>羈絆值 ${v.exp || 0}/500</div>`;
                 }).join('') : '<div class="bond-row">尚未建立羈絆。可選一名武將締結羈絆，或透過擂台對戰累積。</div>'}
             `;
         }
@@ -10104,7 +10092,7 @@ function cyberRefreshArenaUI() {
             const current = targetSel.value;
             targetSel.innerHTML = '';
             Object.entries(fam.spouses || {}).forEach(([name, sp]) => {
-                targetSel.add(new Option(`${cyberFamilyRoleText(sp.role)}｜${cyberDisplaySafeText(name)}｜好感 ${sp.affection || 0}`, name));
+                targetSel.add(new Option(`${cyberFamilyRoleText(sp.role)}｜${name}｜好感 ${sp.affection || 0}`, name));
             });
             if ([...targetSel.options].some(o => o.value === current)) targetSel.value = current;
         }
