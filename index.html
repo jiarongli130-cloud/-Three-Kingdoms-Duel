@@ -1221,6 +1221,27 @@
             border-color: #00ff41 !important;
             color: #00ff41 !important;
         }
+
+        .owner-admin-detail-section {
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 9px;
+            margin-top: 10px;
+            background: rgba(255, 140, 0, 0.05);
+        }
+        .owner-admin-detail-section h5 {
+            margin: 0 0 7px 0;
+            color: #ff8c00;
+            text-shadow: 0 0 6px rgba(255,140,0,0.55);
+            font-size: 14px;
+        }
+        .owner-admin-mini-note {
+            color: #aaa;
+            font-size: 12px;
+            line-height: 1.55;
+            margin: 3px 0 7px 0;
+        }
+
         @media (max-width: 900px) { .owner-admin-grid { grid-template-columns: 1fr; } }
 
     </style>
@@ -1446,7 +1467,7 @@
     <div class="controls owner-arena-admin-panel" id="ownerArenaAdminPanel">
         <h3>🛡️ 群主專用｜玩家 ID・PLAYID・天梯管理後台</h3>
         <p style="font-size:12px; color:#aaa; margin:0 0 12px 0; line-height:1.6;">
-            此介面只在群主 Google 帳號登入後顯示。一般玩家看不到。可查看公開擂台名冊中所有玩家的 playerID / arenaKey / 武力 / 稱號 / 技能快照 / 戰績，並可調整擂台資料或封號禁賽。
+            此介面只在群主 Google 帳號登入後顯示。一般玩家看不到。可查看公開擂台名冊中所有玩家的 playerID / arenaKey / 武力 / 稱號 / 技能快照 / 戰績，並可細修暴擊、閃避、格擋、破甲、吸血、HP、回血、復活、技能、神兵、紅顏等天梯資料或封號禁賽。
         </p>
         <div class="owner-admin-grid">
             <div class="owner-admin-box">
@@ -1476,6 +1497,38 @@
                     <label>目前連勝<input id="ownerAdminCurrentStreak" type="number" step="1" style="border-color:#ffd700; color:#ffd700;"></label>
                     <label>最高連勝<input id="ownerAdminBestStreak" type="number" step="1" style="border-color:#ffd700; color:#ffd700;"></label>
                 </div>
+
+                <div class="owner-admin-detail-section">
+                    <h5>⚙️ 詳細戰鬥資料覆寫｜群主專用</h5>
+                    <p class="owner-admin-mini-note">百分比欄位請輸入百分數，例如 10 代表 10%。這些資料只覆寫公開天梯快照，不會刪除玩家本機存檔。</p>
+                    <div class="owner-admin-form-grid">
+                        <label>額外武力加成<input id="ownerAdminManualPowerBonus" type="number" step="1" style="border-color:#ff8c00; color:#ff8c00;"></label>
+                        <label>暴擊率 +%<input id="ownerAdminManualCrit" type="number" step="0.1" style="border-color:#ff4dff; color:#ff4dff;"></label>
+                        <label>閃避率 +%<input id="ownerAdminManualDodge" type="number" step="0.1" style="border-color:#00ffff; color:#00ffff;"></label>
+                        <label>格擋率 +%<input id="ownerAdminManualBlock" type="number" step="0.1" style="border-color:#00ff41; color:#00ff41;"></label>
+                        <label>破甲率 +%<input id="ownerAdminManualArmorPen" type="number" step="0.1" style="border-color:#ff3131; color:#ff3131;"></label>
+                        <label>吸血率 +%<input id="ownerAdminManualLifesteal" type="number" step="0.1" style="border-color:#ff69b4; color:#ff69b4;"></label>
+                        <label>HP 上限加成<input id="ownerAdminManualMaxHpBonus" type="number" step="1" style="border-color:#ffd700; color:#ffd700;"></label>
+                        <label>每回合回血<input id="ownerAdminManualHpRegen" type="number" step="1" style="border-color:#00ff41; color:#00ff41;"></label>
+                        <label>固定 HP 上限<input id="ownerAdminManualFixedMaxHp" type="number" step="1" placeholder="空白/0=依公式" style="border-color:#ffd700; color:#ffd700;"></label>
+                        <label>復活次數<input id="ownerAdminManualReviveCount" type="number" step="1" style="border-color:#8a2be2; color:#c084ff;"></label>
+                        <label>復活 HP<input id="ownerAdminManualReviveHp" type="number" step="1" style="border-color:#8a2be2; color:#c084ff;"></label>
+                        <label>計算後 HP<input id="ownerAdminComputedMaxHp" readonly style="border-color:#777; color:#aaa;"></label>
+                    </div>
+                    <label style="display:block; color:#aaa; font-size:12px; margin-top:8px;">常規技能 skills（JSON陣列，或用逗號/換行分隔）</label>
+                    <textarea id="ownerAdminSkillsJson" class="owner-admin-textarea" style="min-height:70px; border-color:#00ffff; color:#00ffff;"></textarea>
+                    <label style="display:block; color:#aaa; font-size:12px; margin-top:8px;">拜師技能 masteredSkills（JSON陣列，或用逗號/換行分隔）</label>
+                    <textarea id="ownerAdminMasteredSkillsJson" class="owner-admin-textarea" style="min-height:70px; border-color:#ffd700; color:#ffd700;"></textarea>
+                    <label style="display:block; color:#aaa; font-size:12px; margin-top:8px;">神兵 inventory（JSON陣列，支援完整物件）</label>
+                    <textarea id="ownerAdminInventoryJson" class="owner-admin-textarea" style="min-height:90px; border-color:#8a2be2; color:#c084ff;"></textarea>
+                    <label style="display:block; color:#aaa; font-size:12px; margin-top:8px;">紅顏 harem（JSON陣列，支援完整物件）</label>
+                    <textarea id="ownerAdminHaremJson" class="owner-admin-textarea" style="min-height:90px; border-color:#ff69b4; color:#ff69b4;"></textarea>
+                    <label style="display:block; color:#aaa; font-size:12px; margin-top:8px;">稱號效果 titleStats（JSON物件，可直接覆寫稱號功能）</label>
+                    <textarea id="ownerAdminTitleStatsJson" class="owner-admin-textarea" style="min-height:80px; border-color:#ffd700; color:#ffd700;"></textarea>
+                    <label style="display:block; color:#aaa; font-size:12px; margin-top:8px;">計算後完整戰鬥統計（唯讀）</label>
+                    <textarea id="ownerAdminFullStatsJson" class="owner-admin-textarea" readonly style="min-height:100px; border-color:#777; color:#aaa;"></textarea>
+                </div>
+
                 <label style="display:block; color:#aaa; font-size:12px; margin-top:8px;">封號原因 / 管理備註</label>
                 <select id="ownerAdminBanPreset" onchange="cyberOwnerUseBanPreset()" style="border-color:#ff3131; color:#ff3131; margin-top:4px;">
                     <option value="">-- 選擇常用封號原因，可再自行修改 --</option>
@@ -7314,6 +7367,12 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         if (ov.level !== undefined && ov.level !== '') f.level = Math.max(1, Math.floor(Number(ov.level) || 1));
         if (ov.rank !== undefined) f.rank = String(ov.rank || f.rank || '自創武將');
         if (ov.currentTitle !== undefined) f.currentTitle = String(ov.currentTitle || '');
+        if (Array.isArray(ov.skills)) f.skills = cyberArenaClone(ov.skills, []);
+        if (Array.isArray(ov.masteredSkills)) f.masteredSkills = cyberArenaClone(ov.masteredSkills, []);
+        if (Array.isArray(ov.inventory)) f.inventory = cyberArenaClone(ov.inventory, []);
+        if (Array.isArray(ov.harem)) f.harem = cyberArenaClone(ov.harem, []);
+        if (ov.titleStats !== undefined) f.titleStats = ov.titleStats;
+        if (ov.manualStats && typeof ov.manualStats === 'object') f.adminManualStats = { ...ov.manualStats };
         f.adminOverride = { ...ov };
 
         if (f.arenaSnapshot && typeof f.arenaSnapshot === 'object') {
@@ -7322,11 +7381,18 @@ box.innerHTML = pinnedHtml + arr.map(m => {
             f.arenaSnapshot.level = f.level;
             f.arenaSnapshot.rank = f.rank;
             f.arenaSnapshot.currentTitle = f.currentTitle || '';
-            if (f.currentTitle && typeof cyberGetTitleInfo === 'function') {
+            if (Array.isArray(ov.skills)) f.arenaSnapshot.skills = cyberArenaClone(ov.skills, []);
+            if (Array.isArray(ov.masteredSkills)) f.arenaSnapshot.masteredSkills = cyberArenaClone(ov.masteredSkills, []);
+            if (Array.isArray(ov.inventory)) f.arenaSnapshot.inventory = cyberArenaClone(ov.inventory, []);
+            if (Array.isArray(ov.harem)) f.arenaSnapshot.harem = cyberArenaClone(ov.harem, []);
+            if (ov.titleStats !== undefined) {
+                f.arenaSnapshot.titleStats = ov.titleStats;
+            } else if (f.currentTitle && typeof cyberGetTitleInfo === 'function') {
                 f.arenaSnapshot.titleStats = cyberNormalizeTitleInfo(cyberGetTitleInfo(f.currentTitle), f.currentTitle);
             } else if (!f.currentTitle) {
                 f.arenaSnapshot.titleStats = null;
             }
+            if (ov.manualStats && typeof ov.manualStats === 'object') f.arenaSnapshot.adminManualStats = { ...ov.manualStats };
             f.arenaSnapshot.adminOverride = { ...ov };
         }
 
@@ -7566,11 +7632,17 @@ box.innerHTML = pinnedHtml + arr.map(m => {
             stats.currentTitle = titleName;
         }
 
+        const manualStats = source.adminManualStats || source.manualStats || null;
+        if (manualStats && typeof cyberOwnerApplyManualStatsToStats === 'function') {
+            cyberOwnerApplyManualStatsToStats(stats, manualStats);
+        }
+
         stats.basePower = Number(source.power || 1);
         stats.power = stats.basePower + (stats.powerBonus || 0);
-        stats.maxHp = Math.max(80, 120 + Math.floor((stats.power || 1) / 4) + (stats.maxHpBonus || 0));
+        const fixedMaxHp = manualStats && Number(manualStats.fixedMaxHp || 0) > 0 ? Math.floor(Number(manualStats.fixedMaxHp)) : 0;
+        stats.maxHp = fixedMaxHp > 0 ? fixedMaxHp : Math.max(80, 120 + Math.floor((stats.power || 1) / 4) + (stats.maxHpBonus || 0));
         stats.hpRegen = Math.max(0, Number(stats.hpRegen || 0));
-        stats.revives = Array.isArray(stats.revives) ? stats.revives.slice(0, 5) : [];
+        stats.revives = Array.isArray(stats.revives) ? stats.revives.slice(0, 20) : [];
         return stats;
     }
 
@@ -8011,6 +8083,120 @@ box.innerHTML = pinnedHtml + arr.map(m => {
     }
 
 
+
+function cyberOwnerPercentToInput(v) {
+    const n = Number(v || 0);
+    return Number.isFinite(n) ? +(n * 100).toFixed(3) : 0;
+}
+
+function cyberOwnerInputPercent(id) {
+    const raw = document.getElementById(id)?.value;
+    if (raw === undefined || raw === null || String(raw).trim() === '') return 0;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n / 100 : 0;
+}
+
+function cyberOwnerInputNumber(id, fallback = 0, min = null) {
+    const raw = document.getElementById(id)?.value;
+    if (raw === undefined || raw === null || String(raw).trim() === '') return fallback;
+    const n = Number(raw);
+    if (!Number.isFinite(n)) return fallback;
+    return min === null ? n : Math.max(min, n);
+}
+
+function cyberOwnerParseJsonOrList(id, fallback = []) {
+    const raw = (document.getElementById(id)?.value || '').trim();
+    if (!raw) return cyberArenaClone(fallback, []);
+    try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : fallback;
+    } catch(e) {
+        return raw.split(/[\n,，、]+/).map(s => s.trim()).filter(Boolean);
+    }
+}
+
+function cyberOwnerParseJsonObject(id, fallback = null) {
+    const raw = (document.getElementById(id)?.value || '').trim();
+    if (!raw) return fallback;
+    try {
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : fallback;
+    } catch(e) {
+        alert('JSON 格式錯誤：' + id + '\n請檢查括號、逗號與引號。');
+        throw e;
+    }
+}
+
+function cyberOwnerBuildManualStatsFromInputs() {
+    const reviveCount = Math.max(0, Math.floor(cyberOwnerInputNumber('ownerAdminManualReviveCount', 0, 0)));
+    const reviveHp = Math.max(0, Math.floor(cyberOwnerInputNumber('ownerAdminManualReviveHp', 0, 0)));
+    const fixedMaxHp = Math.max(0, Math.floor(cyberOwnerInputNumber('ownerAdminManualFixedMaxHp', 0, 0)));
+    return {
+        powerBonus: Math.floor(cyberOwnerInputNumber('ownerAdminManualPowerBonus', 0)),
+        critBonus: cyberOwnerInputPercent('ownerAdminManualCrit'),
+        dodgeBonus: cyberOwnerInputPercent('ownerAdminManualDodge'),
+        blockChance: cyberOwnerInputPercent('ownerAdminManualBlock'),
+        armorPen: cyberOwnerInputPercent('ownerAdminManualArmorPen'),
+        lifesteal: cyberOwnerInputPercent('ownerAdminManualLifesteal'),
+        maxHpBonus: Math.floor(cyberOwnerInputNumber('ownerAdminManualMaxHpBonus', 0)),
+        hpRegen: Math.floor(cyberOwnerInputNumber('ownerAdminManualHpRegen', 0)),
+        fixedMaxHp,
+        reviveCount,
+        reviveHp
+    };
+}
+
+function cyberOwnerApplyManualStatsToStats(stats, manualStats) {
+    if (!stats || !manualStats || typeof manualStats !== 'object') return stats;
+    stats.powerBonus = (stats.powerBonus || 0) + (Number(manualStats.powerBonus) || 0);
+    stats.critBonus = (stats.critBonus || 0) + (Number(manualStats.critBonus) || 0);
+    stats.dodgeBonus = (stats.dodgeBonus || 0) + (Number(manualStats.dodgeBonus) || 0);
+    stats.blockChance = (stats.blockChance || 0) + (Number(manualStats.blockChance) || 0);
+    stats.armorPen = (stats.armorPen || 0) + (Number(manualStats.armorPen) || 0);
+    stats.lifesteal = (stats.lifesteal || 0) + (Number(manualStats.lifesteal) || 0);
+    stats.maxHpBonus = (stats.maxHpBonus || 0) + (Number(manualStats.maxHpBonus) || 0);
+    stats.hpRegen = (stats.hpRegen || 0) + (Number(manualStats.hpRegen) || 0);
+    const count = Math.max(0, Math.floor(Number(manualStats.reviveCount) || 0));
+    const hp = Math.max(1, Math.floor(Number(manualStats.reviveHp) || 1));
+    for (let i = 0; i < count; i++) {
+        if (!Array.isArray(stats.revives)) stats.revives = [];
+        stats.revives.push({ type: 'admin', hp, name: '群主覆寫復活', isConsumable: false });
+    }
+    stats.adminManualStats = { ...manualStats };
+    return stats;
+}
+
+function cyberOwnerSetDetailedInputsFromFighter(fighter, score, snapshot) {
+    const snap = snapshot || {};
+    const ov = (fighter && fighter.adminOverride) || snap.adminOverride || {};
+    const manual = snap.adminManualStats || (fighter && fighter.adminManualStats) || ov.manualStats || {};
+    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val ?? ''; };
+    setVal('ownerAdminManualPowerBonus', Number(manual.powerBonus || 0));
+    setVal('ownerAdminManualCrit', cyberOwnerPercentToInput(manual.critBonus));
+    setVal('ownerAdminManualDodge', cyberOwnerPercentToInput(manual.dodgeBonus));
+    setVal('ownerAdminManualBlock', cyberOwnerPercentToInput(manual.blockChance));
+    setVal('ownerAdminManualArmorPen', cyberOwnerPercentToInput(manual.armorPen));
+    setVal('ownerAdminManualLifesteal', cyberOwnerPercentToInput(manual.lifesteal));
+    setVal('ownerAdminManualMaxHpBonus', Number(manual.maxHpBonus || 0));
+    setVal('ownerAdminManualHpRegen', Number(manual.hpRegen || 0));
+    setVal('ownerAdminManualFixedMaxHp', Number(manual.fixedMaxHp || 0));
+    setVal('ownerAdminManualReviveCount', Number(manual.reviveCount || 0));
+    setVal('ownerAdminManualReviveHp', Number(manual.reviveHp || 0));
+    setVal('ownerAdminSkillsJson', JSON.stringify(Array.isArray(snap.skills) ? snap.skills : (fighter && Array.isArray(fighter.skills) ? fighter.skills : []), null, 2));
+    setVal('ownerAdminMasteredSkillsJson', JSON.stringify(Array.isArray(snap.masteredSkills) ? snap.masteredSkills : (fighter && Array.isArray(fighter.masteredSkills) ? fighter.masteredSkills : []), null, 2));
+    setVal('ownerAdminInventoryJson', JSON.stringify(Array.isArray(snap.inventory) ? snap.inventory : (fighter && Array.isArray(fighter.inventory) ? fighter.inventory : []), null, 2));
+    setVal('ownerAdminHaremJson', JSON.stringify(Array.isArray(snap.harem) ? snap.harem : (fighter && Array.isArray(fighter.harem) ? fighter.harem : []), null, 2));
+    setVal('ownerAdminTitleStatsJson', JSON.stringify((snap.titleStats !== undefined ? snap.titleStats : (fighter && fighter.titleStats)) || null, null, 2));
+    try {
+        const full = cyberBuildArenaFullCombatStats(fighter || snap || {});
+        setVal('ownerAdminComputedMaxHp', full.maxHp || '');
+        setVal('ownerAdminFullStatsJson', JSON.stringify(full, null, 2));
+    } catch(e) {
+        setVal('ownerAdminComputedMaxHp', '');
+        setVal('ownerAdminFullStatsJson', '無法計算：' + (e.message || e));
+    }
+}
+
 function cyberOwnerFormatAdminTime(ts) {
     if (!ts) return '';
     try {
@@ -8128,6 +8314,7 @@ function cyberOwnerSelectArenaPlayer(key) {
     setVal('ownerAdminFights', score.fights || 0);
     setVal('ownerAdminCurrentStreak', score.currentStreak || 0);
     setVal('ownerAdminBestStreak', score.bestStreak || 0);
+    cyberOwnerSetDetailedInputsFromFighter(fighter, score, snap);
     setVal('ownerAdminBanPreset', ban ? (ban.category || '') : '');
     setVal('ownerAdminBanReason', ban ? (ban.reason || '') : '');
     setVal('ownerAdminBanStatus', ban ? '已封號禁賽' : '未封號');
@@ -8135,7 +8322,7 @@ function cyberOwnerSelectArenaPlayer(key) {
     setVal('ownerAdminBanBy', ban ? (cyberOwnerGetBanByText(ban) || '') : '');
     setVal('ownerAdminBanCategory', ban ? (ban.category || '') : '');
     const banHistory = state.banHistory && state.banHistory[key] ? state.banHistory[key] : [];
-    setVal('ownerAdminRawJson', JSON.stringify({ arenaKey: key, playerId, fighter, score, ban, banHistory, snapshot: snap }, null, 2));
+    setVal('ownerAdminRawJson', JSON.stringify({ arenaKey: key, playerId, fighter, score, ban, banHistory, snapshot: snap, fullStats: (() => { try { return cyberBuildArenaFullCombatStats(fighter || snap || {}); } catch(e) { return null; } })() }, null, 2));
     cyberRefreshOwnerArenaAdminUI();
 }
 
@@ -8156,8 +8343,17 @@ function cyberOwnerApplyPlayerChanges() {
     const level = Math.max(1, Math.floor(Number(document.getElementById('ownerAdminLevel')?.value || (fighter && fighter.level) || 1)));
     const rank = document.getElementById('ownerAdminRank')?.value || (fighter && fighter.rank) || '自創武將';
     const currentTitle = document.getElementById('ownerAdminCurrentTitle')?.value || '';
+    let manualStats, skills, masteredSkills, inventory, harem, titleStats;
+    try {
+        manualStats = cyberOwnerBuildManualStatsFromInputs();
+        skills = cyberOwnerParseJsonOrList('ownerAdminSkillsJson', (fighter && fighter.arenaSnapshot && fighter.arenaSnapshot.skills) || (fighter && fighter.skills) || []);
+        masteredSkills = cyberOwnerParseJsonOrList('ownerAdminMasteredSkillsJson', (fighter && fighter.arenaSnapshot && fighter.arenaSnapshot.masteredSkills) || (fighter && fighter.masteredSkills) || []);
+        inventory = cyberOwnerParseJsonOrList('ownerAdminInventoryJson', (fighter && fighter.arenaSnapshot && fighter.arenaSnapshot.inventory) || (fighter && fighter.inventory) || []);
+        harem = cyberOwnerParseJsonOrList('ownerAdminHaremJson', (fighter && fighter.arenaSnapshot && fighter.arenaSnapshot.harem) || (fighter && fighter.harem) || []);
+        titleStats = cyberOwnerParseJsonObject('ownerAdminTitleStatsJson', null);
+    } catch(e) { return; }
     if (!state.adminOverrides) state.adminOverrides = {};
-    state.adminOverrides[key] = { power, level, rank, currentTitle, updatedAt: Date.now(), by: CYBER_OWNER_EMAIL };
+    state.adminOverrides[key] = { power, level, rank, currentTitle, manualStats, skills, masteredSkills, inventory, harem, titleStats, updatedAt: Date.now(), by: CYBER_OWNER_EMAIL };
 
     let edited = fighter ? { ...fighter } : null;
     if (edited) {
@@ -8280,7 +8476,7 @@ function cyberOwnerDeleteSelectedRoster() {
     if (state.champion && cyberGetFighterArenaKey(state.champion) === key) state.champion = null;
     cyberSaveArenaState(state).then(() => {
         const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val ?? ''; };
-        ['ownerAdminSelectedKey','ownerAdminPlayerId','ownerAdminOwnerName','ownerAdminHeroName','ownerAdminCurrentTitle','ownerAdminPower','ownerAdminLevel','ownerAdminRank','ownerAdminArenaPower','ownerAdminScore','ownerAdminWin','ownerAdminLose','ownerAdminFights','ownerAdminCurrentStreak','ownerAdminBestStreak','ownerAdminBanReason','ownerAdminRawJson'].forEach(id => setVal(id, ''));
+        ['ownerAdminSelectedKey','ownerAdminPlayerId','ownerAdminOwnerName','ownerAdminHeroName','ownerAdminCurrentTitle','ownerAdminPower','ownerAdminLevel','ownerAdminRank','ownerAdminArenaPower','ownerAdminScore','ownerAdminWin','ownerAdminLose','ownerAdminFights','ownerAdminCurrentStreak','ownerAdminBestStreak','ownerAdminManualPowerBonus','ownerAdminManualCrit','ownerAdminManualDodge','ownerAdminManualBlock','ownerAdminManualArmorPen','ownerAdminManualLifesteal','ownerAdminManualMaxHpBonus','ownerAdminManualHpRegen','ownerAdminManualFixedMaxHp','ownerAdminManualReviveCount','ownerAdminManualReviveHp','ownerAdminComputedMaxHp','ownerAdminSkillsJson','ownerAdminMasteredSkillsJson','ownerAdminInventoryJson','ownerAdminHaremJson','ownerAdminTitleStatsJson','ownerAdminFullStatsJson','ownerAdminBanReason','ownerAdminRawJson'].forEach(id => setVal(id, ''));
         cyberRefreshOwnerArenaAdminUI();
         alert('已移出公開擂台名冊。');
     });
