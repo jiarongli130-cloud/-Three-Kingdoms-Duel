@@ -1339,7 +1339,7 @@
             </div>
             <div class="wargame-box custom-title-admin-panel" id="customTitleAdminPanel" style="display:none;">
                 <h4>👑 群主專用｜自訂稱號管理</h4>
-                <p class="title-admin-note">只有 Google 群主登入後可使用。授予名單會包含本機自創武將、公開擂台名冊、現任擂主與排行榜中的其他玩家自創武將；Firebase 連線時會同步授予紀錄。</p>
+                <p class="title-admin-note">只有 Google 群主登入後可使用。自訂稱號與兌換碼系統採本機 localStorage，不動 Firebase；玩家輸入兌換碼後會在自己電腦取得稱號。</p>
                 <div class="custom-title-admin-grid">
                     <div class="custom-title-admin-box">
                         <strong style="color:#ff8c00;">新增／覆寫自訂稱號</strong>
@@ -1362,6 +1362,7 @@
                             <label>HP 上限加成<input id="customTitleHp" type="number" value="0" step="1"></label>
                         </div>
                         <button onclick="cyberCreateCustomTitle()" style="margin-top:8px; border-color:#ff8c00; color:#ff8c00;">➕ 儲存自訂稱號</button>
+                        <button onclick="cyberCreateCustomTitleAndGenerateCode()" style="margin-top:6px; border-color:#00ffff; color:#00ffff;">💠 儲存並產生兌換碼</button>
                     </div>
                     <div class="custom-title-admin-box">
                         <strong style="color:#ffd700;">授予稱號給自創武將</strong>
@@ -1369,6 +1370,16 @@
                         <select id="grantHeroSelect" style="margin-top:6px; border-color:#00ffff; color:#00ffff;"></select>
                         <button onclick="cyberGrantSelectedTitleToHero()" style="margin-top:8px; border-color:#ffd700; color:#ffd700;">🎁 授予稱號</button>
                         <div id="customTitleListBoard" class="title-admin-note" style="margin-top:8px; max-height:180px; overflow-y:auto;">自訂稱號載入中...</div>
+                    </div>
+                    <div class="custom-title-admin-box">
+                        <strong style="color:#00ffff;">🎁 稱號兌換碼產生器（不動 Firebase）</strong>
+                        <p class="title-admin-note">兌換碼會內含稱號名稱、說明、稀有度與全部加成。玩家在自己電腦輸入後，會寫入本機 localStorage 並可在人物面板裝備。</p>
+                        <select id="redeemTitleSelect" style="margin-top:8px; border-color:#00ffff; color:#00ffff;"></select>
+                        <input id="redeemCodeLabel" placeholder="兌換碼備註，例如：初代通關者／玩家名，可不填" style="margin-top:6px; border-color:#00ffff; color:#00ffff;">
+                        <button onclick="cyberGenerateTitleRedeemCode()" style="margin-top:8px; border-color:#00ffff; color:#00ffff;">🔐 產生稱號兌換碼</button>
+                        <textarea id="generatedTitleRedeemCode" class="title-admin-textarea" readonly placeholder="產生後的兌換碼會出現在這裡，複製給玩家即可。" style="margin-top:6px; min-height:90px; border-color:#00ffff; color:#00ffff;"></textarea>
+                        <button onclick="cyberCopyGeneratedTitleRedeemCode()" style="margin-top:6px; border-color:#ffd700; color:#ffd700;">📋 複製兌換碼</button>
+                        <div id="redeemCodePreviewBoard" class="title-admin-note" style="margin-top:8px;">內建短碼：DRAGONSLAYER-2026 可兌換【弒龍飛將】；FIRST-DRAGON-2026-001 可兌換【初代弒龍飛將】。</div>
                     </div>
                 </div>
             </div>
@@ -6559,8 +6570,6 @@
     let cyberRemotePinnedMessage = null;
     let cyberRemoteMutedUsers = {};
     let cyberRemoteArenaState = null;
-    let cyberRemoteCustomTitleCatalog = {};
-    let cyberRemoteTitleGrants = {};
 
     function cyberEscapeHtml(str) {
         return String(str ?? '')
@@ -6569,17 +6578,6 @@
             .replaceAll('>', '&gt;')
             .replaceAll('"', '&quot;')
             .replaceAll("'", '&#039;');
-    }
-
-
-    function cyberSafeFirebaseKey(str) {
-        return encodeURIComponent(String(str ?? ''))
-            .replaceAll('.', '%2E')
-            .replaceAll('#', '%23')
-            .replaceAll('$', '%24')
-            .replaceAll('[', '%5B')
-            .replaceAll(']', '%5D')
-            .replaceAll('/', '%2F');
     }
 
     function cyberNowTime(ts = Date.now()) {
@@ -7430,10 +7428,11 @@ function cyberRefreshArenaUI() {
     const CYBER_WORLD_BOSS_KEY = 'cyberWorldBossState_v1';
     const CYBER_LEGEND_HALL_KEY = 'cyberLegendHall_v1';
     const CYBER_CUSTOM_TITLE_CATALOG_KEY = 'cyberCustomTitleCatalog_v1';
+    const CYBER_TITLE_REDEEMED_CODES_KEY = 'cyberTitleRedeemedCodes_v1';
 
     const CYBER_TITLE_CATALOG = {
-        "弒龍飛將": { desc: "飛將弒龍挑戰成功者，使用呂布擊敗 Boss 趙雲者可獲得。", source: "飛將弒龍挑戰", rarity: "legend", powerBonus: 10, critBonus: 0.01 },
-        "初代弒龍飛將": { desc: "第一位完成飛將弒龍挑戰者專屬稱號。", source: "飛將弒龍挑戰首位成功者", rarity: "myth", powerBonus: 20, critBonus: 0.02, armorPen: 0.01 },
+        "弒龍飛將": { desc: "這是飛將弒龍挑戰成功者專屬稱號。以呂布之名擊破 Boss 趙雲，證明飛將仍可撼動龍膽神話。", source: "飛將弒龍挑戰成功者", rarity: "legend", powerBonus: 100 },
+        "初代弒龍飛將": { desc: "這是飛將弒龍挑戰首位通關者專屬稱號。以呂布之名破趙雲不敗神話，開創弒龍傳說的第一人。", source: "飛將弒龍挑戰首位通關者專屬", rarity: "myth", powerBonus: 1000, critBonus: 0.10, dodgeBonus: 0.10, blockChance: 0.10, armorPen: 0.10, lifesteal: 0.10, maxHpBonus: 10 },
         "初登擂台": { desc: "第一次參與公開擂台。", rarity: "common" },
         "三連武者": { desc: "公開擂台目前連勝達 3 場。", rarity: "common" },
         "五連豪傑": { desc: "公開擂台目前連勝達 5 場。", rarity: "rare" },
@@ -7495,14 +7494,11 @@ function cyberRefreshArenaUI() {
     }
 
     function cyberGetCustomTitleCatalog() {
-        const localCatalog = cyberReadJson(CYBER_CUSTOM_TITLE_CATALOG_KEY, {});
-        // Firebase 版本優先覆蓋本機舊資料，確保群主更新後玩家端能取得最新稱號效果。
-        return { ...(localCatalog || {}), ...(cyberRemoteCustomTitleCatalog || {}) };
+        return cyberReadJson(CYBER_CUSTOM_TITLE_CATALOG_KEY, {});
     }
 
     function cyberSaveCustomTitleCatalog(catalog) {
         cyberWriteJson(CYBER_CUSTOM_TITLE_CATALOG_KEY, catalog || {});
-        cyberRemoteCustomTitleCatalog = { ...(cyberRemoteCustomTitleCatalog || {}), ...(catalog || {}) };
         cyberSyncCustomTitlesToCloudIfReady(catalog || {});
     }
 
@@ -7580,22 +7576,9 @@ function cyberRefreshArenaUI() {
     }
 
     function cyberSyncCustomTitlesToCloudIfReady(catalog) {
-        if (cyberFirebaseReady && cyberDb) {
-            cyberDb.ref(`${CYBER_ROOM_PATH}/customTitleCatalog`).set(catalog || {}).catch(err => {
-                console.warn('自訂稱號同步雲端失敗：', err);
-            });
-        }
+        // 後續若要開啟 Firebase 稱號同步，可在此處接 RTDB。
+        // 目前先依需求使用本機 localStorage 保存，避免干擾既有公開擂台資料。
         return catalog;
-    }
-
-    function cyberApplyRemoteCustomTitleCatalog(catalog) {
-        cyberRemoteCustomTitleCatalog = catalog || {};
-        const localCatalog = cyberReadJson(CYBER_CUSTOM_TITLE_CATALOG_KEY, {});
-        cyberWriteJson(CYBER_CUSTOM_TITLE_CATALOG_KEY, { ...(localCatalog || {}), ...(catalog || {}) });
-        cyberRefreshEnhancedGameUI();
-        cyberRefreshArenaUI();
-        if (typeof cyberRefreshCustomTitleAdminUI === 'function') cyberRefreshCustomTitleAdminUI();
-        if (activeRpgGeneral && typeof renderRpgPanel === 'function') renderRpgPanel(activeRpgGeneral);
     }
 
     function cyberGetTitleClass(title) {
@@ -7763,112 +7746,25 @@ function cyberRefreshArenaUI() {
             </div>
             <div style="margin-top:6px; color:#aaa;">稱號功能說明：裝備後名稱顯示為 <span style="color:#ffd700;">稱號｜武將名</span>，且稱號效果會進入單挑、擂台與沙盤戰鬥計算。</div>
             <div style="margin-top:4px;">目前稱號效果：<span class="title-tooltip-effect">${cyberEscapeHtml(effectText)}</span></div>
+            <div style="border:1px solid #ffd700; background:rgba(255,215,0,0.06); padding:8px; border-radius:6px; margin-top:8px;">
+                <div style="color:#ffd700; font-weight:bold; text-shadow:0 0 5px #ffd700; margin-bottom:5px;">🎁 稱號兌換碼</div>
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                    <input id="titleRedeemCodeInput" placeholder="輸入群主發放的稱號兌換碼" style="flex:2; min-width:220px; border-color:#ffd700; color:#ffd700;">
+                    <button onclick="cyberRedeemTitleCodeForActiveHero()" style="flex:1; min-width:130px; border-color:#ffd700; color:#ffd700;">兌換到此武將</button>
+                </div>
+                <div style="margin-top:5px; color:#aaa; font-size:12px;">不需 Firebase。兌換成功後，稱號資料與取得紀錄會保存於本機；同一組兌換碼在同一瀏覽器只會生效一次。</div>
+            </div>
         `;
     }
 
-    function cyberGetGrantableHeroEntries() {
-        const map = new Map();
-        const put = (name, data = {}) => {
-            if (!name) return;
-            const old = map.get(name) || { name };
-            map.set(name, { ...old, ...data, name });
-        };
-
+    function cyberGetGrantableHeroNames() {
+        const names = new Set();
         try {
             const saved = cyberReadJson('rpgGenerals', {});
-            Object.values(saved || {}).forEach(g => {
-                if (!g || !g.name) return;
-                put(g.name, {
-                    source: cyberIsMyOwnedGeneral(g) ? '本機我的武將' : '本機封存武將',
-                    owner: g.owner || (cyberIsMyOwnedGeneral(g) ? cyberGetNick() : ''),
-                    ownerId: g.ownerId || '',
-                    power: Number(g.power || 1),
-                    rank: g.rank || (g.isRPG ? '異界修羅' : '自創武將'),
-                    local: true
-                });
-            });
+            Object.keys(saved || {}).forEach(n => { if (n) names.add(n); });
         } catch(e) {}
-
-        try {
-            if (activeRpgGeneral && activeRpgGeneral.name) {
-                put(activeRpgGeneral.name, {
-                    source: '目前喚醒武將',
-                    owner: activeRpgGeneral.owner || cyberGetNick(),
-                    ownerId: activeRpgGeneral.ownerId || cyberGetMyOwnerId(),
-                    power: Number(activeRpgGeneral.power || 1),
-                    rank: activeRpgGeneral.rank || (activeRpgGeneral.isRPG ? '異界修羅' : '自創武將'),
-                    local: true
-                });
-            }
-        } catch(e) {}
-
-        try {
-            generals.filter(g => g && g.inventory !== undefined).forEach(g => {
-                put(g.name, {
-                    source: cyberIsMyOwnedGeneral(g) ? '本機我的武將' : '本機自創武將',
-                    owner: g.owner || '',
-                    ownerId: g.ownerId || '',
-                    power: Number(g.power || 1),
-                    rank: g.rank || (g.isRPG ? '異界修羅' : '自創武將'),
-                    local: true
-                });
-            });
-        } catch(e) {}
-
-        try {
-            const state = cyberGetArenaState();
-            Object.values(state.roster || {}).forEach(g => {
-                if (!g || !g.name) return;
-                put(g.name, {
-                    source: '公開擂台名冊',
-                    owner: g.owner || g.nick || '',
-                    ownerId: g.ownerId || g.clientTag || '',
-                    power: Number(g.power || 1),
-                    rank: g.rank || (g.isRPG ? '異界修羅' : '自創武將'),
-                    public: true
-                });
-            });
-            if (state.champion && state.champion.name) {
-                const g = state.champion;
-                put(g.name, {
-                    source: '現任擂主',
-                    owner: g.owner || g.nick || '',
-                    ownerId: g.ownerId || g.clientTag || '',
-                    power: Number(g.power || 1),
-                    rank: g.rank || (g.isRPG ? '異界修羅' : '自創武將'),
-                    public: true
-                });
-            }
-            Object.values(state.scores || {}).forEach(s => {
-                if (!s || !s.name) return;
-                put(s.name, {
-                    source: '擂台排行榜',
-                    owner: s.owner || '',
-                    power: Number(s.power || 0),
-                    rank: s.rank || '自創武將',
-                    public: true
-                });
-            });
-        } catch(e) {}
-
-        return [...map.values()].sort((a,b) => {
-            const ap = Number(a.power || 0);
-            const bp = Number(b.power || 0);
-            return bp - ap || a.name.localeCompare(b.name, 'zh-Hant');
-        });
-    }
-
-    function cyberGetGrantableHeroNames() {
-        return cyberGetGrantableHeroEntries().map(e => e.name);
-    }
-
-    function cyberFormatGrantableHeroOption(e) {
-        const parts = [e.name];
-        if (e.owner) parts.push(`玩家 ${e.owner}`);
-        if (e.power) parts.push(`武力 ${e.power}`);
-        if (e.rank) parts.push(e.rank);
-        if (e.source) parts.push(e.source);
-        return parts.join('｜');
+        generals.filter(g => g && g.inventory !== undefined).forEach(g => names.add(g.name));
+        return [...names].sort((a,b)=>a.localeCompare(b, 'zh-Hant'));
     }
 
     function cyberCreateCustomTitle() {
@@ -7897,69 +7793,210 @@ function cyberRefreshArenaUI() {
         cyberRefreshEnhancedGameUI();
     }
 
-    function cyberApplyTitleToGameMetaSilently(hero, title, autoEquip = true) {
-        if (!hero || !title) return false;
-        const meta = cyberGetGameMeta();
-        if (!meta.heroes) meta.heroes = {};
-        if (!meta.heroes[hero]) {
-            meta.heroes[hero] = {
-                titles: [],
-                currentTitle: '',
-                arenaWins: 0,
-                arenaFights: 0,
-                masterTrains: 0,
-                masterWins: 0,
-                bossDamageTotal: 0,
-                bossKills: 0,
-                bestStreak: 0
-            };
-        }
-        if (!Array.isArray(meta.heroes[hero].titles)) meta.heroes[hero].titles = [];
-        const added = !meta.heroes[hero].titles.includes(title);
-        if (added) meta.heroes[hero].titles.push(title);
-        if (autoEquip && !meta.heroes[hero].currentTitle) meta.heroes[hero].currentTitle = title;
-        cyberSaveGameMeta(meta);
-        return added;
+    function cyberCreateCustomTitleFromForm(silent = false) {
+        if (!cyberIsRoomOwner()) { if (!silent) alert('只有登入群主 Gmail 才能新增自訂稱號。'); return null; }
+        const name = (document.getElementById('customTitleName')?.value || '').trim();
+        if (!name) { if (!silent) alert('請輸入稱號名稱。'); return null; }
+        const rarity = document.getElementById('customTitleRarity')?.value || 'common';
+        const desc = (document.getElementById('customTitleDesc')?.value || '').trim();
+        const num = id => Number(document.getElementById(id)?.value || 0) || 0;
+        const catalog = cyberGetCustomTitleCatalog();
+        catalog[name] = {
+            desc,
+            source: '群主自訂稱號',
+            rarity,
+            powerBonus: num('customTitlePower'),
+            critBonus: num('customTitleCrit') / 100,
+            dodgeBonus: num('customTitleDodge') / 100,
+            blockChance: num('customTitleBlock') / 100,
+            armorPen: num('customTitleArmorPen') / 100,
+            lifesteal: num('customTitleLifesteal') / 100,
+            maxHpBonus: num('customTitleHp')
+        };
+        cyberSaveCustomTitleCatalog(catalog);
+        if (!silent) alert(`自訂稱號已儲存：【${name}】`);
+        cyberRefreshCustomTitleAdminUI();
+        cyberRefreshEnhancedGameUI();
+        return name;
     }
 
-    function cyberSaveGrantToLocalHeroIfExists(hero, title) {
+    function cyberUtf8ToBase64Url(str) {
+        const bytes = new TextEncoder().encode(String(str || ''));
+        let bin = '';
+        bytes.forEach(b => bin += String.fromCharCode(b));
+        return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    }
+
+    function cyberBase64UrlToUtf8(str) {
+        let s = String(str || '').replace(/-/g, '+').replace(/_/g, '/');
+        while (s.length % 4) s += '=';
+        const bin = atob(s);
+        const bytes = new Uint8Array([...bin].map(ch => ch.charCodeAt(0)));
+        return new TextDecoder().decode(bytes);
+    }
+
+    function cyberTitleCodeChecksum(payloadText) {
+        let a = 0x13572468;
+        const s = String(payloadText || '');
+        for (let i = 0; i < s.length; i++) {
+            a = ((a << 5) - a + s.charCodeAt(i) + (i * 97)) >>> 0;
+        }
+        return a.toString(36).toUpperCase().padStart(7, '0').slice(-7);
+    }
+
+    function cyberBuildTitleRedeemPayload(title, label = '') {
+        const info = cyberGetTitleInfo(title);
+        return {
+            v: 1,
+            type: 'cyber_title_redeem',
+            id: `TRC_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+            label: String(label || '').trim(),
+            title,
+            info: cyberNormalizeTitleInfo(info, title),
+            createdAt: Date.now(),
+            issuer: cyberFirebaseUser?.email || CYBER_OWNER_EMAIL || 'room_owner'
+        };
+    }
+
+    function cyberEncodeTitleRedeemCode(payload) {
+        const b64 = cyberUtf8ToBase64Url(JSON.stringify(payload || {}));
+        return `SGTITLE1.${b64}.${cyberTitleCodeChecksum(b64)}`;
+    }
+
+    function cyberParseBuiltinTitleRedeemCode(code) {
+        const normalized = String(code || '').trim().toUpperCase().replace(/\s+/g, '');
+        const builtin = {
+            'DRAGONSLAYER-2026': {
+                id: 'BUILTIN_DRAGONSLAYER_2026',
+                title: '弒龍飛將',
+                info: CYBER_TITLE_CATALOG['弒龍飛將'],
+                label: '飛將弒龍挑戰成功者'
+            },
+            'FIRST-DRAGON-2026-001': {
+                id: 'BUILTIN_FIRST_DRAGON_2026_001',
+                title: '初代弒龍飛將',
+                info: CYBER_TITLE_CATALOG['初代弒龍飛將'],
+                label: '飛將弒龍挑戰首位通關者'
+            }
+        };
+        if (!builtin[normalized]) return null;
+        const item = builtin[normalized];
+        return {
+            v: 1,
+            type: 'cyber_title_redeem',
+            id: item.id,
+            label: item.label,
+            title: item.title,
+            info: cyberNormalizeTitleInfo(item.info, item.title),
+            createdAt: Date.now(),
+            issuer: '官方內建活動碼'
+        };
+    }
+
+    function cyberParseTitleRedeemCode(code) {
+        const builtin = cyberParseBuiltinTitleRedeemCode(code);
+        if (builtin) return builtin;
+        const raw = String(code || '').trim().replace(/\s+/g, '');
+        const parts = raw.split('.');
+        if (parts.length !== 3 || parts[0] !== 'SGTITLE1') throw new Error('兌換碼格式不正確。');
+        const b64 = parts[1];
+        const checksum = parts[2];
+        if (cyberTitleCodeChecksum(b64) !== checksum) throw new Error('兌換碼校驗失敗，可能複製不完整。');
+        const payload = JSON.parse(cyberBase64UrlToUtf8(b64));
+        if (!payload || payload.type !== 'cyber_title_redeem' || !payload.title || !payload.info) throw new Error('兌換碼內容不完整。');
+        payload.info = cyberNormalizeTitleInfo(payload.info, payload.title);
+        payload.id = payload.id || `TRC_IMPORTED_${payload.title}`;
+        return payload;
+    }
+
+    function cyberGenerateTitleRedeemCode(titleOverride = '') {
+        if (!cyberIsRoomOwner()) { alert('只有登入群主 Gmail 才能產生稱號兌換碼。'); return ''; }
+        const title = titleOverride || document.getElementById('redeemTitleSelect')?.value || '';
+        if (!title) { alert('請先選擇要產生兌換碼的稱號。'); return ''; }
+        const label = document.getElementById('redeemCodeLabel')?.value || '';
+        const payload = cyberBuildTitleRedeemPayload(title, label);
+        const code = cyberEncodeTitleRedeemCode(payload);
+        const out = document.getElementById('generatedTitleRedeemCode');
+        if (out) out.value = code;
+        const board = document.getElementById('redeemCodePreviewBoard');
+        if (board) {
+            const effects = cyberBuildTitleEffectsList(payload.info).join('、') || '無加成';
+            board.innerHTML = `已產生：${cyberTitleChipHtml(title)}<br><span style="color:#aaa;">${cyberEscapeHtml(payload.label || '無備註')}｜${cyberEscapeHtml(effects)}</span><br><span style="color:#ff8c00;">把上方兌換碼複製給玩家；玩家在自己人物面板輸入即可領取。</span>`;
+        }
+        return code;
+    }
+
+    function cyberCreateCustomTitleAndGenerateCode() {
+        const title = cyberCreateCustomTitleFromForm(true);
+        if (!title) return;
+        cyberRefreshCustomTitleAdminUI();
+        const sel = document.getElementById('redeemTitleSelect');
+        if (sel) sel.value = title;
+        cyberGenerateTitleRedeemCode(title);
+        alert(`自訂稱號已儲存，並已產生兌換碼：【${title}】`);
+    }
+
+    function cyberCopyGeneratedTitleRedeemCode() {
+        const out = document.getElementById('generatedTitleRedeemCode');
+        if (!out || !out.value) { alert('目前沒有可複製的兌換碼。'); return; }
+        out.select();
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(out.value).then(() => alert('兌換碼已複製。')).catch(() => { document.execCommand('copy'); alert('兌換碼已複製。'); });
+        } else {
+            document.execCommand('copy');
+            alert('兌換碼已複製。');
+        }
+    }
+
+    function cyberRedeemTitleCodeForActiveHero() {
+        if (!activeRpgGeneral || !activeRpgGeneral.name) { alert('請先喚醒或選定要領取稱號的自創武將。'); return; }
+        const input = document.getElementById('titleRedeemCodeInput');
+        const code = input?.value || '';
+        if (!code.trim()) { alert('請輸入群主發放的稱號兌換碼。'); return; }
+        let payload;
+        try {
+            payload = cyberParseTitleRedeemCode(code);
+        } catch(e) {
+            alert(e.message || '兌換碼無法解析。');
+            return;
+        }
+        const redeemed = cyberReadJson(CYBER_TITLE_REDEEMED_CODES_KEY, {});
+        if (redeemed[payload.id]) {
+            alert(`此兌換碼在本機已兌換過：${redeemed[payload.id].title || payload.title}`);
+            return;
+        }
+        const title = payload.title;
+        const info = cyberNormalizeTitleInfo(payload.info, title);
+        const catalog = cyberGetCustomTitleCatalog();
+        catalog[title] = {
+            desc: info.desc,
+            source: info.source || '稱號兌換碼',
+            rarity: info.rarity || 'common',
+            powerBonus: info.powerBonus || 0,
+            critBonus: info.critBonus || 0,
+            dodgeBonus: info.dodgeBonus || 0,
+            blockChance: info.blockChance || 0,
+            armorPen: info.armorPen || 0,
+            lifesteal: info.lifesteal || 0,
+            maxHpBonus: info.maxHpBonus || 0
+        };
+        cyberSaveCustomTitleCatalog(catalog);
+        cyberAwardTitle(activeRpgGeneral.name, title, true);
         const savedData = cyberReadJson('rpgGenerals', {});
-        if (savedData[hero]) {
-            if (!savedData[hero].grantedTitles) savedData[hero].grantedTitles = [];
-            if (!savedData[hero].grantedTitles.includes(title)) savedData[hero].grantedTitles.push(title);
+        if (savedData[activeRpgGeneral.name]) {
+            if (!savedData[activeRpgGeneral.name].grantedTitles) savedData[activeRpgGeneral.name].grantedTitles = [];
+            if (!savedData[activeRpgGeneral.name].grantedTitles.includes(title)) savedData[activeRpgGeneral.name].grantedTitles.push(title);
             cyberWriteJson('rpgGenerals', savedData);
         }
-    }
-
-    function cyberPushTitleGrantToCloudIfReady(hero, title) {
-        if (!cyberFirebaseReady || !cyberDb || !hero || !title) return Promise.resolve(false);
-        const key = cyberSafeFirebaseKey(hero);
-        const item = {
-            hero,
-            title,
-            grantedBy: cyberGetNick(),
-            grantedByEmail: cyberFirebaseUser && cyberFirebaseUser.email ? cyberFirebaseUser.email : '',
-            time: Date.now()
-        };
-        return cyberDb.ref(`${CYBER_ROOM_PATH}/titleGrants/${key}`).push(item).then(() => true).catch(err => {
-            console.warn('稱號授予同步雲端失敗：', err);
-            return false;
-        });
-    }
-
-    function cyberApplyIncomingTitleGrants() {
-        const grants = cyberRemoteTitleGrants || {};
-        Object.values(grants).forEach(bucket => {
-            Object.values(bucket || {}).forEach(g => {
-                if (!g || !g.hero || !g.title) return;
-                cyberApplyTitleToGameMetaSilently(g.hero, g.title, true);
-                cyberSaveGrantToLocalHeroIfExists(g.hero, g.title);
-            });
-        });
+        redeemed[payload.id] = { title, hero: activeRpgGeneral.name, label: payload.label || '', time: Date.now() };
+        cyberWriteJson(CYBER_TITLE_REDEEMED_CODES_KEY, redeemed);
+        cyberAddLegendRecord('稱號兌換碼', `【${activeRpgGeneral.name}】使用兌換碼獲得稱號「${title}」`, 10);
+        if (input) input.value = '';
         cyberRefreshEnhancedGameUI();
-        cyberRefreshArenaUI();
-        if (typeof cyberRefreshCustomTitleAdminUI === 'function') cyberRefreshCustomTitleAdminUI();
-        if (activeRpgGeneral && typeof renderRpgPanel === 'function') renderRpgPanel(activeRpgGeneral);
+        cyberRefreshCustomTitleAdminUI();
+        renderRpgPanel(activeRpgGeneral);
+        updateDropdowns();
+        alert(`兌換成功！${activeRpgGeneral.name} 已獲得稱號：${title}｜${activeRpgGeneral.name}`);
     }
 
     function cyberGrantSelectedTitleToHero() {
@@ -7967,19 +8004,19 @@ function cyberRefreshArenaUI() {
         const title = document.getElementById('grantTitleSelect')?.value || '';
         const hero = document.getElementById('grantHeroSelect')?.value || '';
         if (!title || !hero) { alert('請選擇要授予的稱號與自創武將。'); return; }
-
-        cyberApplyTitleToGameMetaSilently(hero, title, true);
-        cyberSaveGrantToLocalHeroIfExists(hero, title);
-        cyberPushTitleGrantToCloudIfReady(hero, title).then(cloudOk => {
-            cyberAddLegendRecord('群主授予稱號', `群主授予【${hero}】稱號「${title}」`, 10);
-            cyberSendSystemChat(`【群主授予稱號】${hero} 永久取得稱號「${title}」！`);
-            const cloudText = cloudOk ? '，並已同步到 Firebase，對方連線後可取得' : '。目前為本機紀錄；若未連 Firebase，請讓對方刷新或稍後再同步';
-            alert(`已授予 ${hero} 稱號：${title}｜${hero}${cloudText}`);
-            cyberRefreshCustomTitleAdminUI();
-            cyberRefreshEnhancedGameUI();
-            cyberRefreshArenaUI();
-            if (activeRpgGeneral && activeRpgGeneral.name === hero) renderRpgPanel(activeRpgGeneral);
-        });
+        cyberAwardTitle(hero, title, true);
+        const savedData = cyberReadJson('rpgGenerals', {});
+        if (savedData[hero]) {
+            if (!savedData[hero].grantedTitles) savedData[hero].grantedTitles = [];
+            if (!savedData[hero].grantedTitles.includes(title)) savedData[hero].grantedTitles.push(title);
+            cyberWriteJson('rpgGenerals', savedData);
+        }
+        cyberAddLegendRecord('群主授予稱號', `群主授予【${hero}】稱號「${title}」`, 10);
+        cyberSendSystemChat(`【群主授予稱號】${hero} 永久取得稱號「${title}」！`);
+        alert(`已授予 ${hero} 稱號：${title}｜${hero}`);
+        cyberRefreshCustomTitleAdminUI();
+        cyberRefreshEnhancedGameUI();
+        if (activeRpgGeneral && activeRpgGeneral.name === hero) renderRpgPanel(activeRpgGeneral);
     }
 
     function cyberRefreshCustomTitleAdminUI() {
@@ -7999,13 +8036,24 @@ function cyberRefreshArenaUI() {
             if ([...titleSel.options].some(o => o.value === currentVal)) titleSel.value = currentVal;
         }
 
+        const redeemTitleSel = document.getElementById('redeemTitleSelect');
+        if (redeemTitleSel) {
+            const currentVal = redeemTitleSel.value;
+            redeemTitleSel.innerHTML = '';
+            Object.keys(cyberGetTitleCatalog()).sort((a,b)=>a.localeCompare(b, 'zh-Hant')).forEach(t => {
+                const info = cyberGetTitleInfo(t);
+                redeemTitleSel.add(new Option(`${t}｜${info.rarity}｜${cyberBuildTitleEffectsList(info).join('、') || '無加成'}`, t));
+            });
+            if ([...redeemTitleSel.options].some(o => o.value === currentVal)) redeemTitleSel.value = currentVal;
+        }
+
         const heroSel = document.getElementById('grantHeroSelect');
         if (heroSel) {
             const currentVal = heroSel.value;
             heroSel.innerHTML = '';
-            const entries = cyberGetGrantableHeroEntries();
-            if (!entries.length) heroSel.add(new Option('尚無可授予的自創武將，請先創角、喚醒或請玩家登錄擂台', ''));
-            entries.forEach(e => heroSel.add(new Option(cyberFormatGrantableHeroOption(e), e.name)));
+            const names = cyberGetGrantableHeroNames();
+            if (!names.length) heroSel.add(new Option('尚無可授予的自創武將，請先創角或喚醒', ''));
+            names.forEach(n => heroSel.add(new Option(n, n)));
             if ([...heroSel.options].some(o => o.value === currentVal)) heroSel.value = currentVal;
         }
 
@@ -10074,14 +10122,6 @@ function cyberRefreshArenaUI() {
             cyberDb.ref(`${CYBER_ROOM_PATH}/arenaState`).on('value', snap => {
                 cyberRemoteArenaState = snap.val() || cyberGetDefaultArenaState();
                 cyberRefreshArenaUI();
-                if (typeof cyberRefreshCustomTitleAdminUI === 'function') cyberRefreshCustomTitleAdminUI();
-            });
-            cyberDb.ref(`${CYBER_ROOM_PATH}/customTitleCatalog`).on('value', snap => {
-                cyberApplyRemoteCustomTitleCatalog(snap.val() || {});
-            });
-            cyberDb.ref(`${CYBER_ROOM_PATH}/titleGrants`).on('value', snap => {
-                cyberRemoteTitleGrants = snap.val() || {};
-                cyberApplyIncomingTitleGrants();
             });
         } catch (e) {
             console.warn('Firebase 初始化失敗：', e);
@@ -10099,7 +10139,6 @@ function cyberRefreshArenaUI() {
         if (msgInput) msgInput.addEventListener('keydown', e => { if (e.key === 'Enter') cyberSendPublicChat(); });
         setInterval(cyberRefreshArenaUI, 1000);
         setInterval(cyberRefreshArenaSelect, 3000);
-        setInterval(cyberRefreshCustomTitleAdminUI, 3000);
         setInterval(cyberRefreshEnhancedGameUI, 3000);
         setInterval(cyberRefreshThreeSystemsUI, 3000);
         setInterval(cyberRefreshAdvancedSystemsUI, 3000);
