@@ -7499,8 +7499,27 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         return g;
     }
 
+    function cyberIsLegacyLocalGeneral(g) {
+        // 舊版自創武將可能沒有 ownerId / playerId / clientTag。
+        // 這類資料若存在本機 rpgGenerals / activeRpgGeneral，就視為本機本人擁有，避免升級 playerID 後擂台選單空白、不能登台或挑戰。
+        return !!(g && g.name && g.inventory !== undefined && !g.ownerId && !g.playerId && !g.clientTag);
+    }
+
+    function cyberBindGeneralToCurrentPlayer(g) {
+        if (!g || !g.name) return g;
+        const myId = cyberGetMyOwnerId();
+        g.ownerId = myId;
+        g.playerId = myId;
+        g.clientTag = myId;
+        g.owner = g.owner || cyberGetNick();
+        g.localOwnerVersion = 4;
+        g.lastLocalTouch = Date.now();
+        return g;
+    }
+
     function cyberIsMyOwnedGeneral(g) {
         if (!g || !g.name || g.inventory === undefined) return false;
+        if (cyberIsLegacyLocalGeneral(g)) return true;
         const aliases = cyberGetMyOwnerIdAliases();
         return aliases.includes(g.ownerId) || aliases.includes(g.playerId) || aliases.includes(g.clientTag);
     }
@@ -7508,19 +7527,35 @@ box.innerHTML = pinnedHtml + arr.map(m => {
     function cyberGetLocalRpgGenerals() {
         const saved = cyberReadJson('rpgGenerals', {});
         const map = {};
+        let changed = false;
 
-        Object.values(saved || {}).forEach(g => {
+        Object.entries(saved || {}).forEach(([slotKey, g]) => {
+            if (!g || !g.name || g.inventory === undefined) return;
+            if (cyberIsLegacyLocalGeneral(g)) {
+                cyberBindGeneralToCurrentPlayer(g);
+                saved[slotKey] = g;
+                changed = true;
+            }
             if (cyberIsMyOwnedGeneral(g)) map[g.name] = g;
         });
 
+        if (changed) {
+            cyberWriteJson('rpgGenerals', saved);
+        }
+
         try {
-            if (cyberIsMyOwnedGeneral(activeRpgGeneral)) map[activeRpgGeneral.name] = activeRpgGeneral;
+            if (activeRpgGeneral && cyberIsLegacyLocalGeneral(activeRpgGeneral)) {
+                cyberBindGeneralToCurrentPlayer(activeRpgGeneral);
+                map[activeRpgGeneral.name] = activeRpgGeneral;
+            } else if (cyberIsMyOwnedGeneral(activeRpgGeneral)) {
+                map[activeRpgGeneral.name] = activeRpgGeneral;
+            }
         } catch(e) {}
 
         try {
             generals
                 .filter(g => cyberIsMyOwnedGeneral(g))
-                .forEach(g => map[g.name] = g);
+                .forEach(g => map[g.name] = cyberBindGeneralToCurrentPlayer(g));
         } catch(e) {}
 
         return map;
