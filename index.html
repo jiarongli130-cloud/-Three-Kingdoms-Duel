@@ -9494,10 +9494,37 @@ function cyberRefreshArenaUI() {
 
     function cyberGetCurrentArenaMatchId() {
         const state = cyberGetArenaState();
-        const champ = state.champion && state.champion.name ? state.champion.name : '無擂主';
+        const championKey = state.champion ? cyberGetArenaKeyFromFighter(state.champion) : '';
         const challengerSel = document.getElementById('arenaFighterSelect');
-        const challenger = challengerSel && challengerSel.value ? challengerSel.value : '未選挑戰者';
-        return `${champ}__VS__${challenger}`;
+        const challengerKey = challengerSel && challengerSel.value ? challengerSel.value : '未選挑戰者';
+        return `${championKey || '無擂主'}__VS__${challengerKey}`;
+    }
+
+    function cyberFormatArenaSideLabel(fighter, fallbackName = '') {
+        if (!fighter) return fallbackName || '未選定';
+        const ownerName = (fighter.owner || '').trim();
+        const generalName = (fighter.name || fighter.displayName || fallbackName || '無名武將').trim();
+        if (ownerName) return `${ownerName}｜${generalName}`;
+        return generalName || fallbackName || '未選定';
+    }
+
+    function cyberGetCurrentArenaMatchLabel() {
+        const state = cyberGetArenaState();
+        const championLabel = state.champion && state.champion.name
+            ? cyberFormatArenaSideLabel(state.champion, state.champion.name)
+            : '無擂主';
+
+        const challengerSel = document.getElementById('arenaFighterSelect');
+        let challengerLabel = '未選挑戰者';
+        if (challengerSel && challengerSel.value) {
+            const resolved = typeof cyberResolveMyArenaSelection === 'function'
+                ? cyberResolveMyArenaSelection(challengerSel.value)
+                : null;
+            const fighter = resolved && resolved.fighter ? resolved.fighter : null;
+            const fighterName = resolved && resolved.name ? resolved.name : challengerSel.value;
+            challengerLabel = cyberFormatArenaSideLabel(fighter, fighterName);
+        }
+        return `${championLabel} VS ${challengerLabel}`;
     }
 
     function cyberPlaceCheerBet() {
@@ -9710,7 +9737,7 @@ function cyberRefreshArenaUI() {
             const champBet = Object.values(pack.champion || {}).reduce((a,b)=>a+(b.bet||0),0);
             const challengerBet = Object.values(pack.challenger || {}).reduce((a,b)=>a+(b.bet||0),0);
             cheerBox.innerHTML = `
-                <div class="cheer-row">目前場次：<br><span style="color:#ffd700;">${cyberEscapeHtml(matchId.replace('__VS__',' VS '))}</span></div>
+                <div class="cheer-row">目前場次：<br><span style="color:#ffd700;">${cyberEscapeHtml(cyberGetCurrentArenaMatchLabel())}</span></div>
                 <div class="cheer-row"><span class="cheer-side">擂主方</span> 助威 ${champCount} 人｜押注 ${champBet} 武神幣</div>
                 <div class="cheer-row"><span class="cheer-side red">挑戰者方</span> 助威 ${challengerCount} 人｜押注 ${challengerBet} 武神幣</div>
                 <div class="cheer-row">你的武神幣：<span class="coin-badge">${coin.coins || 0}</span></div>
