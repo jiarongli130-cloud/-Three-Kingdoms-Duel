@@ -7316,8 +7316,9 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         keys.forEach(key => {
             const g = map[key];
             const shownPower = g.arenaPower && g.arenaPower !== g.power ? `${g.power}／戰力 ${g.arenaPower}` : g.power;
-            // 玩家介面只顯示武將名與戰力，不顯示內部 arenaKey。
-            sel.add(new Option(`${g.name}｜武力 ${shownPower}｜${g.rank || '自創武將'}｜我的`, key));
+            // 玩家介面只顯示公開戰牌碼＋武將名與戰力，不顯示內部 arenaKey / ownerId / 玩家ID。
+            const publicCode = cyberGetArenaPublicCodeFromFighter(g, key);
+            sel.add(new Option(`${publicCode}｜${g.name}｜武力 ${shownPower}｜${g.rank || '自創武將'}`, key));
         });
         if (keys.includes(current)) sel.value = current;
     }
@@ -7364,7 +7365,7 @@ box.innerHTML = pinnedHtml + arr.map(m => {
         const cd = cyberCanFight(arenaKey);
         if (!cd.ok) { alert(`敗者冷卻中，還要 ${cd.remain} 秒才能再次挑戰。`); return; }
         const state = cyberGetArenaState();
-        if (state.champion && state.champion.name) { alert(`目前已有擂主：${state.champion.name}，請使用挑戰擂主。`); return; }
+        if (state.champion && state.champion.name) { alert(`目前已有擂主：${cyberFormatArenaSideLabel(state.champion, state.champion.name)}，請使用挑戰擂主。`); return; }
         const fighters = cyberGetMyArenaFighterMap();
         if (!fighters[arenaKey]) { alert('這不是你本機擁有的自創武將，不能登台。'); return; }
         const fighter = fighters[arenaKey];
@@ -7658,7 +7659,7 @@ function cyberRefreshMyArenaSnapshotBeforeChallenge(state, fighterKeyOrName) {
 
         const feed = document.getElementById('arenaBattleFeed');
         if (feed) {
-            feed.innerHTML = `<div style="color:#ffd700; font-weight:bold;">⚔️ ${cyberEscapeHtml(state.champion.name)} 的擂台戰報</div>` + result.logs.map(x => `<div>${cyberEscapeHtml(x)}</div>`).join('');
+            feed.innerHTML = `<div style="color:#ffd700; font-weight:bold;">⚔️ ${cyberEscapeHtml(cyberFormatArenaSideLabel(state.champion, state.champion.name))} 的擂台戰報</div>` + result.logs.map(x => `<div>${cyberEscapeHtml(x)}</div>`).join('');
             feed.scrollTop = feed.scrollHeight;
         }
         if (typeof battleLog !== 'undefined') {
@@ -9500,12 +9501,28 @@ function cyberRefreshArenaUI() {
         return `${championKey || '無擂主'}__VS__${challengerKey}`;
     }
 
+    function cyberBuildArenaPublicCode(seed) {
+        const raw = String(seed || 'anonymous');
+        let hash = 2166136261;
+        for (let i = 0; i < raw.length; i++) {
+            hash ^= raw.charCodeAt(i);
+            hash = Math.imul(hash, 16777619);
+        }
+        const code = (hash >>> 0).toString(36).toUpperCase().replace(/[^A-Z0-9]/g, '').padStart(5, '0').slice(-5);
+        return `武者#${code}`;
+    }
+
+    function cyberGetArenaPublicCodeFromFighter(fighter, fallbackSeed = '') {
+        if (!fighter) return cyberBuildArenaPublicCode(fallbackSeed || 'unknown');
+        const seed = fighter.arenaKey || cyberGetArenaKeyFromFighter(fighter) || fallbackSeed || fighter.name || 'unknown';
+        return cyberBuildArenaPublicCode(seed);
+    }
+
     function cyberFormatArenaSideLabel(fighter, fallbackName = '') {
         if (!fighter) return fallbackName || '未選定';
-        const ownerName = (fighter.owner || '').trim();
         const generalName = (fighter.name || fighter.displayName || fallbackName || '無名武將').trim();
-        if (ownerName) return `${ownerName}｜${generalName}`;
-        return generalName || fallbackName || '未選定';
+        const publicCode = cyberGetArenaPublicCodeFromFighter(fighter, fallbackName);
+        return `${publicCode}｜${generalName || '無名武將'}`;
     }
 
     function cyberGetCurrentArenaMatchLabel() {
