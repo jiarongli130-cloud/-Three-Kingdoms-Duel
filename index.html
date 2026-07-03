@@ -1132,10 +1132,10 @@
 
 
     <!-- 📘 電子書延伸演武：任意武將 VS 任意武將 一鍵開戰連結產生器 -->
-    <div class="controls" id="ebookDeepLinkPanel" style="border: 2px dashed #ffd700; padding: 15px; border-radius: 6px; background: rgba(255,215,0,0.06); display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+    <div class="controls" id="ebookDeepLinkPanel" style="border: 2px dashed #ffd700; padding: 15px; border-radius: 6px; background: rgba(255,215,0,0.06); display: none; flex-direction: column; gap: 10px; margin-bottom: 20px;">
         <h3 style="color:#ffd700; margin:0; text-shadow:0 0 8px #ffd700;">📘 電子書延伸演武｜一鍵開戰連結產生器</h3>
         <p style="font-size:12px; color:#aaa; margin:0; line-height:1.6;">
-            先在上方「單挑我軍／單挑敵軍」選好任意兩名武將，再按下產生連結。這條網址可直接放進電子書超連結，也可拿去製作 QR Code；讀者點開後會提示 1 秒，然後自動開戰。
+            群主專用功能：只有以 jiarongli130@gmail.com 登入 Google 群主帳號後才會顯示。先在上方「單挑我軍／單挑敵軍」選好任意兩名武將，再按下產生連結。這條網址可直接放進電子書超連結，也可拿去製作 QR Code；讀者點開後會提示 1 秒，然後自動開戰。
         </p>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
             <button onclick="cyberGenerateEbookDuelLink()" style="flex:1; min-width:180px; border-color:#ffd700; color:#ffd700;">⚔ 產生一鍵開戰連結</button>
@@ -6643,6 +6643,7 @@
             status.style.color = '#aaa';
         }
         if (typeof cyberRefreshCustomTitleAdminUI === 'function') cyberRefreshCustomTitleAdminUI();
+        if (typeof cyberRefreshEbookDeepLinkPanelVisibility === 'function') cyberRefreshEbookDeepLinkPanelVisibility();
     }
 
     async function cyberGoogleOwnerLogin() {
@@ -10697,7 +10698,35 @@ function cyberRefreshArenaUI() {
         return { p1Name: p1.name, p2Name: p2.name };
     }
 
+    function cyberRefreshEbookDeepLinkPanelVisibility() {
+        const panel = document.getElementById('ebookDeepLinkPanel');
+        if (!panel) return;
+
+        const isOwner = (typeof cyberIsRoomOwner === 'function') && cyberIsRoomOwner();
+        panel.style.display = isOwner ? 'flex' : 'none';
+
+        // 非群主時清空產生器內容，避免共用裝置殘留網址或 QR Code。
+        if (!isOwner) {
+            const output = document.getElementById('ebookDuelLinkOutput');
+            const qrBox = document.getElementById('ebookDuelQrBox');
+            const qrImg = document.getElementById('ebookDuelQrImg');
+            const qrCaption = document.getElementById('ebookDuelQrCaption');
+            if (output) output.value = '';
+            if (qrBox) qrBox.style.display = 'none';
+            if (qrImg) qrImg.removeAttribute('src');
+            if (qrCaption) qrCaption.innerHTML = '';
+        }
+    }
+
+    function cyberAssertEbookGeneratorOwnerOnly() {
+        if ((typeof cyberIsRoomOwner === 'function') && cyberIsRoomOwner()) return true;
+        alert('此功能僅限群主 jiarongli130@gmail.com 登入後使用。');
+        cyberRefreshEbookDeepLinkPanelVisibility();
+        return false;
+    }
+
     function cyberGenerateEbookDuelLink() {
+        if (!cyberAssertEbookGeneratorOwnerOnly()) return '';
         const names = cyberGetSelectedDuelNames();
         if (!names) {
             alert('主公，請先選好單挑我軍與單挑敵軍。');
@@ -10722,6 +10751,7 @@ function cyberRefreshArenaUI() {
     }
 
     async function cyberCopyEbookDuelLink() {
+        if (!cyberAssertEbookGeneratorOwnerOnly()) return;
         const output = document.getElementById('ebookDuelLinkOutput');
         const link = output && output.value ? output.value : cyberGenerateEbookDuelLink();
         if (!link) return;
@@ -10738,6 +10768,7 @@ function cyberRefreshArenaUI() {
     }
 
     function cyberOpenEbookDuelLink() {
+        if (!cyberAssertEbookGeneratorOwnerOnly()) return;
         const output = document.getElementById('ebookDuelLinkOutput');
         const link = output && output.value ? output.value : cyberGenerateEbookDuelLink();
         if (!link) return;
@@ -10817,7 +10848,9 @@ function cyberRefreshArenaUI() {
     function cyberInitEbookDeepLinkPanel() {
         const panel = document.getElementById('ebookDeepLinkPanel');
         if (!panel) return;
+        cyberRefreshEbookDeepLinkPanelVisibility();
         const refresh = () => {
+            if ((typeof cyberIsRoomOwner === 'function') && !cyberIsRoomOwner()) return;
             const output = document.getElementById('ebookDuelLinkOutput');
             if (!output || output.value) return;
             const names = cyberGetSelectedDuelNames();
