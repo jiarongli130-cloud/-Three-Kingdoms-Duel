@@ -167,6 +167,76 @@
     text-align: center;
     margin: 8px 0 12px 0;
 }
+.book-event-panel {
+    border: 2px solid #ffd700;
+    background: linear-gradient(135deg, rgba(255,215,0,0.12), rgba(0,255,65,0.08), rgba(0,255,255,0.05));
+    box-shadow: 0 0 18px rgba(255,215,0,0.22);
+    border-radius: 8px;
+    padding: 14px;
+    margin: 10px 0 20px 0;
+    color: #ddd;
+    line-height: 1.75;
+}
+
+.book-event-panel h3 {
+    margin: 0 0 8px 0;
+    color: #ffd700;
+    text-align: center;
+    text-shadow: 0 0 8px rgba(255,215,0,0.75);
+}
+
+.book-event-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.book-event-card {
+    border: 1px solid #333;
+    background: rgba(0,0,0,0.62);
+    border-radius: 6px;
+    padding: 10px;
+}
+
+.book-event-card strong {
+    color: #00ffff;
+    text-shadow: 0 0 6px rgba(0,255,255,0.65);
+}
+
+.book-event-prize {
+    color: #ffd700;
+    font-weight: bold;
+    text-shadow: 0 0 6px rgba(255,215,0,0.6);
+}
+
+.book-version-panel {
+    border: 1px solid #8a2be2;
+    background: linear-gradient(135deg, rgba(138,43,226,0.12), rgba(255,215,0,0.06));
+    border-radius: 6px;
+    padding: 10px;
+    margin-top: 10px;
+    color: #ccc;
+    font-size: 13px;
+    line-height: 1.65;
+}
+
+.book-version-title {
+    color: #ffd700;
+    font-weight: bold;
+    text-shadow: 0 0 6px rgba(255,215,0,0.65);
+}
+
+.book-small-note {
+    color: #aaa;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+@media (max-width: 760px) {
+    .book-event-grid { grid-template-columns: 1fr; }
+}
+
         .controls { display: flex; flex-wrap: wrap; justify-content: space-between; margin-bottom: 20px; gap: 10px; }
         .select-group { flex: 1; min-width: 200px; }
         select, button, input {
@@ -1131,10 +1201,46 @@
 <p class="book-hero-note">本沙盤為《三國演義武力超百科》互動延伸內容，書中收錄完整武力排名、戰例考據與單挑評析。</p>
 <div class="book-cta-row">
     <a class="book-line-btn" href="https://line.me/ti/g2/F5nCDMXwBczFFO7GQXV08PDJSMZChOXPBuBh3g?utm_source=invitation&utm_medium=link_copy&utm_campaign=default" target="_blank" rel="noopener noreferrer">
-        ⚔ 加入官方 LINE 群｜接收電子書上架通知與實體書樣書進度
+        📲 加入 LINE 群｜領稱號＋抽典藏版
     </a>
 </div>
-<p class="book-hero-bonus">加入 LINE 群可參加：每週沙盤挑戰任務、讀者武力投票、精彩戰報分享，並優先收到電子書上架、實體書樣書與收藏版早鳥消息。</p>
+<p class="book-hero-bonus">加入 LINE 讀者演武營，可領沙盤限定稱號【延伸演武見證者】，參加新人入群抽獎，並用自創武將角逐天梯前三名獎勵。</p>
+
+<div class="book-event-panel" id="lineBookEventPanel">
+    <h3>🎁 入群抽典藏版｜🏆 天梯爭奪實體書</h3>
+    <div style="text-align:center; color:#fff;">
+        電子書導入沙盤，沙盤導入 LINE 群；一起為《三國演義武力超百科》實體書上市做準備。
+    </div>
+    <div class="book-event-grid">
+        <div class="book-event-card">
+            <strong>🎁 新人入群抽獎活動</strong><br>
+            活動至實體書正式印製完成並公告截止日為止。加入官方 LINE 讀者演武營並依群內公告完成登記，即可取得抽獎資格。<br>
+            <span class="book-event-prize">獎項：全彩典藏版實體書 1 本｜608頁｜原定價 NT$2,880</span><br>
+            <span class="book-small-note">實體書全部印出來後，將於 LINE 群內公開抽出得獎者。</span>
+        </div>
+        <div class="book-event-card">
+            <strong>🏆 自創武將天梯爭霸</strong><br>
+            入群後建立自創武將，登錄擂台天梯，挑戰其他玩家累積積分。活動同樣至實體書正式印製完成並公告截止日為止。<br>
+            <span class="book-event-prize">第 1 名：全彩典藏版 1 本｜608頁｜NT$2,880</span><br>
+            <span class="book-event-prize">第 2 名：普通版 1 本｜576頁｜NT$1,580</span><br>
+            <span class="book-event-prize">第 3 名：高畫質可檢索收藏版 PDF｜551頁｜NT$799</span>
+        </div>
+    </div>
+    <div class="book-version-panel">
+        <div class="book-version-title">📚 版本差異簡介</div>
+        <strong style="color:#ffd700;">全彩典藏版｜608頁｜原定價 NT$2,880：</strong>
+        全書全彩印刷，完整收錄主書內容、武力排名、戰例考據、夢幻單挑、隱藏結局，並加收典藏限定篇章〈群芳演武錄〉；另預定收錄典藏版限定隱藏圖【武巔零號圖】，定位為全書最高規格神級戰圖。<br>
+        <strong style="color:#ffd700;">普通版｜576頁｜原定價 NT$1,580：</strong>
+        收錄完整主書內容、武力排名、戰例考據、夢幻單挑與隱藏結局；前後段重點彩色呈現，其餘以黑白／單色方式印製。<br>
+        <strong style="color:#ffd700;">高畫質可檢索收藏版 PDF｜551頁｜原定價 NT$799：</strong>
+        保留高畫質版面細節，支援文字檢索、目錄跳轉與沙盤延伸演武連結，適合平板、電腦大螢幕閱讀與查找戰例。
+    </div>
+    <div class="book-cta-row" style="margin-bottom:0;">
+        <a class="book-line-btn" href="https://line.me/ti/g2/F5nCDMXwBczFFO7GQXV08PDJSMZChOXPBuBh3g?utm_source=invitation&utm_medium=link_copy&utm_campaign=default" target="_blank" rel="noopener noreferrer">
+            📲 立即加入官方 LINE 群｜領稱號＋抽典藏版
+        </a>
+    </div>
+</div>
     
     <div class="controls">
         <div class="select-group">
@@ -1304,12 +1410,18 @@
     <div class="controls public-warroom-panel" id="publicWarroomPanel">
         <h3>🌐 公開聊天室・自創武將單挑擂台</h3>
     <p style="font-size:12px; color:#aaa; margin:0 0 12px 0;">
-這裡是《三國演義武力超百科》讀者與玩家的公開演武場。你可以用自創武將上擂台、留下戰報、挑戰天下高手；想參加每週沙盤任務、領取限定稱號兌換碼、接收電子書與實體書消息，請加入官方 LINE 群。
+這裡是《三國演義武力超百科》讀者與玩家的公開演武場。你可以用自創武將上擂台、留下戰報、挑戰天下高手；加入官方 LINE 讀者演武營，可領限定稱號【延伸演武見證者】、參加新人入群抽典藏版，並角逐天梯前三名實體書／高畫質電子書獎勵。
 </p>
 <div class="book-inline-cta">
     <a class="book-line-btn" href="https://line.me/ti/g2/F5nCDMXwBczFFO7GQXV08PDJSMZChOXPBuBh3g?utm_source=invitation&utm_medium=link_copy&utm_campaign=default" target="_blank" rel="noopener noreferrer">
-        📲 加入官方 LINE 群
+        📲 加入 LINE 群｜領稱號＋抽典藏版
     </a>
+</div>
+<div class="book-version-panel" style="margin-bottom:12px;">
+    <div class="book-version-title">🎁 活動獎勵總覽</div>
+    新人入群抽獎：全彩典藏版實體書 1 本｜608頁｜原定價 NT$2,880。<br>
+    天梯前三名：第 1 名全彩典藏版｜第 2 名普通版｜第 3 名高畫質可檢索收藏版 PDF。<br>
+    活動至實體書正式印製完成並公告截止日為止；得獎名單與寄送方式以 LINE 群公告為準。
 </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
             <input id="chatNickInput" placeholder="輸入聊天室暱稱 / 玩家名" style="flex:2; min-width:180px; border-color:#00ffff; color:#00ffff;">
@@ -1353,7 +1465,14 @@
         </div>
         <div class="public-warroom-box" style="margin-top:14px;">
             <h4>🏆 自創武將擂台天梯排行榜｜累計積分最高者第一名</h4>
-            <p style="font-size:12px; color:#aaa; margin-top:-4px;">勝利 +3 分，落敗 +1 參戰分；所有參加擂台者都會被排名。敗者 5 分鐘後才能再次挑戰。</p>
+            <p style="font-size:12px; color:#aaa; margin-top:-4px; line-height:1.65;">
+勝利 +3 分，落敗 +1 參戰分；所有參加擂台者都會被排名。敗者 5 分鐘後才能再次挑戰。<br>
+<span style="color:#ffd700; font-weight:bold;">🏆 活動獎勵：</span>
+第 1 名全彩典藏版 1 本｜608頁｜原定價 NT$2,880；
+第 2 名普通版 1 本｜576頁｜原定價 NT$1,580；
+第 3 名高畫質可檢索收藏版 PDF｜551頁｜原定價 NT$799。<br>
+<span style="color:#00ffff;">活動至實體書正式印製完成並公告截止日為止；結算以沙盤排行榜紀錄與群主最終審核為準。</span>
+</p>
             <div id="arenaRankBoard">排行榜載入中...</div>
         </div>
     </div>
@@ -6602,6 +6721,9 @@
     const CYBER_LINE_CTA_TITLE = '《三國演義武力超百科》讀者演武營';
     const CYBER_LINE_CTA_BADGE = '【延伸演武見證者】';
     const CYBER_LINE_CTA_BADGE_EFFECT = '武力 +20｜暴擊 +1%｜閃避 +1%｜格擋 +1%｜破甲 +1%｜吸血 +1%｜HP +10';
+    const CYBER_LINE_CTA_RAFFLE = '新人入群抽獎：全彩典藏版實體書 1 本｜608頁｜原定價 NT$2,880';
+    const CYBER_LINE_CTA_LADDER = '天梯前三名：第 1 名全彩典藏版｜第 2 名普通版｜第 3 名高畫質可檢索收藏版 PDF';
+    const CYBER_LINE_CTA_VERSION_SHORT = '典藏版 608頁全彩含〈群芳演武錄〉與預定限定隱藏圖【武巔零號圖】；普通版 576頁含隱藏結局、前後段重點彩色；高畫質可檢索 PDF 551頁支援搜尋與沙盤延伸連結。';
 
 
     // 【Firebase 開關】
@@ -6665,9 +6787,20 @@ ${winnerLine}
 不服榜單，進沙盤驗天下：
 ${duelUrl}
 
-加入讀者演武營，領限定稱號 ${CYBER_LINE_CTA_BADGE}
+加入讀者演武營，可領限定稱號 ${CYBER_LINE_CTA_BADGE}
 效果：${CYBER_LINE_CTA_BADGE_EFFECT}
-討論戰果、接收電子書與實體書消息：
+
+🎁 ${CYBER_LINE_CTA_RAFFLE}
+🏆 ${CYBER_LINE_CTA_LADDER}
+
+版本差異：
+${CYBER_LINE_CTA_VERSION_SHORT}
+
+讀電子書，進沙盤；
+入 LINE 群，領稱號、抽典藏版；
+自創武將登天梯，爭奪三國武魁。
+
+LINE 群入口：
 ${CYBER_LINE_GROUP_URL}`;
     }
 
@@ -6705,11 +6838,11 @@ ${CYBER_LINE_GROUP_URL}`;
             <br>
             <div style="
                 border:2px solid #00ff41;
-                background:linear-gradient(135deg, rgba(0,255,65,0.12), rgba(255,215,0,0.08), rgba(0,255,255,0.06));
+                background:linear-gradient(135deg, rgba(0,255,65,0.12), rgba(255,215,0,0.10), rgba(0,255,255,0.06));
                 padding:16px;
                 margin-top:14px;
                 text-align:center;
-                box-shadow:0 0 20px rgba(0,255,65,0.30);
+                box-shadow:0 0 22px rgba(0,255,65,0.34);
                 color:#ddd;
                 line-height:1.8;
                 border-radius:8px;
@@ -6719,17 +6852,18 @@ ${CYBER_LINE_GROUP_URL}`;
                 </div>
                 ${safeWinner ? `<div style="margin-top:4px; color:#fff; font-weight:bold;">勝者：<span style="color:#ff8c00;">${safeWinner}</span></div>` : ''}
                 <div style="margin-top:8px; color:#fff;">
-                    你認同這場結果嗎？加入 <span style="color:#00ff41; font-weight:bold;">${CYBER_LINE_CTA_TITLE}</span>，討論戰果、參加沙盤任務、接收電子書與實體書消息。
+                    你認同這場結果嗎？加入 <span style="color:#00ff41; font-weight:bold;">${CYBER_LINE_CTA_TITLE}</span>，領稱號、抽典藏版，並用自創武將爭奪天梯獎勵。
                 </div>
+
                 <div style="
                     margin-top:10px;
                     border:1px solid #ffd700;
-                    background:rgba(255,215,0,0.08);
+                    background:rgba(255,215,0,0.09);
                     padding:10px;
                     border-radius:6px;
                     color:#ffd700;
                     font-weight:bold;
-                    box-shadow:0 0 12px rgba(255,215,0,0.20);
+                    box-shadow:0 0 12px rgba(255,215,0,0.22);
                 ">
                     入群輸入「我要稱號」，可領沙盤限定稱號
                     <span style="color:#fff; text-shadow:0 0 8px #ffd700;">${CYBER_LINE_CTA_BADGE}</span><br>
@@ -6737,6 +6871,53 @@ ${CYBER_LINE_GROUP_URL}`;
                         稱號效果：${CYBER_LINE_CTA_BADGE_EFFECT}
                     </span>
                 </div>
+
+                <div style="
+                    margin-top:10px;
+                    border:1px solid #00ffff;
+                    background:rgba(0,255,255,0.07);
+                    padding:10px;
+                    border-radius:6px;
+                    color:#ddd;
+                    text-align:left;
+                ">
+                    <div style="color:#ffd700; font-weight:bold; text-align:center; margin-bottom:4px;">🎁 新人入群抽獎｜等實體書全部印出來後抽出</div>
+                    <div><span style="color:#fff;">獎項：</span><span style="color:#ffd700; font-weight:bold;">全彩典藏版實體書 1 本｜608頁｜原定價 NT$2,880</span></div>
+                    <div style="font-size:12px; color:#aaa;">加入 LINE 群並依群內公告完成登記，即可取得抽獎資格。</div>
+                </div>
+
+                <div style="
+                    margin-top:10px;
+                    border:1px solid #ff8c00;
+                    background:rgba(255,140,0,0.07);
+                    padding:10px;
+                    border-radius:6px;
+                    color:#ddd;
+                    text-align:left;
+                ">
+                    <div style="color:#ffd700; font-weight:bold; text-align:center; margin-bottom:4px;">🏆 自創武將天梯爭霸｜活動至實體書印製完成</div>
+                    <div><span style="color:#ffd700;">第 1 名：</span>全彩典藏版 1 本｜608頁｜原定價 NT$2,880</div>
+                    <div><span style="color:#ffd700;">第 2 名：</span>普通版 1 本｜576頁｜原定價 NT$1,580</div>
+                    <div><span style="color:#ffd700;">第 3 名：</span>高畫質可檢索收藏版 PDF｜551頁｜原定價 NT$799</div>
+                    <div style="font-size:12px; color:#aaa;">結算以沙盤排行榜紀錄與群主最終審核為準。</div>
+                </div>
+
+                <div style="
+                    margin-top:10px;
+                    border:1px solid #8a2be2;
+                    background:rgba(138,43,226,0.08);
+                    padding:10px;
+                    border-radius:6px;
+                    color:#ccc;
+                    text-align:left;
+                    font-size:13px;
+                ">
+                    <div style="color:#ffd700; font-weight:bold; text-align:center;">📚 版本差異</div>
+                    <div><span style="color:#ffd700;">典藏版 608頁：</span>全彩，含隱藏結局、〈群芳演武錄〉，並預定收錄限定隱藏圖【武巔零號圖】。</div>
+                    <div><span style="color:#ffd700;">普通版 576頁：</span>含主書完整內容與隱藏結局，前後段重點彩色，其餘黑白／單色。</div>
+                    <div><span style="color:#ffd700;">高畫質 PDF 551頁：</span>可檢索、可跳目錄，適合查武將、戰例與沙盤延伸連結。</div>
+                </div>
+
                 <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:12px;">
                     <a href="${CYBER_LINE_GROUP_URL}" target="_blank" rel="noopener noreferrer" style="
                         display:inline-block;
@@ -6748,7 +6929,7 @@ ${CYBER_LINE_GROUP_URL}`;
                         font-weight:bold;
                         border-radius:6px;
                         box-shadow:0 0 12px rgba(0,255,65,0.35);
-                    ">📲 加入官方 LINE 群｜領取【延伸演武見證者】</a>
+                    ">📲 加入 LINE 群｜領稱號＋抽典藏版</a>
                     <button onclick="cyberCopyBattleShareText()" style="
                         width:auto;
                         padding:12px 18px;
@@ -6770,7 +6951,7 @@ ${CYBER_LINE_GROUP_URL}`;
                     ">🔁 分享一鍵重戰連結</a>
                 </div>
                 <div style="font-size:12px; color:#aaa; margin-top:8px;">
-                    讀完書，看武力；進沙盤，驗天下。
+                    讀電子書，進沙盤；入 LINE 群，領稱號、抽典藏版；自創武將登天梯，爭奪三國武魁。
                 </div>
             </div>
         `;
