@@ -1131,10 +1131,10 @@
 <p class="book-hero-note">本沙盤為《三國演義武力超百科》互動延伸內容，書中收錄完整武力排名、戰例考據與單挑評析。</p>
 <div class="book-cta-row">
     <a class="book-line-btn" href="https://line.me/ti/g2/F5nCDMXwBczFFO7GQXV08PDJSMZChOXPBuBh3g?utm_source=invitation&utm_medium=link_copy&utm_campaign=default" target="_blank" rel="noopener noreferrer">
-        ⚔ 加入官方 LINE 群｜搶先取得上市嘖嘖募資通知與早鳥優惠
+        ⚔ 加入官方 LINE 群｜接收電子書上架通知與實體書樣書進度
     </a>
 </div>
-<p class="book-hero-bonus">加入 LINE 群可參加：每週沙盤挑戰任務、讀者武力投票、精彩戰報分享，並優先收到嘖嘖募資與新書上市通知。</p>
+<p class="book-hero-bonus">加入 LINE 群可參加：每週沙盤挑戰任務、讀者武力投票、精彩戰報分享，並優先收到電子書上架、實體書樣書與收藏版早鳥消息。</p>
     
     <div class="controls">
         <div class="select-group">
@@ -1304,7 +1304,7 @@
     <div class="controls public-warroom-panel" id="publicWarroomPanel">
         <h3>🌐 公開聊天室・自創武將單挑擂台</h3>
     <p style="font-size:12px; color:#aaa; margin:0 0 12px 0;">
-這裡是《三國演義武力超百科》讀者與玩家的公開演武場。你可以用自創武將上擂台、留下戰報、挑戰天下高手；想搶先取得嘖嘖募資上市通知、早鳥優惠與讀者活動，請加入官方 LINE 群。
+這裡是《三國演義武力超百科》讀者與玩家的公開演武場。你可以用自創武將上擂台、留下戰報、挑戰天下高手；想參加每週沙盤任務、領取限定稱號兌換碼、接收電子書與實體書消息，請加入官方 LINE 群。
 </p>
 <div class="book-inline-cta">
     <a class="book-line-btn" href="https://line.me/ti/g2/F5nCDMXwBczFFO7GQXV08PDJSMZChOXPBuBh3g?utm_source=invitation&utm_medium=link_copy&utm_campaign=default" target="_blank" rel="noopener noreferrer">
@@ -4987,6 +4987,11 @@
             cyberResolveCurrentEncounter(winnerObj, loserObj);
         }
 
+        // 📲 一般單挑 / 電子書一鍵開戰結束後，在戰報底部追加 LINE 群導流卡。
+        if (!isTournamentMode && typeof cyberAppendLineGroupCtaAfterBattle === 'function') {
+            cyberAppendLineGroupCtaAfterBattle(p1.name, p2.name, winner, 'duel');
+        }
+
         updateAsuraUI();
 
         const winnerIndex = h1 > h2 ? parseInt(p1Select.value) : parseInt(p2Select.value);
@@ -6589,6 +6594,14 @@
     const CYBER_ARENA_KEY = 'publicArenaState_v1';
     const CYBER_NICK_KEY = 'publicChatNick_v1';
     const CYBER_ROOM_PATH = 'threeKingdomsDuelPublicRoom_v1';
+    // ==============================================================
+    // 📲 LINE 群導流設定：電子書、沙盤、戰報分享統一入口
+    // ==============================================================
+    const CYBER_LINE_GROUP_URL = 'https://line.me/ti/g2/F5nCDMXwBczFFO7GQXV08PDJSMZChOXPBuBh3g?utm_source=invitation&utm_medium=link_copy&utm_campaign=default';
+    const CYBER_DUEL_HOME_URL = 'https://jiarongli130-cloud.github.io/-Three-Kingdoms-Duel/';
+    const CYBER_LINE_CTA_TITLE = '《三國演義武力超百科》讀者演武營';
+    const CYBER_LINE_CTA_BADGE = '【延伸演武見證者】';
+
 
     // 【Firebase 開關】
     // Firebase 已啟用：公開聊天室與擂台資料會同步到 Realtime Database。
@@ -6621,6 +6634,131 @@
             .replaceAll('>', '&gt;')
             .replaceAll('"', '&quot;')
             .replaceAll("'", '&#039;');
+    }
+
+
+    // ==============================================================
+    // 📲 戰鬥結束 LINE 導流卡：在讀者情緒最高點導入 LINE 群
+    // ==============================================================
+    function cyberBuildOneClickDuelUrl(p1Name = '', p2Name = '') {
+        const baseUrl = (typeof CYBER_DUEL_HOME_URL !== 'undefined' && CYBER_DUEL_HOME_URL)
+            ? CYBER_DUEL_HOME_URL
+            : (window.location.origin + window.location.pathname);
+        const url = new URL(baseUrl, window.location.href);
+        url.searchParams.set('mode', 'duel');
+        url.searchParams.set('p1', p1Name || '趙雲');
+        url.searchParams.set('p2', p2Name || '呂布');
+        url.searchParams.set('auto', '1');
+        url.searchParams.set('delay', '1000');
+        return url.toString();
+    }
+
+    function cyberBuildBattleShareText(p1Name = '', p2Name = '', winnerName = '') {
+        const duelTitle = (p1Name && p2Name) ? `${p1Name} VS ${p2Name}` : '本場演武';
+        const duelUrl = cyberBuildOneClickDuelUrl(p1Name, p2Name);
+        const winnerLine = winnerName ? `勝者：${winnerName}
+` : '';
+        return `我剛在《三國演義武力超百科》官方演武沙盤觀看：
+${duelTitle}
+${winnerLine}
+不服榜單，進沙盤驗天下：
+${duelUrl}
+
+加入讀者演武營，領限定稱號、討論戰果、接收電子書與實體書消息：
+${CYBER_LINE_GROUP_URL}`;
+    }
+
+    async function cyberCopyBattleShareText() {
+        const text = window.cyberLastBattleShareText || cyberBuildBattleShareText();
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(text);
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+            }
+            alert('戰報分享文字已複製！可貼到 LINE 群、Threads、FB 或三國社團。');
+        } catch (e) {
+            alert('複製失敗，請手動選取戰報文字再複製。');
+        }
+    }
+
+    function cyberAppendLineGroupCtaAfterBattle(p1Name = '', p2Name = '', winnerName = '', source = 'duel') {
+        if (typeof battleLog === 'undefined' || !battleLog) return;
+        const duelTitle = (p1Name && p2Name) ? `${p1Name} VS ${p2Name}` : '本場演武';
+        const safeDuelTitle = cyberEscapeHtml(duelTitle);
+        const safeWinner = winnerName ? cyberEscapeHtml(winnerName) : '';
+        const oneClickUrl = cyberBuildOneClickDuelUrl(p1Name, p2Name);
+        window.cyberLastBattleShareText = cyberBuildBattleShareText(p1Name, p2Name, winnerName);
+
+        battleLog.innerHTML += `
+            <br>
+            <div style="
+                border:2px solid #00ff41;
+                background:linear-gradient(135deg, rgba(0,255,65,0.12), rgba(255,215,0,0.08), rgba(0,255,255,0.06));
+                padding:16px;
+                margin-top:14px;
+                text-align:center;
+                box-shadow:0 0 20px rgba(0,255,65,0.30);
+                color:#ddd;
+                line-height:1.8;
+                border-radius:8px;
+            ">
+                <div style="font-size:20px; color:#ffd700; font-weight:bold; text-shadow:0 0 8px #ffd700;">
+                    ⚔ ${safeDuelTitle}｜延伸演武結束
+                </div>
+                ${safeWinner ? `<div style="margin-top:4px; color:#fff; font-weight:bold;">勝者：<span style="color:#ff8c00;">${safeWinner}</span></div>` : ''}
+                <div style="margin-top:8px; color:#fff;">
+                    你認同這場結果嗎？加入 <span style="color:#00ff41; font-weight:bold;">${CYBER_LINE_CTA_TITLE}</span>，討論戰果、參加沙盤任務、接收電子書與實體書消息。
+                </div>
+                <div style="margin-top:8px; color:#ffd700; font-weight:bold;">
+                    入群輸入「我要稱號」，可領沙盤限定稱號 ${CYBER_LINE_CTA_BADGE}。
+                </div>
+                <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:12px;">
+                    <a href="${CYBER_LINE_GROUP_URL}" target="_blank" rel="noopener noreferrer" style="
+                        display:inline-block;
+                        padding:12px 18px;
+                        border:1px solid #00ff41;
+                        color:#00ff41;
+                        background:rgba(0,255,65,0.12);
+                        text-decoration:none;
+                        font-weight:bold;
+                        border-radius:6px;
+                        box-shadow:0 0 12px rgba(0,255,65,0.35);
+                    ">📲 加入官方 LINE 群</a>
+                    <button onclick="cyberCopyBattleShareText()" style="
+                        width:auto;
+                        padding:12px 18px;
+                        border-color:#ffd700;
+                        color:#ffd700;
+                        border-radius:6px;
+                        font-weight:bold;
+                    ">📋 複製本場戰報</button>
+                    <a href="${oneClickUrl}" target="_blank" rel="noopener noreferrer" style="
+                        display:inline-block;
+                        padding:12px 18px;
+                        border:1px solid #00ffff;
+                        color:#00ffff;
+                        background:rgba(0,255,255,0.08);
+                        text-decoration:none;
+                        font-weight:bold;
+                        border-radius:6px;
+                        box-shadow:0 0 12px rgba(0,255,255,0.22);
+                    ">🔁 分享一鍵重戰連結</a>
+                </div>
+                <div style="font-size:12px; color:#aaa; margin-top:8px;">
+                    讀完書，看武力；進沙盤，驗天下。
+                </div>
+            </div>
+        `;
+        battleLog.scrollTop = battleLog.scrollHeight;
     }
 
     function cyberNowTime(ts = Date.now()) {
@@ -10875,8 +11013,8 @@ function cyberRefreshArenaUI() {
         cyberShowEbookAutoDuelNotice(p1Name, p2Name, delayMs);
 
         if (auto === '1') {
-            setTimeout(() => {
-                if (typeof startDuel === 'function') startDuel();
+            setTimeout(async () => {
+                if (typeof startDuel === 'function') await startDuel();
             }, delayMs);
         }
     }
