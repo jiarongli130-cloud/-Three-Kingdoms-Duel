@@ -1096,6 +1096,28 @@
         }
         @media (max-width: 900px) { .family-romance-grid { grid-template-columns: 1fr; } }
 
+        /* ==============================================================
+           🔒 群主專用介面硬隱藏：未通過 Gmail 群主驗證前，HTML/CSS/JS 三層都隱藏
+           ============================================================== */
+        .cyber-owner-only-hidden {
+            display: none !important;
+            visibility: hidden !important;
+            max-height: 0 !important;
+            overflow: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: 0 !important;
+        }
+        .cyber-owner-only-visible {
+            visibility: visible !important;
+            max-height: none !important;
+            overflow: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }
+
         .firebase-off { color: #aaa; }
         .firebase-on { color: #00ff41; text-shadow: 0 0 5px #00ff41; }
         @media (max-width: 760px) { .public-warroom-grid { grid-template-columns: 1fr; } }
@@ -1132,7 +1154,7 @@
 
 
     <!-- 📘 電子書延伸演武：任意武將 VS 任意武將 一鍵開戰連結產生器 -->
-    <div class="controls" id="ebookDeepLinkPanel" style="border: 2px dashed #ffd700; padding: 15px; border-radius: 6px; background: rgba(255,215,0,0.06); display: none; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+    <div class="controls cyber-owner-only-hidden" id="ebookDeepLinkPanel" hidden aria-hidden="true" data-owner-only="jiarongli130@gmail.com" style="border: 2px dashed #ffd700; padding: 15px; border-radius: 6px; background: rgba(255,215,0,0.06); display: none !important; flex-direction: column; gap: 10px; margin-bottom: 20px;">
         <h3 style="color:#ffd700; margin:0; text-shadow:0 0 8px #ffd700;">📘 電子書延伸演武｜一鍵開戰連結產生器</h3>
         <p style="font-size:12px; color:#aaa; margin:0; line-height:1.6;">
             群主專用功能：只有以 jiarongli130@gmail.com 登入 Google 群主帳號後才會顯示。先在上方「單挑我軍／單挑敵軍」選好任意兩名武將，再按下產生連結。這條網址可直接放進電子書超連結，也可拿去製作 QR Code；讀者點開後會提示 1 秒，然後自動開戰。
@@ -10702,11 +10724,24 @@ function cyberRefreshArenaUI() {
         const panel = document.getElementById('ebookDeepLinkPanel');
         if (!panel) return;
 
-        const isOwner = (typeof cyberIsRoomOwner === 'function') && cyberIsRoomOwner();
-        panel.style.display = isOwner ? 'flex' : 'none';
+        const isOwner = !!(cyberFirebaseUser && cyberFirebaseUser.email === CYBER_OWNER_EMAIL);
+        cyberIsFirebaseRoomOwner = isOwner;
 
-        // 非群主時清空產生器內容，避免共用裝置殘留網址或 QR Code。
-        if (!isOwner) {
+        if (isOwner) {
+            panel.hidden = false;
+            panel.setAttribute('aria-hidden', 'false');
+            panel.classList.remove('cyber-owner-only-hidden');
+            panel.classList.add('cyber-owner-only-visible');
+            panel.style.setProperty('display', 'flex', 'important');
+            panel.style.setProperty('flex-direction', 'column');
+        } else {
+            panel.hidden = true;
+            panel.setAttribute('aria-hidden', 'true');
+            panel.classList.add('cyber-owner-only-hidden');
+            panel.classList.remove('cyber-owner-only-visible');
+            panel.style.setProperty('display', 'none', 'important');
+
+            // 非群主時清空產生器內容，避免共用裝置殘留網址或 QR Code。
             const output = document.getElementById('ebookDuelLinkOutput');
             const qrBox = document.getElementById('ebookDuelQrBox');
             const qrImg = document.getElementById('ebookDuelQrImg');
@@ -10719,7 +10754,8 @@ function cyberRefreshArenaUI() {
     }
 
     function cyberAssertEbookGeneratorOwnerOnly() {
-        if ((typeof cyberIsRoomOwner === 'function') && cyberIsRoomOwner()) return true;
+        const isOwner = !!(cyberFirebaseUser && cyberFirebaseUser.email === CYBER_OWNER_EMAIL);
+        if (isOwner) return true;
         alert('此功能僅限群主 jiarongli130@gmail.com 登入後使用。');
         cyberRefreshEbookDeepLinkPanelVisibility();
         return false;
@@ -10850,7 +10886,7 @@ function cyberRefreshArenaUI() {
         if (!panel) return;
         cyberRefreshEbookDeepLinkPanelVisibility();
         const refresh = () => {
-            if ((typeof cyberIsRoomOwner === 'function') && !cyberIsRoomOwner()) return;
+            if (!(cyberFirebaseUser && cyberFirebaseUser.email === CYBER_OWNER_EMAIL)) return;
             const output = document.getElementById('ebookDuelLinkOutput');
             if (!output || output.value) return;
             const names = cyberGetSelectedDuelNames();
@@ -10863,6 +10899,7 @@ function cyberRefreshArenaUI() {
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+        cyberRefreshEbookDeepLinkPanelVisibility();
         cyberInitEbookDeepLinkPanel();
         setTimeout(() => cyberInitEbookDeepLinkAutoDuel(), 600);
         cyberRefreshAllPublicWarroom();
