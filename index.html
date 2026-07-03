@@ -1130,6 +1130,26 @@
         <button id="bgmToggleBtn" onclick="toggleBgm()" style="flex: 0.5; background: #111; border-color: #00ffff; color: #00ffff;">🎵 戰歌：未解封</button>
     </div>
 
+
+    <!-- 📘 電子書延伸演武：任意武將 VS 任意武將 一鍵開戰連結產生器 -->
+    <div class="controls" id="ebookDeepLinkPanel" style="border: 2px dashed #ffd700; padding: 15px; border-radius: 6px; background: rgba(255,215,0,0.06); display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+        <h3 style="color:#ffd700; margin:0; text-shadow:0 0 8px #ffd700;">📘 電子書延伸演武｜一鍵開戰連結產生器</h3>
+        <p style="font-size:12px; color:#aaa; margin:0; line-height:1.6;">
+            先在上方「單挑我軍／單挑敵軍」選好任意兩名武將，再按下產生連結。這條網址可直接放進電子書超連結，也可拿去製作 QR Code；讀者點開後會提示 1 秒，然後自動開戰。
+        </p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button onclick="cyberGenerateEbookDuelLink()" style="flex:1; min-width:180px; border-color:#ffd700; color:#ffd700;">⚔ 產生一鍵開戰連結</button>
+            <button onclick="cyberCopyEbookDuelLink()" style="flex:1; min-width:140px; border-color:#00ffff; color:#00ffff;">📋 複製連結</button>
+            <button onclick="cyberOpenEbookDuelLink()" style="flex:1; min-width:140px; border-color:#00ff41; color:#00ff41;">🚀 測試開戰</button>
+        </div>
+        <textarea id="ebookDuelLinkOutput" readonly placeholder="產生後的一鍵開戰網址會出現在這裡" style="width:100%; min-height:72px; box-sizing:border-box; background:#000; color:#ffd700; border:1px solid #ffd700; padding:10px; font-family:'Courier New', Courier, monospace, 'Microsoft JhengHei'; resize:vertical;"></textarea>
+        <div id="ebookDuelQrBox" style="display:none; text-align:center; border:1px solid #333; padding:10px; background:rgba(0,0,0,0.55);">
+            <div style="color:#ffd700; font-weight:bold; margin-bottom:8px;">QR Code 預覽｜可另存圖片放入電子書</div>
+            <img id="ebookDuelQrImg" alt="電子書一鍵開戰 QR Code" style="background:#fff; padding:8px; max-width:220px; width:220px; height:220px;">
+            <div id="ebookDuelQrCaption" style="font-size:12px; color:#aaa; margin-top:8px; line-height:1.5;"></div>
+        </div>
+    </div>
+
     <!-- 隱藏的賽博琴瑟陣眼 -->
     <audio id="bgmAudio" loop preload="auto">
         <!-- 主公！請將下方的 src 網址替換為您在 GitHub 上傳的 MP3 Raw 連結！ -->
@@ -10567,7 +10587,251 @@ function cyberRefreshArenaUI() {
         }
     }
 
+
+    /* ==============================================================
+       📘 電子書延伸演武深層連結：任意武將 VS 任意武將
+       使用方式：
+       ?mode=duel&p1=趙雲&p2=呂布&auto=1
+       ?mode=duel&p1=yanliang&p2=xuchu&auto=1
+       ============================================================== */
+    const CYBER_EBOOK_DUEL_ALIASES = {
+        'zhaoyun': '趙雲', 'zhao-yun': '趙雲', 'zhao yun': '趙雲', '子龍': '趙雲',
+        'lubu': '呂布', 'lu-bu': '呂布', 'lu bu': '呂布', '奉先': '呂布',
+        'guanyu': '關羽', 'guan-yu': '關羽', 'guan yu': '關羽', '雲長': '關羽',
+        'zhangfei': '張飛', 'zhang-fei': '張飛', 'zhang fei': '張飛', '翼德': '張飛',
+        'machao': '馬超', 'ma-chao': '馬超', 'ma chao': '馬超', '孟起': '馬超',
+        'huangzhong': '黃忠', 'huang-zhong': '黃忠', 'huang zhong': '黃忠', '漢升': '黃忠',
+        'xuchu': '許褚', 'xu-chu': '許褚', 'xu chu': '許褚', '仲康': '許褚',
+        'dianwei': '典韋', 'dian-wei': '典韋', 'dian wei': '典韋',
+        'yanliang': '顏良', 'yan-liang': '顏良', 'yan liang': '顏良',
+        'wenchou': '文醜', 'wen-chou': '文醜', 'wen chou': '文醜',
+        'pangde': '龐德', 'pang-de': '龐德', 'pang de': '龐德',
+        'zhangliao': '張遼', 'zhang-liao': '張遼', 'zhang liao': '張遼',
+        'zhanghe': '張郃', 'zhang-he': '張郃', 'zhang he': '張郃', '張合': '張郃',
+        'taishici': '太史慈', 'tai-shi-ci': '太史慈', 'tai shi ci': '太史慈',
+        'sunce': '孫策', 'sun-ce': '孫策', 'sun ce': '孫策',
+        'gan ning': '甘寧', 'ganning': '甘寧', 'gan-ning': '甘寧',
+        'weiyan': '魏延', 'wei-yan': '魏延', 'wei yan': '魏延',
+        'jiangwei': '姜維', 'jiang-wei': '姜維', 'jiang wei': '姜維'
+    };
+
+    function cyberEbookNormalizeKey(value) {
+        return String(value || '')
+            .normalize('NFKC')
+            .trim()
+            .toLowerCase()
+            .replace(/[\s　_\-・·.．。,:：;；/\\|｜~～!！?？'"“”‘’`´^=+*#@%&$]+/g, '')
+            .replace(/[()（）\[\]【】{}「」『』《》〈〉]/g, '');
+    }
+
+    function cyberEbookDecodeParam(value) {
+        if (!value) return '';
+        try { return decodeURIComponent(String(value).replace(/\+/g, '%20')).trim(); }
+        catch (e) { return String(value).trim(); }
+    }
+
+    function cyberEbookResolveAlias(rawName) {
+        const raw = cyberEbookDecodeParam(rawName);
+        if (!raw) return '';
+        if (CYBER_EBOOK_DUEL_ALIASES[raw]) return CYBER_EBOOK_DUEL_ALIASES[raw];
+        const compact = cyberEbookNormalizeKey(raw);
+        for (const key in CYBER_EBOOK_DUEL_ALIASES) {
+            if (cyberEbookNormalizeKey(key) === compact) return CYBER_EBOOK_DUEL_ALIASES[key];
+        }
+        return raw;
+    }
+
+    function cyberEbookFindSelectableGeneralIndex(rawName, selectNode) {
+        if (!rawName || !Array.isArray(generals)) return -1;
+        const resolvedName = cyberEbookResolveAlias(rawName);
+        const targetKey = cyberEbookNormalizeKey(resolvedName);
+        const originalKey = cyberEbookNormalizeKey(rawName);
+        const node = selectNode || p1Select;
+        const optionValues = [];
+
+        if (node && node.options && node.options.length) {
+            for (let i = 0; i < node.options.length; i++) {
+                const idx = parseInt(node.options[i].value, 10);
+                if (!Number.isNaN(idx)) optionValues.push(idx);
+            }
+        } else {
+            for (let i = 0; i < generals.length; i++) optionValues.push(i);
+        }
+
+        for (const idx of optionValues) {
+            const g = generals[idx];
+            if (!g || !g.name) continue;
+            const nameKey = cyberEbookNormalizeKey(g.name);
+            if (nameKey === targetKey || nameKey === originalKey) return idx;
+        }
+
+        // 最後再用「包含」做寬鬆比對，避免全名帶括號或別名時找不到。
+        for (const idx of optionValues) {
+            const g = generals[idx];
+            if (!g || !g.name) continue;
+            const nameKey = cyberEbookNormalizeKey(g.name);
+            if ((targetKey && nameKey.includes(targetKey)) || (targetKey && targetKey.includes(nameKey))) return idx;
+        }
+
+        return -1;
+    }
+
+    function cyberEbookGetCurrentBaseUrl() {
+        return window.location.origin + window.location.pathname;
+    }
+
+    function cyberBuildEbookDuelLink(p1Name, p2Name, auto = '1') {
+        const baseUrl = cyberEbookGetCurrentBaseUrl();
+        const params = new URLSearchParams();
+        params.set('mode', 'duel');
+        params.set('p1', p1Name);
+        params.set('p2', p2Name);
+        params.set('auto', auto);
+        return `${baseUrl}?${params.toString()}`;
+    }
+
+    function cyberGetSelectedDuelNames() {
+        const p1 = generals[p1Select.value];
+        const p2 = generals[p2Select.value];
+        if (!p1 || !p2) return null;
+        return { p1Name: p1.name, p2Name: p2.name };
+    }
+
+    function cyberGenerateEbookDuelLink() {
+        const names = cyberGetSelectedDuelNames();
+        if (!names) {
+            alert('主公，請先選好單挑我軍與單挑敵軍。');
+            return '';
+        }
+        const link = cyberBuildEbookDuelLink(names.p1Name, names.p2Name, '1');
+        const output = document.getElementById('ebookDuelLinkOutput');
+        const qrBox = document.getElementById('ebookDuelQrBox');
+        const qrImg = document.getElementById('ebookDuelQrImg');
+        const qrCaption = document.getElementById('ebookDuelQrCaption');
+
+        if (output) output.value = link;
+        if (qrImg) qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(link);
+        if (qrCaption) qrCaption.innerHTML = `本場延伸演武：<span style="color:#00ff41;">${names.p1Name}</span> VS <span style="color:#ff3131;">${names.p2Name}</span>`;
+        if (qrBox) qrBox.style.display = 'block';
+
+        if (battleLog) {
+            battleLog.innerHTML = `📘 已產生電子書一鍵開戰連結：<br><span style="color:#00ff41;">${names.p1Name}</span> VS <span style="color:#ff3131;">${names.p2Name}</span><br><br><span style="color:#ffd700; word-break:break-all;">${link}</span>`;
+            battleLog.scrollTop = battleLog.scrollHeight;
+        }
+        return link;
+    }
+
+    async function cyberCopyEbookDuelLink() {
+        const output = document.getElementById('ebookDuelLinkOutput');
+        const link = output && output.value ? output.value : cyberGenerateEbookDuelLink();
+        if (!link) return;
+        try {
+            await navigator.clipboard.writeText(link);
+            alert('已複製一鍵開戰連結，可貼到電子書超連結或 QR Code 產生器。');
+        } catch (e) {
+            if (output) {
+                output.focus();
+                output.select();
+            }
+            alert('瀏覽器未允許自動複製，已幫你選取網址，請手動複製。');
+        }
+    }
+
+    function cyberOpenEbookDuelLink() {
+        const output = document.getElementById('ebookDuelLinkOutput');
+        const link = output && output.value ? output.value : cyberGenerateEbookDuelLink();
+        if (!link) return;
+        window.open(link, '_blank', 'noopener,noreferrer');
+    }
+
+    function cyberShowEbookAutoDuelNotice(p1Name, p2Name, delayMs) {
+        if (!battleLog) return;
+        const secondsText = Math.max(1, Math.round(delayMs / 1000));
+        battleLog.innerHTML = `
+            <div style="border:2px solid #ffd700; background:rgba(255,215,0,0.08); padding:18px; text-align:center; box-shadow:0 0 18px rgba(255,215,0,0.35); color:#ddd; line-height:1.8;">
+                <div style="font-size:22px; color:#ffd700; font-weight:bold; text-shadow:0 0 8px #ffd700;">📘 本場延伸演武</div>
+                <div style="font-size:20px; margin-top:8px;"><span style="color:#00ff41; font-weight:bold;">${p1Name}</span><span style="color:#fff;"> VS </span><span style="color:#ff3131; font-weight:bold;">${p2Name}</span></div>
+                <div style="color:#aaa; margin-top:8px;">天道沙盤已載入，${secondsText} 秒後自動開戰。</div>
+            </div>
+        `;
+        battleLog.scrollTop = 0;
+    }
+
+    function cyberShowEbookDeepLinkError(p1Raw, p2Raw) {
+        if (!battleLog) return;
+        battleLog.innerHTML = `
+            <div style="border:2px solid #ff3131; padding:16px; color:#ff3131; background:rgba(255,49,49,0.08); line-height:1.7;">
+                ⚠ 找不到指定武將，請返回沙盤手動選擇。<br>
+                我軍參數：${p1Raw || '未指定'}<br>
+                敵軍參數：${p2Raw || '未指定'}<br>
+                <span style="color:#aaa;">提示：建議直接使用連結產生器建立網址，最不容易打錯。</span>
+            </div>
+        `;
+    }
+
+    function cyberInitEbookDeepLinkAutoDuel(retryCount = 0) {
+        const params = new URLSearchParams(window.location.search);
+        const mode = params.get('mode');
+        if (mode !== 'duel') return;
+
+        if (!p1Select || !p2Select || !p1Select.options.length || !p2Select.options.length) {
+            if (retryCount < 12) setTimeout(() => cyberInitEbookDeepLinkAutoDuel(retryCount + 1), 250);
+            return;
+        }
+
+        const p1Raw = cyberEbookDecodeParam(params.get('p1'));
+        const p2Raw = cyberEbookDecodeParam(params.get('p2'));
+        const auto = params.get('auto');
+        const delayParam = parseInt(params.get('delay'), 10);
+        const delayMs = Number.isFinite(delayParam) && delayParam >= 0 ? delayParam : 1000;
+
+        if (!p1Raw || !p2Raw) return;
+
+        const p1Index = cyberEbookFindSelectableGeneralIndex(p1Raw, p1Select);
+        const p2Index = cyberEbookFindSelectableGeneralIndex(p2Raw, p2Select);
+
+        if (p1Index < 0 || p2Index < 0) {
+            cyberShowEbookDeepLinkError(p1Raw, p2Raw);
+            return;
+        }
+
+        p1Select.value = String(p1Index);
+        p2Select.value = String(p2Index);
+        if (typeof checkRpgPanel === 'function') checkRpgPanel();
+
+        const p1Name = generals[p1Index].name;
+        const p2Name = generals[p2Index].name;
+
+        const output = document.getElementById('ebookDuelLinkOutput');
+        if (output) output.value = cyberBuildEbookDuelLink(p1Name, p2Name, auto === '0' ? '0' : '1');
+
+        cyberShowEbookAutoDuelNotice(p1Name, p2Name, delayMs);
+
+        if (auto === '1') {
+            setTimeout(() => {
+                if (typeof startDuel === 'function') startDuel();
+            }, delayMs);
+        }
+    }
+
+    function cyberInitEbookDeepLinkPanel() {
+        const panel = document.getElementById('ebookDeepLinkPanel');
+        if (!panel) return;
+        const refresh = () => {
+            const output = document.getElementById('ebookDuelLinkOutput');
+            if (!output || output.value) return;
+            const names = cyberGetSelectedDuelNames();
+            if (!names) return;
+            output.placeholder = cyberBuildEbookDuelLink(names.p1Name, names.p2Name, '1');
+        };
+        refresh();
+        if (p1Select) p1Select.addEventListener('change', refresh);
+        if (p2Select) p2Select.addEventListener('change', refresh);
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
+        cyberInitEbookDeepLinkPanel();
+        setTimeout(() => cyberInitEbookDeepLinkAutoDuel(), 600);
         cyberRefreshAllPublicWarroom();
         cyberUpdateOwnerStatus();
         if (typeof cyberRefreshCustomTitleAdminUI === 'function') cyberRefreshCustomTitleAdminUI();
