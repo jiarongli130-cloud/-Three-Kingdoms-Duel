@@ -6601,6 +6601,7 @@
     const CYBER_DUEL_HOME_URL = 'https://jiarongli130-cloud.github.io/-Three-Kingdoms-Duel/';
     const CYBER_LINE_CTA_TITLE = '《三國演義武力超百科》讀者演武營';
     const CYBER_LINE_CTA_BADGE = '【延伸演武見證者】';
+    const CYBER_LINE_CTA_BADGE_EFFECT = '武力 +20｜暴擊 +1%｜閃避 +1%｜格擋 +1%｜破甲 +1%｜吸血 +1%｜HP +10';
 
 
     // 【Firebase 開關】
@@ -6664,7 +6665,9 @@ ${winnerLine}
 不服榜單，進沙盤驗天下：
 ${duelUrl}
 
-加入讀者演武營，領限定稱號、討論戰果、接收電子書與實體書消息：
+加入讀者演武營，領限定稱號 ${CYBER_LINE_CTA_BADGE}
+效果：${CYBER_LINE_CTA_BADGE_EFFECT}
+討論戰果、接收電子書與實體書消息：
 ${CYBER_LINE_GROUP_URL}`;
     }
 
@@ -6718,8 +6721,21 @@ ${CYBER_LINE_GROUP_URL}`;
                 <div style="margin-top:8px; color:#fff;">
                     你認同這場結果嗎？加入 <span style="color:#00ff41; font-weight:bold;">${CYBER_LINE_CTA_TITLE}</span>，討論戰果、參加沙盤任務、接收電子書與實體書消息。
                 </div>
-                <div style="margin-top:8px; color:#ffd700; font-weight:bold;">
-                    入群輸入「我要稱號」，可領沙盤限定稱號 ${CYBER_LINE_CTA_BADGE}。
+                <div style="
+                    margin-top:10px;
+                    border:1px solid #ffd700;
+                    background:rgba(255,215,0,0.08);
+                    padding:10px;
+                    border-radius:6px;
+                    color:#ffd700;
+                    font-weight:bold;
+                    box-shadow:0 0 12px rgba(255,215,0,0.20);
+                ">
+                    入群輸入「我要稱號」，可領沙盤限定稱號
+                    <span style="color:#fff; text-shadow:0 0 8px #ffd700;">${CYBER_LINE_CTA_BADGE}</span><br>
+                    <span style="font-size:13px; color:#00ffff; text-shadow:0 0 6px #00ffff;">
+                        稱號效果：${CYBER_LINE_CTA_BADGE_EFFECT}
+                    </span>
                 </div>
                 <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:12px;">
                     <a href="${CYBER_LINE_GROUP_URL}" target="_blank" rel="noopener noreferrer" style="
@@ -6732,7 +6748,7 @@ ${CYBER_LINE_GROUP_URL}`;
                         font-weight:bold;
                         border-radius:6px;
                         box-shadow:0 0 12px rgba(0,255,65,0.35);
-                    ">📲 加入官方 LINE 群</a>
+                    ">📲 加入官方 LINE 群｜領取【延伸演武見證者】</a>
                     <button onclick="cyberCopyBattleShareText()" style="
                         width:auto;
                         padding:12px 18px;
