@@ -1,5 +1,4 @@
-# trigger-2026-08-25-1611
-name: houhanshu-bulk-temp
+name: houhanshu-batch4-temp
 
 on:
   push:
@@ -12,148 +11,51 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  inspect-secondary:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: tmp/houhanshu-bulk-20260825
-          fetch-depth: 0
-
-      - name: Clone source
-        run: git clone --depth 1 https://github.com/Ancient-China-Books/houhanshu.git /tmp/houhanshu
-
-      - name: Extract and QA all 130 physical HTML files
+      - name: Clone secondary source
+        run: git clone --depth 1 https://github.com/quzhi1/ChineseHistoricalSource.git /tmp/chs
+      - name: Inspect Hou Hanshu secondary file
         shell: bash
         run: |
+          mkdir -p houhanshu_batch4_inspect
           python3 - <<'PY'
           from pathlib import Path
-          import re, csv, json, html
-          import xml.etree.ElementTree as ET
-
-          src = Path('/tmp/houhanshu/OEBPS/Text')
-          out = Path('houhanshu_batch2b2')
-          clean = out / 'clean_physical'
-          clean.mkdir(parents=True, exist_ok=True)
-
-          pat = re.compile(r'^(\d{3})([ab]?)\.htm$')
-          files = sorted([p for p in src.glob('*.htm') if pat.match(p.name)], key=lambda p: (int(p.stem[:3]), p.stem[3:]))
-
-          def local(tag): return tag.rsplit('}',1)[-1]
-          def cls(el): return (el.attrib.get('class') or '').split()
-          def norm(s):
-              if not s: return ''
-              s = html.unescape(s).replace('\u3000',' ')
-              s = re.sub(r'[ \t\r\f\v]+',' ',s)
-              s = re.sub(r' *\n *','\n',s)
-              return s.strip()
-          def text_all(el): return norm(''.join(el.itertext()))
-          def main_without_notes(el):
-              parts=[]
-              def rec(x, table=False):
-                  if x.text: parts.append(x.text)
-                  for ch in list(x):
-                      tag=local(ch.tag)
-                      ch_table = table or tag in ('table','tr','td','th')
-                      is_note = (not ch_table) and ('style7' in cls(ch)) and tag in ('span','p')
-                      if not is_note: rec(ch, ch_table)
-                      if ch.tail: parts.append(ch.tail)
-              rec(el)
-              return norm(''.join(parts))
-
-          rows=[]; anomalies=[]; physical_order=[]
-          for p in files:
-              raw=p.read_text(encoding='utf-8')
-              replacement=raw.count('\ufffd'); parse_error=''
-              try: root=ET.fromstring(raw)
-              except Exception as e:
-                  parse_error=repr(e); anomalies.append((p.name,'PARSE',parse_error))
-                  rows.append([p.name,'',0,0,0,0,0,0,0,replacement,parse_error]); continue
-              feature=None
-              for el in root.iter():
-                  if local(el.tag)=='div' and 'feature' in cls(el): feature=el; break
-              if feature is None:
-                  anomalies.append((p.name,'NO_FEATURE',''))
-                  rows.append([p.name,'',0,0,0,0,0,0,0,replacement,'NO_FEATURE']); continue
-
-              h1=''; main_blocks=[]; note_blocks=[]; table_blocks=[]; rendered=[]
-              p_count=note_count=table_count=0
-              for ch in list(feature):
-                  tag=local(ch.tag)
-                  if tag=='h1':
-                      h1=text_all(ch); rendered.append('# '+h1)
-                  elif tag=='hr': continue
-                  elif tag=='p':
-                      p_count += 1
-                      if 'style7' in cls(ch):
-                          n=text_all(ch)
-                          if n: note_blocks.append(n); note_count += 1; rendered.append('【注】'+n)
-                      else:
-                          m=main_without_notes(ch)
-                          if m: main_blocks.append(m)
-                          seq=[]
-                          if ch.text: seq.append(ch.text)
-                          for x in list(ch):
-                              xtag=local(x.tag)
-                              if xtag=='a' and 'gg-link' in cls(x): pass
-                              elif xtag=='span' and 'style7' in cls(x):
-                                  n=text_all(x)
-                                  if n: note_blocks.append(n); note_count += 1; seq.append('【注】'+n+'【/注】')
-                              else: seq.append(''.join(x.itertext()))
-                              if x.tail: seq.append(x.tail)
-                          rp=norm(''.join(seq))
-                          if rp: rendered.append(rp)
-                  elif tag=='table':
-                      table_count += 1; tlines=[]
-                      for tr in ch.iter():
-                          if local(tr.tag)!='tr': continue
-                          cells=[text_all(td) for td in list(tr) if local(td.tag) in ('td','th')]
-                          if cells: tlines.append('\t'.join(cells))
-                      t='\n'.join(tlines).strip()
-                      if t: table_blocks.append(t); rendered.append('【表】\n'+t+'\n【/表】')
-                  else:
-                      t=text_all(ch)
-                      if t: anomalies.append((p.name,'UNEXPECTED_TOPLEVEL',tag+': '+t[:120]))
-
-              main_chars=sum(len(x) for x in main_blocks); note_chars=sum(len(x) for x in note_blocks); table_chars=sum(len(x) for x in table_blocks)
-              total_chars=main_chars+note_chars+table_chars
-              (clean/p.with_suffix('.txt').name).write_text('\n\n'.join(rendered)+'\n',encoding='utf-8')
-              rows.append([p.name,h1,p_count,note_count,table_count,main_chars,note_chars,table_chars,total_chars,replacement,parse_error])
-              physical_order.append(p.name)
-
-          expected_splits={1:['001.htm','001b.htm'],10:['010a.htm','010b.htm'],28:['028a.htm','028b.htm'],30:['030a.htm','030b.htm'],40:['040.htm','040b.htm'],60:['060a.htm','060b.htm'],74:['074.htm','074b.htm'],79:['079.htm','079b.htm'],80:['080.htm','080b.htm'],82:['082.htm','082b.htm']}
-          logical={i:[] for i in range(1,121)}
-          for name in physical_order: logical[int(name[:3])].append(name)
-          logical_ok=all(logical[i] for i in range(1,121))
-          split_ok=all(logical[k]==v for k,v in expected_splits.items()) and all(len(logical[i])==1 for i in range(1,121) if i not in expected_splits)
-
-          logical_dir=out/'clean_logical_120'; logical_dir.mkdir(exist_ok=True)
-          for i in range(1,121):
-              parts=[(clean/Path(name).with_suffix('.txt').name).read_text(encoding='utf-8').strip() for name in logical[i]]
-              (logical_dir/f'{i:03d}.txt').write_text('\n\n'.join(parts)+'\n',encoding='utf-8')
-
-          with (out/'batch2b2_stats.tsv').open('w',encoding='utf-8',newline='') as f:
-              w=csv.writer(f,delimiter='\t'); w.writerow(['physical_html','title','p_count','note_node_count','table_count','main_chars','note_chars','table_chars','total_chars','replacement_char_count','parse_error']); w.writerows(rows)
-          with (out/'anomalies.tsv').open('w',encoding='utf-8',newline='') as f:
-              w=csv.writer(f,delimiter='\t'); w.writerow(['file','type','detail']); w.writerows(anomalies)
-          summary={'physical_files':len(files),'logical_volumes_nonempty':sum(bool(logical[i]) for i in logical),'logical_1_120_complete':logical_ok,'split_mapping_ok':split_ok,'parse_errors':sum(bool(r[-1]) for r in rows),'replacement_char_total':sum(r[-2] for r in rows),'tables_total':sum(r[4] for r in rows),'paragraphs_total':sum(r[2] for r in rows),'note_nodes_total':sum(r[3] for r in rows),'main_chars_total':sum(r[5] for r in rows),'note_chars_total':sum(r[6] for r in rows),'table_chars_total':sum(r[7] for r in rows),'total_chars':sum(r[8] for r in rows),'anomaly_rows':len(anomalies)}
-          (out/'summary.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-          (out/'README.txt').write_text('《後漢書》BATCH 2B-2 bulk extraction generated from Ancient-China-Books/houhanshu master.\nMAIN/NOTE/TABLE rules follow project BATCH 2A/2B-1 checkpoint.\nInline notes are preserved as 【注】...【/注】; standalone note paragraphs as 【注】...; tables as 【表】 blocks.\n',encoding='utf-8')
-          print(json.dumps(summary,ensure_ascii=False,indent=2))
-          if len(files)!=130 or not logical_ok or not split_ok or summary['parse_errors'] or summary['replacement_char_total']: raise SystemExit('BATCH2B2 structural/parse QA failed')
+          import hashlib, json, re
+          p=Path('/tmp/chs/utf8/03后汉书.TXT')
+          b=p.read_bytes()
+          t=b.decode('utf-8')
+          lines=t.splitlines()
+          info={
+            'bytes':len(b),'chars':len(t),'lines':len(lines),
+            'sha1':hashlib.sha1(b).hexdigest(),'sha256':hashlib.sha256(b).hexdigest(),
+            'replacement_chars':t.count('\ufffd'),
+          }
+          Path('houhanshu_batch4_inspect/info.json').write_text(json.dumps(info,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          Path('houhanshu_batch4_inspect/head.txt').write_text('\n'.join(lines[:220])+'\n',encoding='utf-8')
+          Path('houhanshu_batch4_inspect/tail.txt').write_text('\n'.join(lines[-220:])+'\n',encoding='utf-8')
+          keys=['世祖光武皇帝諱秀','顯宗孝明皇帝諱莊','曹操','劉備','孫權','袁紹','董卓','官渡','獻帝','志第三 律曆下','志第三十 輿服下']
+          out=[]
+          for k in keys:
+            pos=t.find(k)
+            out.append(f'KEY={k} POS={pos}')
+            if pos>=0:
+              out.append(t[max(0,pos-300):pos+900].replace('\r',''))
+              out.append('---')
+          Path('houhanshu_batch4_inspect/key_samples.txt').write_text('\n'.join(out)+'\n',encoding='utf-8')
+          # Header-like lines for structural inspection.
+          heads=[ln for ln in lines if re.search(r'(卷第|卷一|本紀|列傳|志第)',ln)][:500]
+          Path('houhanshu_batch4_inspect/header_candidates.txt').write_text('\n'.join(heads)+'\n',encoding='utf-8')
+          print(json.dumps(info,ensure_ascii=False))
           PY
-
-      - name: Commit generated corpus checkpoint
+      - name: Commit inspection
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add houhanshu_batch2b2
-          git commit -m "temp: generated Hou Hanshu batch2b2 corpus and QA" || true
+          git add houhanshu_batch4_inspect
+          git commit -m "temp: inspect Hou Hanshu secondary source" || true
           git push origin HEAD:tmp/houhanshu-bulk-20260825
-
-      - name: Upload generated corpus artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: houhanshu-batch2b2
-          path: houhanshu_batch2b2
-          retention-days: 7
