@@ -11,51 +11,228 @@ permissions:
   contents: write
 
 jobs:
-  inspect-secondary:
+  batch4:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: tmp/houhanshu-bulk-20260825
-      - name: Clone secondary source
-        run: git clone --depth 1 https://github.com/quzhi1/ChineseHistoricalSource.git /tmp/chs
-      - name: Inspect Hou Hanshu secondary file
+      - name: Clone primary and secondary sources
+        run: |
+          git clone --depth 1 https://github.com/Ancient-China-Books/houhanshu.git /tmp/houhanshu
+          git clone --depth 1 https://github.com/quzhi1/ChineseHistoricalSource.git /tmp/chs
+      - name: Install comparison-only script normalizer
+        run: python3 -m pip install --quiet opencc-python-reimplemented
+      - name: Run BATCH 4 cross-source QA
         shell: bash
         run: |
-          mkdir -p houhanshu_batch4_inspect
+          rm -rf houhanshu_batch4
+          mkdir -p houhanshu_batch4
           python3 - <<'PY'
           from pathlib import Path
-          import hashlib, json, re
-          p=Path('/tmp/chs/utf8/03后汉书.TXT')
-          b=p.read_bytes()
-          t=b.decode('utf-8')
-          lines=t.splitlines()
-          info={
-            'bytes':len(b),'chars':len(t),'lines':len(lines),
-            'sha1':hashlib.sha1(b).hexdigest(),'sha256':hashlib.sha256(b).hexdigest(),
-            'replacement_chars':t.count('\ufffd'),
+          import re, csv, json, html, hashlib
+          import xml.etree.ElementTree as ET
+          from opencc import OpenCC
+
+          PRIMARY=Path('/tmp/houhanshu/OEBPS/Text')
+          SECONDARY=Path('/tmp/chs/utf8/03后汉书.TXT')
+          OUT=Path('houhanshu_batch4')
+          cc=OpenCC('t2s')
+
+          split_expected={1:['001.htm','001b.htm'],10:['010a.htm','010b.htm'],28:['028a.htm','028b.htm'],30:['030a.htm','030b.htm'],40:['040.htm','040b.htm'],60:['060a.htm','060b.htm'],74:['074.htm','074b.htm'],79:['079.htm','079b.htm'],80:['080.htm','080b.htm'],82:['082.htm','082b.htm']}
+
+          def local(tag): return tag.rsplit('}',1)[-1]
+          def cls(el): return (el.attrib.get('class') or '').split()
+          def norm_space(s):
+              s=html.unescape(s or '').replace('\u3000',' ')
+              s=re.sub(r'[ \t\r\f\v]+',' ',s)
+              s=re.sub(r' *\n *','\n',s)
+              return s.strip()
+          def text_all(el): return norm_space(''.join(el.itertext()))
+          def main_without_notes(el):
+              parts=[]
+              def rec(x, in_table=False):
+                  if x.text: parts.append(x.text)
+                  for ch in list(x):
+                      tag=local(ch.tag)
+                      table=in_table or tag in ('table','tr','td','th')
+                      is_note=(not table) and tag in ('span','p') and 'style7' in cls(ch)
+                      if not is_note: rec(ch,table)
+                      if ch.tail: parts.append(ch.tail)
+              rec(el,False)
+              return norm_space(''.join(parts))
+
+          # Parse primary into logical MAIN paragraphs / NOTE nodes / table rows.
+          logical={i:{'main':[],'notes':[],'tables':[],'titles':[]} for i in range(1,121)}
+          files=sorted([p for p in PRIMARY.glob('*.htm') if re.match(r'^\d{3}[ab]?\.htm$',p.name)], key=lambda p:(int(p.name[:3]),p.stem[3:]))
+          for p in files:
+              n=int(p.name[:3])
+              root=ET.fromstring(p.read_text(encoding='utf-8'))
+              feature=next(el for el in root.iter() if local(el.tag)=='div' and 'feature' in cls(el))
+              for ch in list(feature):
+                  tag=local(ch.tag)
+                  if tag=='h1': logical[n]['titles'].append(text_all(ch))
+                  elif tag=='p':
+                      if 'style7' in cls(ch):
+                          t=text_all(ch)
+                          if t: logical[n]['notes'].append(t)
+                      else:
+                          m=main_without_notes(ch)
+                          if m: logical[n]['main'].append(m)
+                          for x in ch.iter():
+                              if x is ch: continue
+                              if local(x.tag)=='span' and 'style7' in cls(x):
+                                  t=text_all(x)
+                                  if t: logical[n]['notes'].append(t)
+                  elif tag=='table':
+                      for tr in ch.iter():
+                          if local(tr.tag)!='tr': continue
+                          cells=[text_all(td) for td in list(tr) if local(td.tag) in ('td','th')]
+                          if cells: logical[n]['tables'].append('｜'.join(cells))
+
+          sec_raw=SECONDARY.read_text(encoding='utf-8-sig')
+
+          # Resolve ChineseHistoricalSource's editorial correction syntax only for comparison.
+          def resolve_editorial(s):
+              old=None
+              while old!=s:
+                  old=s
+                  s=re.sub(r'\*\(([^()]*)\)\*\*\[([^\]]*)\]\*',lambda m:m.group(2),s)
+                  s=re.sub(r'\*\[([^\]]*)\]\*',lambda m:m.group(1),s)
+                  s=re.sub(r'\*\(([^()]*)\)\*','',s)
+              return s
+          sec_resolved=resolve_editorial(sec_raw)
+
+          # Comparison normalizer: T->S only in QA copy; primary itself is never converted.
+          # Strip punctuation, whitespace and apparatus reference numbers so paragraph text can match.
+          refpat=re.compile(r'\[[一二三四五六七八九十百０0-9]+\]')
+          punct=re.compile(r'[\s\u3000，。；：！？、,.!?;:「」『』“”‘’《》〈〉（）()【】〔〕［］\[\]—…·﹑﹔﹕﹖﹗＊*#=<>/\\|\-]+')
+          def cmpnorm(s, convert=True):
+              s=resolve_editorial(s)
+              s=refpat.sub('',s)
+              # Secondary explicit note labels are not part of primary note text.
+              s=re.sub(r'(?m)^\s*注(?=[^\u4e00-\u9fff]|$)','',s)
+              if convert: s=cc.convert(s)
+              s=punct.sub('',s)
+              return s
+
+          sec_cmp=cmpnorm(sec_resolved,convert=False)  # already Simplified-dominant; preserve its actual chars.
+
+          # Structural key coverage of second source.
+          digits='零一二三四五六七八九'
+          def cn(n):
+              if n<10: return digits[n]
+              if n==10: return '十'
+              if n<20: return '十'+digits[n%10]
+              if n<100:
+                  return digits[n//10]+'十'+(digits[n%10] if n%10 else '')
+              return '一百'+(cn(n-100) if n>100 else '')
+          sec_no_ws=re.sub(r'\s+','',sec_resolved)
+          missing=[]
+          coverage=[]
+          for i in range(1,91):
+              key='后汉书卷'+cn(i)
+              count=sec_no_ws.count(key)
+              # Volume 1 upper title at the very beginning lacks 后汉书 prefix, but 卷一下 provides the key.
+              coverage.append((f'卷{i}',key,count))
+              if count==0: missing.append(f'卷{i}:{key}')
+          for j in range(1,31):
+              key='后汉书志第'+cn(j)
+              count=sec_no_ws.count(key)
+              coverage.append((f'志{j}',key,count))
+              if count==0: missing.append(f'志{j}:{key}')
+          with (OUT/'secondary_structure_coverage.tsv').open('w',encoding='utf-8',newline='') as f:
+              w=csv.writer(f,delimiter='\t'); w.writerow(['logical','search_key','count']); w.writerows(coverage)
+
+          # 26 main samples covering the whole 120-volume range.
+          main_vols=[1,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,91,95,100,105,110,115,120]
+          samples=[]
+          def choose_near_middle(items,minlen=160):
+              candidates=[(abs(i-(len(items)-1)/2),i,t) for i,t in enumerate(items) if len(t)>=minlen]
+              if candidates: return min(candidates)[2]
+              if items: return max(items,key=len)
+              return ''
+          def centered(t,n=120):
+              if len(t)<=n: return t
+              start=max(0,(len(t)-n)//2)
+              return t[start:start+n]
+          def match_levels(s):
+              c=cmpnorm(s,convert=True)
+              # Search successively shorter centered anchors; preserve a minimum meaningful 25-char test.
+              for L in (120,100,80,60,40,25):
+                  if len(c)<L: continue
+                  st=(len(c)-L)//2; q=c[st:st+L]
+                  if q in sec_cmp: return f'EXACT_{L}',q
+              return 'MISS',c[:120]
+
+          for v in main_vols:
+              para=choose_near_middle(logical[v]['main'])
+              sn=centered(para,160)
+              status,q=match_levels(sn)
+              samples.append({'kind':'MAIN','volume':v,'status':status,'query':q,'primary_excerpt':sn})
+
+          # 4 annotation samples spanning Li Xian notes and Liu Zhao notes.
+          for v in (1,30,91,120):
+              note=choose_near_middle(logical[v]['notes'],120)
+              sn=centered(note,150)
+              status,q=match_levels(sn)
+              samples.append({'kind':'NOTE','volume':v,'status':status,'query':q,'primary_excerpt':sn})
+
+          with (OUT/'spotcheck_30.tsv').open('w',encoding='utf-8',newline='') as f:
+              w=csv.writer(f,delimiter='\t')
+              w.writerow(['kind','volume','status','normalized_anchor','primary_excerpt'])
+              for r in samples: w.writerow([r['kind'],r['volume'],r['status'],r['query'],r['primary_excerpt']])
+
+          # Core Three Kingdoms people/events presence and rough count comparison.
+          keywords=['曹操','劉備','孫權','袁紹','袁術','董卓','呂布','公孫瓚','劉表','劉璋','馬騰','韓遂','張魯','陶謙','黃巾','李傕','郭汜','官渡','荊州','益州','漢中','獻帝']
+          pri_all=''.join(''.join(logical[i]['main'])+''.join(logical[i]['notes'])+''.join(logical[i]['tables']) for i in range(1,121))
+          pri_cmp=cmpnorm(pri_all,convert=True)
+          keyword_rows=[]
+          missing_kw=[]
+          for kw in keywords:
+              k=cmpnorm(kw,convert=True)
+              a=pri_cmp.count(k); b=sec_cmp.count(k)
+              keyword_rows.append((kw,k,a,b,b-a))
+              if a>0 and b==0: missing_kw.append(kw)
+          with (OUT/'keyword_counts.tsv').open('w',encoding='utf-8',newline='') as f:
+              w=csv.writer(f,delimiter='\t'); w.writerow(['keyword_traditional','comparison_simplified','primary_count','secondary_count','delta_secondary_minus_primary']); w.writerows(keyword_rows)
+
+          status_counts={}
+          for r in samples: status_counts[r['status']]=status_counts.get(r['status'],0)+1
+          strong=sum(v for k,v in status_counts.items() if k in ('EXACT_120','EXACT_100','EXACT_80'))
+          partial=sum(v for k,v in status_counts.items() if k in ('EXACT_60','EXACT_40','EXACT_25'))
+          misses=status_counts.get('MISS',0)
+
+          # Major conflict criterion: structural missing, core keyword disappearance, or >20% sample MISS.
+          major_conflict=bool(missing or missing_kw or misses>6)
+          summary={
+              'secondary_bytes':SECONDARY.stat().st_size,
+              'secondary_chars':len(sec_raw),
+              'secondary_sha256':hashlib.sha256(SECONDARY.read_bytes()).hexdigest(),
+              'secondary_replacement_chars':sec_raw.count('\ufffd'),
+              'secondary_structure_missing':missing,
+              'spotchecks_total':len(samples),
+              'spotcheck_status_counts':status_counts,
+              'spotcheck_strong_exact_80plus':strong,
+              'spotcheck_partial_25_to_60':partial,
+              'spotcheck_miss':misses,
+              'core_keywords_missing_in_secondary':missing_kw,
+              'major_conflict':major_conflict,
+              'note':'Traditional-to-Simplified conversion is applied only to a temporary QA comparison string; the project primary corpus remains untouched.'
           }
-          Path('houhanshu_batch4_inspect/info.json').write_text(json.dumps(info,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-          Path('houhanshu_batch4_inspect/head.txt').write_text('\n'.join(lines[:220])+'\n',encoding='utf-8')
-          Path('houhanshu_batch4_inspect/tail.txt').write_text('\n'.join(lines[-220:])+'\n',encoding='utf-8')
-          keys=['世祖光武皇帝諱秀','顯宗孝明皇帝諱莊','曹操','劉備','孫權','袁紹','董卓','官渡','獻帝','志第三 律曆下','志第三十 輿服下']
-          out=[]
-          for k in keys:
-            pos=t.find(k)
-            out.append(f'KEY={k} POS={pos}')
-            if pos>=0:
-              out.append(t[max(0,pos-300):pos+900].replace('\r',''))
-              out.append('---')
-          Path('houhanshu_batch4_inspect/key_samples.txt').write_text('\n'.join(out)+'\n',encoding='utf-8')
-          # Header-like lines for structural inspection.
-          heads=[ln for ln in lines if re.search(r'(卷第|卷一|本紀|列傳|志第)',ln)][:500]
-          Path('houhanshu_batch4_inspect/header_candidates.txt').write_text('\n'.join(heads)+'\n',encoding='utf-8')
-          print(json.dumps(info,ensure_ascii=False))
+          (OUT/'summary.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          misses_rows=[r for r in samples if r['status']=='MISS']
+          (OUT/'mismatch_samples.txt').write_text('\n\n'.join(f"{r['kind']} VOL {r['volume']}\n{r['primary_excerpt']}" for r in misses_rows)+('\n' if misses_rows else 'NONE\n'),encoding='utf-8')
+          (OUT/'README.txt').write_text(
+              '《後漢書》BATCH 4 cross-source QA. Primary: Ancient-China-Books/houhanshu (Han-Chuan lineage). Secondary: quzhi1/ChineseHistoricalSource utf8/03后汉书.TXT.\n'
+              'Secondary is Simplified and contains editorial correction apparatus; comparison normalization resolves apparatus and converts only the QA copy of the Traditional primary to Simplified. No conversion is applied to the project corpus.\n'
+              '30 passage checks = 26 MAIN + 4 NOTE, spread across the full 120 logical volumes.\n',encoding='utf-8')
+          print(json.dumps(summary,ensure_ascii=False,indent=2))
           PY
-      - name: Commit inspection
+      - name: Commit BATCH 4 results
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add houhanshu_batch4_inspect
-          git commit -m "temp: inspect Hou Hanshu secondary source" || true
+          git add houhanshu_batch4
+          git commit -m "temp: Hou Hanshu batch4 cross-source QA" || true
           git push origin HEAD:tmp/houhanshu-bulk-20260825
