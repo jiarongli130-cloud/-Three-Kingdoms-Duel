@@ -1,0 +1,25 @@
+{
+  "secondary_bytes": 5433232,
+  "secondary_chars": 1904315,
+  "secondary_sha256": "ec771f9502ad98cf183c981f7e06663c8c307a66577134f698b0e0ca8579e436",
+  "secondary_replacement_chars": 0,
+  "secondary_structure_missing": [
+    "卷46:后汉书卷四十六"
+  ],
+  "spotchecks_total": 30,
+  "spotcheck_status_counts": {
+    "EXACT_40": 5,
+    "EXACT_60": 4,
+    "MISS": 6,
+    "EXACT_25": 4,
+    "EXACT_80": 7,
+    "EXACT_120": 3,
+    "EXACT_100": 1
+  },
+  "spotcheck_strong_exact_80plus": 11,
+  "spotcheck_partial_25_to_60": 13,
+  "spotcheck_miss": 6,
+  "core_keywords_missing_in_secondary": [],
+  "major_conflict": true,
+  "note": "Traditional-to-Simplified conversion is applied only to a temporary QA comparison string; the project primary corpus remains untouched."
+}
