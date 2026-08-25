@@ -1,0 +1,16 @@
+{
+  "physical_files": 130,
+  "logical_volumes_nonempty": 120,
+  "logical_1_120_complete": true,
+  "split_mapping_ok": true,
+  "parse_errors": 0,
+  "replacement_char_total": 0,
+  "tables_total": 2,
+  "paragraphs_total": 6916,
+  "note_nodes_total": 13894,
+  "main_chars_total": 826183,
+  "note_chars_total": 555603,
+  "table_chars_total": 1567,
+  "total_chars": 1383353,
+  "anomaly_rows": 0
+}
